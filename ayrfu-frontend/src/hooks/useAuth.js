@@ -1,37 +1,43 @@
+// src/hooks/useAuth.js
 import { useState, useEffect, useCallback } from 'react';
-import axiosInstance from '../utils/axiosConfig';
+import axios from '../api/axios';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Check if user is logged in based on token in localStorage
-  const isAuthenticated = !!localStorage.getItem('token');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
   // Get current user data from backend
   const getCurrentUser = useCallback(async () => {
-    if (!isAuthenticated) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsAuthenticated(false);
+      setUser(null);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get('/auth/profile');
+      const response = await axios.get('/auth/profile');
       setUser(response.data);
+      setIsAuthenticated(true);
       setError(null);
     } catch (err) {
       console.error('Error fetching user profile:', err);
       setError(err.response?.data?.message || 'Failed to fetch user profile');
+      
       // Clear token if unauthorized
       if (err.response?.status === 401) {
         localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   // Login function
   const login = async (email, password) => {
@@ -39,13 +45,16 @@ export const useAuth = () => {
     setError(null);
     
     try {
-      const response = await axiosInstance.post('/auth/login', { email, password });
+      const response = await axios.post('/auth/login', { email, password });
       
-      if (response.data.token) {
+      if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
         setUser(response.data);
+        setIsAuthenticated(true);
         return response.data;
       }
+      
+      return null;
     } catch (err) {
       console.error('Login error:', err);
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -59,18 +68,25 @@ export const useAuth = () => {
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     setUser(null);
+    setIsAuthenticated(false);
+  }, []);
+
+  // Clear authentication error
+  const clearAuthError = useCallback(() => {
+    setError(null);
   }, []);
 
   // Check for roles
   const hasRole = useCallback((role) => {
     if (!user || !user.roles) return false;
     
-    if (Array.isArray(user.roles)) {
+    // Handle roles as array of strings
+    if (Array.isArray(user.roles) && typeof user.roles[0] === 'string') {
       return user.roles.includes(role);
     }
     
-    // Handle roles as objects with name property
-    if (typeof user.roles === 'object') {
+    // Handle roles as array of objects with name property
+    if (Array.isArray(user.roles) && typeof user.roles[0] === 'object') {
       return user.roles.some(r => r.name === role);
     }
     
@@ -90,7 +106,8 @@ export const useAuth = () => {
     login,
     logout,
     getCurrentUser,
-    hasRole
+    hasRole,
+    clearAuthError
   };
 };
 

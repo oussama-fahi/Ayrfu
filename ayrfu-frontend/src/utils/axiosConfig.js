@@ -1,7 +1,7 @@
 // src/utils/axiosConfig.js
 import axios from 'axios';
 
-const API_URL = '/ayrfu/api';
+const API_URL = '/api';
 
 // Create an axios instance with base URL
 const instance = axios.create({

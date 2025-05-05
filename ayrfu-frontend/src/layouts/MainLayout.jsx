@@ -1,49 +1,43 @@
 // src/layouts/MainLayout.jsx
-import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { 
   AppBar, 
   Toolbar, 
   Typography, 
   Button, 
   Box, 
+  Container,
   IconButton,
   Drawer,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
+  ListItemText,
   useMediaQuery,
   useTheme,
   Divider,
   Avatar,
   Menu, 
-  MenuItem,
+  MenuItem
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
 import BusinessIcon from '@mui/icons-material/Business';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
+import { useAuth } from '../hooks/useAuth';
 import Footer from '../components/common/Footer';
 
 const MainLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Check if user is authenticated
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  // Check authentication on page load and location change
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  }, [location]);
+  const { user, isAuthenticated, logout, hasRole } = useAuth();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
@@ -72,15 +66,12 @@ const MainLayout = () => {
   };
   
   const handleLogout = () => {
-    // Clear token from localStorage
-    localStorage.removeItem('token');
-    // Close menu
+    logout();
     handleAccountMenuClose();
-    // Update authentication state
-    setIsAuthenticated(false);
-    // Redirect to home
     navigate('/');
   };
+  
+  const isAdmin = user && hasRole && (hasRole('ADMIN') || hasRole('SUPER_USER'));
   
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -121,37 +112,57 @@ const MainLayout = () => {
                   component={RouterLink} 
                   to={item.path}
                   sx={{ mx: 1 }}
-                  startIcon={item.icon}
                 >
                   {item.text}
                 </Button>
               ))}
               
-              {/* Always show profile or login button */}
               {isAuthenticated ? (
                 <Button 
                   color="inherit"
-                  startIcon={<AccountCircleIcon />}
                   onClick={handleAccountMenuOpen}
+                  startIcon={
+                    <Avatar 
+                      sx={{ 
+                        width: 24, 
+                        height: 24, 
+                        fontSize: '0.75rem',
+                        bgcolor: 'primary.dark'
+                      }}
+                    >
+                      {user?.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                    </Avatar>
+                  }
                   sx={{ ml: 2 }}
                 >
-                  My Profile
+                  Profile
                 </Button>
               ) : (
-                <Button 
-                  color="inherit"
-                  component={RouterLink}
-                  to="/login"
-                  startIcon={<LoginIcon />}
-                  sx={{ ml: 2 }}
-                >
-                  Login
-                </Button>
+                <Box sx={{ display: 'flex' }}>
+                  <Button 
+                    color="inherit"
+                    component={RouterLink}
+                    to="/login"
+                    startIcon={<LoginIcon />}
+                    sx={{ ml: 2 }}
+                  >
+                    Login
+                  </Button>
+                  <Button 
+                    color="inherit"
+                    component={RouterLink}
+                    to="/register"
+                    startIcon={<AppRegistrationIcon />}
+                    sx={{ ml: 1 }}
+                  >
+                    Register
+                  </Button>
+                </Box>
               )}
             </Box>
           )}
           
-          {/* User Account Menu when authenticated */}
+          {/* User Account Menu when authenticated (mobile and desktop) */}
           <Menu
             id="account-menu"
             anchorEl={accountMenuAnchor}
@@ -195,15 +206,17 @@ const MainLayout = () => {
               <ListItemText primary="My Applications" />
             </MenuItem>
             
-            <MenuItem onClick={() => { 
-              handleAccountMenuClose(); 
-              navigate('/admin/dashboard'); 
-            }}>
-              <ListItemIcon>
-                <DashboardIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Admin Dashboard" />
-            </MenuItem>
+            {isAdmin && (
+              <MenuItem onClick={() => { 
+                handleAccountMenuClose(); 
+                navigate('/admin/dashboard'); 
+              }}>
+                <ListItemIcon>
+                  <DashboardIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Admin Dashboard" />
+              </MenuItem>
+            )}
             
             <Divider />
             
@@ -265,12 +278,14 @@ const MainLayout = () => {
                   <ListItemText primary="My Applications" />
                 </ListItem>
                 
-                <ListItem button onClick={() => handleNavigation('/admin/dashboard')}>
-                  <ListItemIcon>
-                    <DashboardIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Admin Dashboard" />
-                </ListItem>
+                {isAdmin && (
+                  <ListItem button onClick={() => handleNavigation('/admin/dashboard')}>
+                    <ListItemIcon>
+                      <DashboardIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Admin Dashboard" />
+                  </ListItem>
+                )}
                 
                 <Divider />
                 
@@ -282,12 +297,21 @@ const MainLayout = () => {
                 </ListItem>
               </>
             ) : (
-              <ListItem button onClick={() => handleNavigation('/login')}>
-                <ListItemIcon>
-                  <LoginIcon />
-                </ListItemIcon>
-                <ListItemText primary="Login" />
-              </ListItem>
+              <>
+                <ListItem button onClick={() => handleNavigation('/login')}>
+                  <ListItemIcon>
+                    <LoginIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Login" />
+                </ListItem>
+                
+                <ListItem button onClick={() => handleNavigation('/register')}>
+                  <ListItemIcon>
+                    <AppRegistrationIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Register" />
+                </ListItem>
+              </>
             )}
           </List>
         </Box>

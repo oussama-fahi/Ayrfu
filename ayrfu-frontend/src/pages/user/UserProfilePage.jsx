@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/user/UserProfilePage.jsx
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -11,45 +12,50 @@ import {
   Button,
   CircularProgress,
   Alert,
-  TextField
+  TextField,
+  Snackbar
 } from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
 import axios from 'axios';
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
   
-  const [userData, setUserData] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   
-  const [formData, setFormData] = useState({
+  const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
     phoneNumber: '',
     address: ''
   });
 
-  // Check if user is authenticated
+  // Load user data when component mounts
   useEffect(() => {
     const token = localStorage.getItem('token');
+    
     if (!token) {
       navigate('/login');
       return;
     }
     
-    // Fetch user profile data
     const fetchUserProfile = async () => {
       setLoading(true);
       try {
         const response = await axios.get('/api/auth/profile', {
           headers: {
-            Authorization: `Bearer ${token}`
+            'Authorization': `Bearer ${token}`
           }
         });
         
-        setUserData(response.data);
-        setFormData({
+        setUser(response.data);
+        setProfileData({
           fullName: response.data.fullName || '',
           email: response.data.email || '',
           phoneNumber: response.data.phoneNumber || '',
@@ -57,9 +63,6 @@ const UserProfilePage = () => {
         });
       } catch (err) {
         console.error('Error fetching user profile:', err);
-        setError('Failed to load user profile. Please try again later.');
-        
-        // If 401 unauthorized, redirect to login
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
           navigate('/login');
@@ -74,7 +77,7 @@ const UserProfilePage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setProfileData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -82,38 +85,66 @@ const UserProfilePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
+    setError(null);
     
     try {
+      // Get token for authorization
       const token = localStorage.getItem('token');
       if (!token) {
-        navigate('/login');
-        return;
+        throw new Error('Authentication token not found');
       }
       
-      const response = await axios.put('/api/users/profile', formData, {
+      // Make API call to update user profile
+      if (!user || !user.id) {
+        throw new Error('User ID not found');
+      }
+      
+      const userId = user.id;
+      
+      // Update user profile
+      await axios.put(`/api/users/${userId}`, {
+        fullName: profileData.fullName,
+        email: profileData.email,
+        phoneNumber: profileData.phoneNumber,
+        address: profileData.address
+      }, {
         headers: {
-          Authorization: `Bearer ${token}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
-      setUserData(response.data);
+      // Show success message
+      setSuccess(true);
       setEditing(false);
+      
+      // Refresh user data
+      const updatedUserResponse = await axios.get('/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      setUser(updatedUserResponse.data);
     } catch (err) {
       console.error('Error updating profile:', err);
-      setError('Failed to update profile. Please try again later.');
+      setError(
+        err.response?.data?.message || 
+        'Failed to update profile. Please try again.'
+      );
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+  
+  const handleCloseSuccessMessage = () => {
+    setSuccess(false);
+  };
 
-  if (loading && !userData) {
+  if (loading) {
     return (
       <Container sx={{ py: 8, textAlign: 'center' }}>
         <CircularProgress />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading profile...
-        </Typography>
       </Container>
     );
   }
@@ -121,12 +152,6 @@ const UserProfilePage = () => {
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-        
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
           <Avatar 
             sx={{ 
@@ -137,19 +162,25 @@ const UserProfilePage = () => {
               mr: 3
             }}
           >
-            {userData?.fullName ? userData.fullName[0].toUpperCase() : 'U'}
+            {user?.fullName ? user.fullName[0].toUpperCase() : 'U'}
           </Avatar>
           <Box>
             <Typography variant="h4" gutterBottom>
-              {userData?.fullName || 'User Profile'}
+              {user?.fullName || 'User Profile'}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {userData?.email || 'No email available'}
+              {user?.email || 'No email available'}
             </Typography>
           </Box>
         </Box>
 
         <Divider sx={{ mb: 4 }} />
+        
+        {error && (
+          <Alert severity="error" sx={{ mb: 4 }}>
+            {error}
+          </Alert>
+        )}
 
         {editing ? (
           <Box component="form" onSubmit={handleSubmit}>
@@ -158,55 +189,61 @@ const UserProfilePage = () => {
                 <TextField
                   name="fullName"
                   label="Full Name"
-                  value={formData.fullName}
+                  value={profileData.fullName}
                   onChange={handleInputChange}
                   fullWidth
                   required
+                  disabled={saving}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   name="email"
                   label="Email"
-                  value={formData.email}
+                  value={profileData.email}
                   onChange={handleInputChange}
                   fullWidth
                   required
-                  disabled
+                  disabled={true} // Email should not be editable
+                  helperText="Email cannot be changed"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   name="phoneNumber"
                   label="Phone Number"
-                  value={formData.phoneNumber}
+                  value={profileData.phoneNumber}
                   onChange={handleInputChange}
                   fullWidth
+                  disabled={saving}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   name="address"
                   label="Address"
-                  value={formData.address}
+                  value={profileData.address}
                   onChange={handleInputChange}
                   fullWidth
+                  disabled={saving}
                 />
               </Grid>
               <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                 <Button 
                   variant="outlined" 
                   onClick={() => setEditing(false)}
-                  disabled={loading}
+                  startIcon={<CancelIcon />}
+                  disabled={saving}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   variant="contained"
-                  disabled={loading}
+                  startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+                  disabled={saving}
                 >
-                  {loading ? <CircularProgress size={24} /> : 'Save Changes'}
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </Grid>
             </Grid>
@@ -219,7 +256,7 @@ const UserProfilePage = () => {
                   Full Name
                 </Typography>
                 <Typography variant="body1">
-                  {userData?.fullName || 'Not provided'}
+                  {profileData.fullName || 'Not provided'}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -227,7 +264,7 @@ const UserProfilePage = () => {
                   Email
                 </Typography>
                 <Typography variant="body1">
-                  {userData?.email || 'Not provided'}
+                  {profileData.email || 'Not provided'}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -235,7 +272,7 @@ const UserProfilePage = () => {
                   Phone Number
                 </Typography>
                 <Typography variant="body1">
-                  {userData?.phoneNumber || 'Not provided'}
+                  {profileData.phoneNumber || 'Not provided'}
                 </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -243,7 +280,7 @@ const UserProfilePage = () => {
                   Address
                 </Typography>
                 <Typography variant="body1">
-                  {userData?.address || 'Not provided'}
+                  {profileData.address || 'Not provided'}
                 </Typography>
               </Grid>
             </Grid>
@@ -258,6 +295,13 @@ const UserProfilePage = () => {
           </>
         )}
       </Paper>
+      
+      <Snackbar
+        open={success}
+        autoHideDuration={6000}
+        onClose={handleCloseSuccessMessage}
+        message="Profile updated successfully"
+      />
     </Container>
   );
 };

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/pages/public/RegisterPage.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Container, 
@@ -7,7 +8,7 @@ import {
   TextField, 
   Button, 
   Box, 
-  Avatar, 
+  Avatar,
   CircularProgress,
   Alert,
   InputAdornment,
@@ -15,15 +16,22 @@ import {
   Stepper,
   Step,
   StepLabel,
-  Divider
+  Divider,
+  RadioGroup,
+  Radio,
+  FormControlLabel,
+  FormControl,
+  FormLabel
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import BusinessIcon from '@mui/icons-material/Business';
+import PersonIcon from '@mui/icons-material/Person';
 import axios from 'axios';
 
-const steps = ['Account Details', 'Personal Information'];
+const steps = ['Account Details', 'Role Selection', 'Personal Information'];
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -35,6 +43,9 @@ const RegisterPage = () => {
     password: '',
     confirmPassword: '',
     
+    // Role selection
+    role: 'CANDIDATE', // Default role
+    
     // Personal information
     fullName: '',
     phoneNumber: '',
@@ -45,6 +56,14 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Check if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/');
+    }
+  }, [navigate]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,8 +88,6 @@ const RegisterPage = () => {
       // Validate account details
       if (!formData.email.trim()) {
         errors.email = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        errors.email = 'Email is invalid';
       }
       
       if (!formData.password) {
@@ -85,6 +102,11 @@ const RegisterPage = () => {
         errors.confirmPassword = 'Passwords do not match';
       }
     } else if (activeStep === 1) {
+      // Validate role selection
+      if (!formData.role) {
+        errors.role = 'Please select a role';
+      }
+    } else if (activeStep === 2) {
       // Validate personal information
       if (!formData.fullName.trim()) {
         errors.fullName = 'Full name is required';
@@ -123,26 +145,28 @@ const RegisterPage = () => {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
-          phoneNumber: formData.phoneNumber,
-          address: formData.address,
+          phoneNumber: formData.phoneNumber || null,
+          address: formData.address || null,
+          roles: [{ name: formData.role }] // Send role as object with name property
         };
         
         // Send registration request
-        const response = await axios.post('/api/auth/register', registrationData);
+        const response = await axios.post('/ayrfu/api/auth/register', registrationData);
         
         console.log('Registration successful:', response.data);
         
         // If registration also returns a token, store it
         if (response.data && response.data.token) {
           localStorage.setItem('token', response.data.token);
+          navigate('/');
+        } else {
+          // Navigate to login page with success message
+          navigate('/login', { 
+            state: { 
+              message: 'Registration successful! Please login with your new account.' 
+            } 
+          });
         }
-        
-        // Navigate to login page or dashboard
-        navigate('/login', { 
-          state: { 
-            message: 'Registration successful! Please login with your new account.' 
-          } 
-        });
       } catch (err) {
         console.error('Registration failed:', err);
         setError(
@@ -230,6 +254,70 @@ const RegisterPage = () => {
           </>
         );
       case 1:
+        return (
+          <FormControl component="fieldset" sx={{ mt: 2, width: '100%' }}>
+            <FormLabel component="legend">I am registering as a:</FormLabel>
+            <RadioGroup
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              sx={{ mt: 2 }}
+            >
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  mb: 2, 
+                  p: 2, 
+                  border: formData.role === 'CANDIDATE' ? '2px solid #5e35b1' : 'none',
+                  bgcolor: formData.role === 'CANDIDATE' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
+                }}
+              >
+                <FormControlLabel 
+                  value="CANDIDATE" 
+                  control={<Radio />}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      <Typography variant="subtitle1">Candidate</Typography>
+                    </Box>
+                  } 
+                />
+                <Typography variant="body2" sx={{ ml: 4, mt: 1, color: 'text.secondary' }}>
+                  I am looking for job opportunities at UDDAN and want to apply for positions.
+                </Typography>
+              </Paper>
+              
+              <Paper 
+                elevation={3} 
+                sx={{ 
+                  p: 2, 
+                  border: formData.role === 'CLIENT' ? '2px solid #5e35b1' : 'none',
+                  bgcolor: formData.role === 'CLIENT' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
+                }}
+              >
+                <FormControlLabel 
+                  value="CLIENT" 
+                  control={<Radio />} 
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <BusinessIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      <Typography variant="subtitle1">Client</Typography>
+                    </Box>
+                  }
+                />
+                <Typography variant="body2" sx={{ ml: 4, mt: 1, color: 'text.secondary' }}>
+                  I represent a business looking for UDDAN's services and solutions.
+                </Typography>
+              </Paper>
+            </RadioGroup>
+            {formErrors.role && (
+              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                {formErrors.role}
+              </Typography>
+            )}
+          </FormControl>
+        );
+      case 2:
         return (
           <>
             <TextField

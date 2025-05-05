@@ -42,7 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Register", description = "Registers a new user with the provided details")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
         UserResponse userResponse = authService.register(registerRequest);

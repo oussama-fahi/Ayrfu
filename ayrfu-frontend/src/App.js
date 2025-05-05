@@ -1,3 +1,4 @@
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -18,7 +19,6 @@ import ContactPage from './pages/public/ContactPage';
 import NotFoundPage from './pages/public/NotFoundPage';
 import LoginPage from './pages/public/LoginPage';
 import RegisterPage from './pages/public/RegisterPage';
-import DebugLogin from './pages/public/DebugLogin';
 
 // User Pages
 import UserProfilePage from './pages/user/UserProfilePage';
@@ -33,13 +33,13 @@ import ServiceForm from './pages/admin/ServiceForm';
 import CandidateMessagesPage from './pages/admin/CandidateMessagesPage';
 import ClientMessagesPage from './pages/admin/ClientMessagesPage';
 
-// Protected Route
+// Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  // Check if token exists in localStorage
-  const isAuthenticated = !!localStorage.getItem('token');
+  // Simple token check - we'll do deeper validation in the actual components
+  const token = localStorage.getItem('token');
   
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (!token) {
+    return <Navigate to="/login" />;
   }
   
   return children;
@@ -49,7 +49,7 @@ const ProtectedRoute = ({ children }) => {
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#5e35b1', // AYRFU Purple
+      main: '#5e35b1', // Main Purple
     },
     secondary: {
       main: '#2e7d32', // Green for client sections
@@ -109,9 +109,8 @@ const App = () => {
             <Route path="contact" element={<ContactPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
-            <Route path="debug" element={<DebugLogin />} />
             
-            {/* User Routes (Protected) */}
+            {/* Protected User Routes */}
             <Route path="user">
               <Route path="profile" element={
                 <ProtectedRoute>
@@ -128,9 +127,10 @@ const App = () => {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
           
-          {/* Admin Routes */}
+          {/* Admin Login Page (outside of admin layout) */}
           <Route path="/admin/login" element={<LoginPage />} />
           
+          {/* Admin Routes (all protected) */}
           <Route path="/admin" element={
             <ProtectedRoute>
               <AdminLayout />

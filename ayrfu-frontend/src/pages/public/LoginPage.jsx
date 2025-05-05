@@ -1,6 +1,6 @@
 // src/pages/public/LoginPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Container, 
   Paper, 
@@ -13,8 +13,7 @@ import {
   Alert,
   InputAdornment,
   IconButton,
-  Divider,
-  Grid
+  Divider
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Visibility from '@mui/icons-material/Visibility';
@@ -23,34 +22,16 @@ import axios from 'axios';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Extract previous page path or message from location state
-  const message = location.state?.message || null;
-  const from = location.state?.from?.pathname || '/';
-  const adminLogin = location.pathname.includes('/admin/login');
   
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   
+  const [formErrors, setFormErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  // Check if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // If already logged in, redirect to appropriate page
-      if (adminLogin) {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
-    }
-  }, [navigate, adminLogin]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,47 +39,67 @@ const LoginPage = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear errors on input change
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+  };
+  
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await axios.post('/api/auth/login', formData);
+      // Login API call
+      const response = await axios.post('/api/auth/login', {
+        email: formData.email,
+        password: formData.password
+      });
       
-      console.log('Login response:', response.data);
-      
-      if (response.data.token) {
+      // Store token in localStorage
+      if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
         
-        // Check user roles to determine redirect
-        const roles = response.data.roles || [];
+        // Check if this is for admin login
+        const isAdminPath = window.location.pathname.includes('/admin');
         
-        // Handle admin login specifically
-        if (adminLogin) {
-          // If logging in from admin page, always redirect to dashboard
+        if (isAdminPath) {
           navigate('/admin/dashboard');
-        } else if (roles.includes('ADMIN') || roles.includes('SUPER_USER')) {
-          // If admin/super user from regular login, ask if they want to go to admin dashboard
-          const goToAdmin = window.confirm('You have admin privileges. Would you like to go to the admin dashboard?');
-          if (goToAdmin) {
-            navigate('/admin/dashboard');
-          } else {
-            // Redirect to from page or home
-            navigate(from !== '/' ? from : '/user/profile');
-          }
         } else {
-          // For regular users, go to profile page or previous page
-          navigate(from !== '/' ? from : '/user/profile');
+          navigate('/');
         }
+      } else {
+        throw new Error('No token received from server');
       }
     } catch (err) {
       console.error('Login failed:', err);
       setError(
         err.response?.data?.message || 
-        err.response?.data?.error || 
         'Login failed. Please check your credentials.'
       );
     } finally {
@@ -109,6 +110,8 @@ const LoginPage = () => {
   const toggleShowPassword = () => {
     setShowPassword(prev => !prev);
   };
+  
+  const isAdminLogin = window.location.pathname.includes('/admin');
   
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
@@ -122,19 +125,13 @@ const LoginPage = () => {
           borderRadius: 2
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: adminLogin ? 'secondary.main' : 'primary.main' }}>
+        <Avatar sx={{ m: 1, bgcolor: isAdminLogin ? 'secondary.main' : 'primary.main' }}>
           <LockOutlinedIcon />
         </Avatar>
         
         <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-          {adminLogin ? 'Admin Login' : 'Sign in to AYRFU'}
+          {isAdminLogin ? 'Admin Login' : 'Sign in to AYRFU'}
         </Typography>
-        
-        {message && (
-          <Alert severity="success" sx={{ width: '100%', mb: 3 }}>
-            {message}
-          </Alert>
-        )}
         
         {error && (
           <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
@@ -154,6 +151,8 @@ const LoginPage = () => {
             autoFocus
             value={formData.email}
             onChange={handleChange}
+            error={!!formErrors.email}
+            helperText={formErrors.email}
             disabled={isLoading}
           />
           
@@ -168,6 +167,8 @@ const LoginPage = () => {
             autoComplete="current-password"
             value={formData.password}
             onChange={handleChange}
+            error={!!formErrors.password}
+            helperText={formErrors.password}
             disabled={isLoading}
             InputProps={{
               endAdornment: (
@@ -188,7 +189,7 @@ const LoginPage = () => {
             type="submit"
             fullWidth
             variant="contained"
-            color={adminLogin ? 'secondary' : 'primary'}
+            color={isAdminLogin ? 'secondary' : 'primary'}
             disabled={isLoading}
             sx={{ mt: 3, mb: 2, py: 1.5 }}
           >
@@ -198,7 +199,7 @@ const LoginPage = () => {
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
           
-          {!adminLogin && (
+          {!isAdminLogin && (
             <>
               <Divider sx={{ my: 2 }}>
                 <Typography variant="body2" color="text.secondary">

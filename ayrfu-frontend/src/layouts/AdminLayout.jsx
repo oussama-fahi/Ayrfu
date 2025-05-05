@@ -1,6 +1,6 @@
 // src/layouts/AdminLayout.jsx
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, Link } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { 
   AppBar, 
   Toolbar, 
@@ -17,8 +17,7 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  useMediaQuery,
-  useTheme
+  CircularProgress
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -29,22 +28,19 @@ import BusinessIcon from '@mui/icons-material/Business';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HomeIcon from '@mui/icons-material/Home';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import PersonIcon from '@mui/icons-material/Person';
 import axios from 'axios';
 
 const drawerWidth = 240;
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   
-  // Count unread messages by type - would normally come from API
+  // Count unread messages by type
   const [unreadCandidateMessages, setUnreadCandidateMessages] = useState(0);
   const [unreadClientMessages, setUnreadClientMessages] = useState(0);
   
@@ -60,7 +56,7 @@ const AdminLayout = () => {
     const fetchUserProfile = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/auth/profile', {
+        const response = await axios.get('/ayrfu/api/auth/profile', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -68,9 +64,40 @@ const AdminLayout = () => {
         
         setUserData(response.data);
         
-        // Mock unread messages count - would come from API in a real app
-        setUnreadCandidateMessages(3);
-        setUnreadClientMessages(2);
+        // Check if user has admin or super_user role
+        const hasAdminRole = response.data.roles && response.data.roles.some(role => {
+          const roleName = typeof role === 'string' ? role : role.name;
+          return roleName === 'ADMIN' || roleName === 'SUPER_USER';
+        });
+        
+        if (!hasAdminRole) {
+          // Redirect to home if not admin
+          navigate('/');
+          return;
+        }
+        
+        // Fetch unread messages count
+        try {
+          // Fetch unread candidate messages
+          const candidateResponse = await axios.get('/ayrfu/api/messages/unread/type/CANDIDATE', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUnreadCandidateMessages(candidateResponse.data.length);
+        } catch (err) {
+          console.error('Error fetching candidate messages:', err);
+          setUnreadCandidateMessages(0);
+        }
+        
+        try {
+          // Fetch unread client messages
+          const clientResponse = await axios.get('/ayrfu/api/messages/unread/type/CLIENT', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUnreadClientMessages(clientResponse.data.length);
+        } catch (err) {
+          console.error('Error fetching client messages:', err);
+          setUnreadClientMessages(0);
+        }
       } catch (err) {
         console.error('Error fetching user profile:', err);
         
@@ -91,6 +118,11 @@ const AdminLayout = () => {
     setMobileOpen(!mobileOpen);
   };
   
+  const handleNavigation = (path) => {
+    navigate(path);
+    setMobileOpen(false);
+  };
+  
   const handleAccountMenuOpen = (event) => {
     setAccountMenuAnchor(event.currentTarget);
   };
@@ -104,13 +136,6 @@ const AdminLayout = () => {
     navigate('/');
   };
   
-  const handleNavigation = (path) => {
-    navigate(path);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
-  };
-
   const drawer = (
     <div>
       <Toolbar sx={{ 
@@ -193,7 +218,7 @@ const AdminLayout = () => {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography>Loading...</Typography>
+        <CircularProgress />
       </Box>
     );
   }
@@ -268,16 +293,6 @@ const AdminLayout = () => {
                 <AccountCircleIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="My Profile" />
-            </MenuItem>
-            
-            <MenuItem onClick={() => { 
-              handleAccountMenuClose(); 
-              navigate('/user/applications'); 
-            }}>
-              <ListItemIcon>
-                <PersonIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="My Applications" />
             </MenuItem>
             
             <Divider />
