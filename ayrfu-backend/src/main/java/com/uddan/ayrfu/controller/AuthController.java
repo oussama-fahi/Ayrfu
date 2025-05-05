@@ -31,8 +31,10 @@ public class AuthController {
     public ResponseEntity<JwtResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             JwtResponse response = authService.login(loginRequest);
+            System.out.println("jwt response : "+response.getEmail());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.out.println("error : "+e.getMessage());
             e.printStackTrace(); // Add debugging
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(null);

@@ -1,9 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { useDispatch, useSelector } from 'react-redux';
-import { getCurrentUser } from './redux/slices/authSlice';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -18,9 +16,15 @@ import ServiceDetailPage from './pages/public/ServiceDetailPage';
 import ApplyPage from './pages/public/ApplyPage';
 import ContactPage from './pages/public/ContactPage';
 import NotFoundPage from './pages/public/NotFoundPage';
+import LoginPage from './pages/public/LoginPage';
+import RegisterPage from './pages/public/RegisterPage';
+import DebugLogin from './pages/public/DebugLogin';
+
+// User Pages
+import UserProfilePage from './pages/user/UserProfilePage';
+import UserApplicationsPage from './pages/user/UserApplicationsPage';
 
 // Admin Pages
-import LoginPage from './pages/admin/LoginPage';
 import Dashboard from './pages/admin/Dashboard';
 import PositionManagement from './pages/admin/PositionManagement';
 import PositionForm from './pages/admin/PositionForm';
@@ -29,14 +33,23 @@ import ServiceForm from './pages/admin/ServiceForm';
 import CandidateMessagesPage from './pages/admin/CandidateMessagesPage';
 import ClientMessagesPage from './pages/admin/ClientMessagesPage';
 
-// Routes
-import ProtectedRoute from './routes/ProtectedRoute';
+// Protected Route
+const ProtectedRoute = ({ children }) => {
+  // Check if token exists in localStorage
+  const isAuthenticated = !!localStorage.getItem('token');
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
 
 // Theme configuration
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#5e35b1', // Main Purple
+      main: '#5e35b1', // AYRFU Purple
     },
     secondary: {
       main: '#2e7d32', // Green for client sections
@@ -80,15 +93,6 @@ const theme = createTheme({
 });
 
 const App = () => {
-  const dispatch = useDispatch();
-  const { token } = useSelector((state) => state.auth);
-  
-  useEffect(() => {
-    if (token) {
-      dispatch(getCurrentUser());
-    }
-  }, [dispatch, token]);
-  
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -103,35 +107,51 @@ const App = () => {
             <Route path="services/:id" element={<ServiceDetailPage />} />
             <Route path="apply/:positionId?" element={<ApplyPage />} />
             <Route path="contact" element={<ContactPage />} />
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
+            <Route path="debug" element={<DebugLogin />} />
+            
+            {/* User Routes (Protected) */}
+            <Route path="user">
+              <Route path="profile" element={
+                <ProtectedRoute>
+                  <UserProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="applications" element={
+                <ProtectedRoute>
+                  <UserApplicationsPage />
+                </ProtectedRoute>
+              } />
+            </Route>
+            
             <Route path="*" element={<NotFoundPage />} />
           </Route>
           
-          {/* Admin Login */}
+          {/* Admin Routes */}
           <Route path="/admin/login" element={<LoginPage />} />
           
-          {/* Protected Admin Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              
-              <Route path="positions" element={<PositionManagement />} />
-              <Route path="positions/create" element={<PositionForm />} />
-              <Route path="positions/edit/:id" element={<PositionForm />} />
-              
-              <Route path="services" element={<ServiceManagement />} />
-              <Route path="services/create" element={<ServiceForm />} />
-              <Route path="services/edit/:id" element={<ServiceForm />} />
-              
-              <Route path="messages/candidates" element={<CandidateMessagesPage />} />
-              <Route path="messages/clients" element={<ClientMessagesPage />} />
-              
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            
+            <Route path="positions" element={<PositionManagement />} />
+            <Route path="positions/create" element={<PositionForm />} />
+            <Route path="positions/edit/:id" element={<PositionForm />} />
+            
+            <Route path="services" element={<ServiceManagement />} />
+            <Route path="services/create" element={<ServiceForm />} />
+            <Route path="services/edit/:id" element={<ServiceForm />} />
+            
+            <Route path="messages/candidates" element={<CandidateMessagesPage />} />
+            <Route path="messages/clients" element={<ClientMessagesPage />} />
+            
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          
-          {/* Fallback redirect */}
-          <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>
