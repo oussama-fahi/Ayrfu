@@ -15,6 +15,10 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Column(name = "company_name", nullable = false)
     private String companyName;
 
@@ -48,11 +52,12 @@ public class Client {
     public Client() {
     }
 
-    // Full constructor
-    public Client(Long id, String companyName, String contactPerson, String email, String phoneNumber,
-                  String industry, String companySize, String requirements, LocalDateTime createdAt,
-                  LocalDateTime updatedAt) {
+    // All-args constructor
+    public Client(Long id, User user, String companyName, String contactPerson, String email,
+                  String phoneNumber, String industry, String companySize, String requirements,
+                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.user = user;
         this.companyName = companyName;
         this.contactPerson = contactPerson;
         this.email = email;
@@ -64,13 +69,24 @@ public class Client {
         this.updatedAt = updatedAt;
     }
 
-    // Getters and setters
+    // Getters and Setters
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+        if (user != null && user.getClient() != this) {
+            user.setClient(this);
+        }
     }
 
     public String getCompanyName() {
@@ -145,13 +161,14 @@ public class Client {
         this.updatedAt = updatedAt;
     }
 
-    // Builder implementation
+    // Builder pattern implementation
     public static ClientBuilder builder() {
         return new ClientBuilder();
     }
 
     public static class ClientBuilder {
         private Long id;
+        private User user;
         private String companyName;
         private String contactPerson;
         private String email;
@@ -167,6 +184,11 @@ public class Client {
 
         public ClientBuilder id(Long id) {
             this.id = id;
+            return this;
+        }
+
+        public ClientBuilder user(User user) {
+            this.user = user;
             return this;
         }
 
@@ -216,8 +238,8 @@ public class Client {
         }
 
         public Client build() {
-            return new Client(id, companyName, contactPerson, email, phoneNumber, industry,
-                    companySize, requirements, createdAt, updatedAt);
+            return new Client(id, user, companyName, contactPerson, email, phoneNumber,
+                    industry, companySize, requirements, createdAt, updatedAt);
         }
     }
 }

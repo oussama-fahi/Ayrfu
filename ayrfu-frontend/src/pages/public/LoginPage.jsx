@@ -1,6 +1,6 @@
 // src/pages/public/LoginPage.jsx
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Container, 
   Paper, 
@@ -18,10 +18,12 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import axios from 'axios';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated, isLoading, error, clearAuthError } = useAuthContext();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -30,8 +32,28 @@ const LoginPage = () => {
   
   const [formErrors, setFormErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  
+  // Check if there's a success message from registration
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
+  
+  // Check if this is for admin login
+  const isAdminPath = location.pathname.includes('/admin');
+  
+  useEffect(() => {
+    // If already authenticated, redirect
+    if (isAuthenticated) {
+      if (isAdminPath) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
+    }
+    
+    // Cleanup error on unmount
+    return () => {
+      if (clearAuthError) clearAuthError();
+    };
+  }, [isAuthenticated, navigate, clearAuthError, isAdminPath]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,6 +76,8 @@ const LoginPage = () => {
     
     if (!formData.email.trim()) {
       errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Email is invalid';
     }
     
     if (!formData.password) {
@@ -71,47 +95,16 @@ const LoginPage = () => {
       return;
     }
     
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      // Login API call
-      const response = await axios.post('/api/auth/login', {
-        email: formData.email,
-        password: formData.password
-      });
-      
-      // Store token in localStorage
-      if (response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        
-        // Check if this is for admin login
-        const isAdminPath = window.location.pathname.includes('/admin');
-        
-        if (isAdminPath) {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/');
-        }
-      } else {
-        throw new Error('No token received from server');
-      }
+      await login(formData.email, formData.password);
     } catch (err) {
-      console.error('Login failed:', err);
-      setError(
-        err.response?.data?.message || 
-        'Login failed. Please check your credentials.'
-      );
-    } finally {
-      setIsLoading(false);
+      // Error is handled in the auth hook
     }
   };
   
   const toggleShowPassword = () => {
     setShowPassword(prev => !prev);
   };
-  
-  const isAdminLogin = window.location.pathname.includes('/admin');
   
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
@@ -125,13 +118,19 @@ const LoginPage = () => {
           borderRadius: 2
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: isAdminLogin ? 'secondary.main' : 'primary.main' }}>
+        <Avatar sx={{ m: 1, bgcolor: isAdminPath ? 'secondary.main' : 'primary.main' }}>
           <LockOutlinedIcon />
         </Avatar>
         
         <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-          {isAdminLogin ? 'Admin Login' : 'Sign in to AYRFU'}
+          {isAdminPath ? 'Admin Login' : 'Sign in to AYRFU'}
         </Typography>
+        
+        {successMessage && (
+          <Alert severity="success" sx={{ width: '100%', mb: 3 }}>
+            {successMessage}
+          </Alert>
+        )}
         
         {error && (
           <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
@@ -189,7 +188,7 @@ const LoginPage = () => {
             type="submit"
             fullWidth
             variant="contained"
-            color={isAdminLogin ? 'secondary' : 'primary'}
+            color={isAdminPath ? 'secondary' : 'primary'}
             disabled={isLoading}
             sx={{ mt: 3, mb: 2, py: 1.5 }}
           >
@@ -199,7 +198,7 @@ const LoginPage = () => {
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
           
-          {!isAdminLogin && (
+          {!isAdminPath && (
             <>
               <Divider sx={{ my: 2 }}>
                 <Typography variant="body2" color="text.secondary">

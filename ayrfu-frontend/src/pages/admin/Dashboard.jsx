@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaBriefcase, FaUsers, FaBuilding, FaEnvelope, FaSignOutAlt } from 'react-icons/fa';
 import axios from 'axios';
-import MessageAPI from '../../api/message.api';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { hasRole, logout } = useAuthContext();
   
   const [stats, setStats] = useState({
     positions: 0,
@@ -28,37 +29,17 @@ const Dashboard = () => {
           return;
         }
 
-        // Fetch user data to ensure admin access
-        try {
-          const userResponse = await axios.get('/ayrfu/api/auth/profile', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          const user = userResponse.data;
-          
-          // Check if user has admin role
-          const hasAdminRole = user.roles && user.roles.some(role => {
-            const roleName = typeof role === 'string' ? role : role.name;
-            return roleName === 'ADMIN' || roleName === 'SUPER_USER';
-          });
-          
-          if (!hasAdminRole) {
-            navigate('/');
-            return;
-          }
-        } catch (err) {
-          console.error('Error fetching user profile:', err);
-          if (err.response?.status === 401) {
-            localStorage.removeItem('token');
-            navigate('/login');
-          }
+        // Check if user has admin or super_user role
+        const isAdminOrSuperUser = hasRole('ROLE_ADMIN') || hasRole('ROLE_SUPER_USER');
+        if (!isAdminOrSuperUser) {
+          navigate('/');
           return;
         }
 
         // Fetch positions count
         let positions = [];
         try {
-          const positionsResponse = await axios.get('/ayrfu/api/positions', {
+          const positionsResponse = await axios.get('/api/positions', {
             headers: { Authorization: `Bearer ${token}` }
           });
           positions = positionsResponse.data || [];
@@ -70,7 +51,7 @@ const Dashboard = () => {
         // Fetch services count
         let services = [];
         try {
-          const servicesResponse = await axios.get('/ayrfu/api/services', {
+          const servicesResponse = await axios.get('/api/services', {
             headers: { Authorization: `Bearer ${token}` }
           });
           services = servicesResponse.data || [];
@@ -82,7 +63,7 @@ const Dashboard = () => {
         // Fetch candidate messages count
         let candidateMessages = [];
         try {
-          const candidateMessagesResponse = await axios.get('/ayrfu/api/messages/type/CANDIDATE', {
+          const candidateMessagesResponse = await axios.get('/api/messages/type/CANDIDATE', {
             headers: { Authorization: `Bearer ${token}` }
           });
           candidateMessages = candidateMessagesResponse.data || [];
@@ -94,7 +75,7 @@ const Dashboard = () => {
         // Fetch client messages count
         let clientMessages = [];
         try {
-          const clientMessagesResponse = await axios.get('/ayrfu/api/messages/type/CLIENT', {
+          const clientMessagesResponse = await axios.get('/api/messages/type/CLIENT', {
             headers: { Authorization: `Bearer ${token}` }
           });
           clientMessages = clientMessagesResponse.data || [];
@@ -118,12 +99,14 @@ const Dashboard = () => {
     };
     
     fetchStats();
-  }, [navigate]);
+  }, [navigate, hasRole]);
   
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/');
   };
+  
+  const isAdmin = hasRole && hasRole('ROLE_ADMIN');
   
   if (loading) {
     return (

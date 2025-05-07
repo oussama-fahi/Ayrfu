@@ -18,6 +18,10 @@ public class Candidate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
@@ -74,11 +78,13 @@ public class Candidate {
     }
 
     // All-args constructor
-    public Candidate(Long id, String fullName, String email, String phoneNumber, String address,
-                     LocalDate dateOfBirth, String gender, Set<String> technologies, Set<String> languages,
-                     String experienceLevel, String preferredLocation, String preferredWorkModel,
-                     String cvPath, LocalDateTime createdAt, LocalDateTime updatedAt, Set<Application> applications) {
+    public Candidate(Long id, User user, String fullName, String email, String phoneNumber,
+                     String address, LocalDate dateOfBirth, String gender, Set<String> technologies,
+                     Set<String> languages, String experienceLevel, String preferredLocation,
+                     String preferredWorkModel, String cvPath, LocalDateTime createdAt,
+                     LocalDateTime updatedAt, Set<Application> applications) {
         this.id = id;
+        this.user = user;
         this.fullName = fullName;
         this.email = email;
         this.phoneNumber = phoneNumber;
@@ -103,6 +109,17 @@ public class Candidate {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+        if (user != null && user.getCandidate() != this) {
+            user.setCandidate(this);
+        }
     }
 
     public String getFullName() {
@@ -225,22 +242,14 @@ public class Candidate {
         this.applications = applications != null ? applications : new HashSet<>();
     }
 
-    public void addApplication(Application application) {
-        applications.add(application);
-        application.setCandidate(this);
-    }
-
-    public void removeApplication(Application application) {
-        applications.remove(application);
-        application.setCandidate(null);
-    }
-
+    // Builder pattern implementation
     public static CandidateBuilder builder() {
         return new CandidateBuilder();
     }
 
     public static class CandidateBuilder {
         private Long id;
+        private User user;
         private String fullName;
         private String email;
         private String phoneNumber;
@@ -262,6 +271,11 @@ public class Candidate {
 
         public CandidateBuilder id(Long id) {
             this.id = id;
+            return this;
+        }
+
+        public CandidateBuilder user(User user) {
+            this.user = user;
             return this;
         }
 
@@ -341,8 +355,8 @@ public class Candidate {
         }
 
         public Candidate build() {
-            return new Candidate(id, fullName, email, phoneNumber, address, dateOfBirth, gender,
-                    technologies, languages, experienceLevel, preferredLocation,
+            return new Candidate(id, user, fullName, email, phoneNumber, address, dateOfBirth,
+                    gender, technologies, languages, experienceLevel, preferredLocation,
                     preferredWorkModel, cvPath, createdAt, updatedAt, applications);
         }
     }

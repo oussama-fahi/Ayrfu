@@ -10,18 +10,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/clients")
-@Tag(name = "Client API", description = "APIs for client management")
+@Tag(name = "Clients", description = "Client management API endpoints")
 public class ClientController {
 
     private final ClientService clientService;
 
-    public ClientController(ClientService clientService){
-        this.clientService=clientService;
+    public ClientController(ClientService clientService) {
+        this.clientService = clientService;
     }
 
     @PostMapping
@@ -32,7 +31,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @clientService.isOwnProfile(#id, authentication.principal.id)")
     @Operation(summary = "Get client by ID", description = "Retrieves a client by its ID")
     public ResponseEntity<ClientResponse> getClientById(@PathVariable Long id) {
         ClientResponse client = clientService.getClientById(id);
@@ -40,7 +39,7 @@ public class ClientController {
     }
 
     @GetMapping("/email/{email}")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @clientService.isOwnEmail(#email, authentication.principal.username)")
     @Operation(summary = "Get client by email", description = "Retrieves a client by its email")
     public ResponseEntity<ClientResponse> getClientByEmail(@PathVariable String email) {
         ClientResponse client = clientService.getClientByEmail(email);
@@ -56,7 +55,7 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @clientService.isOwnProfile(#id, authentication.principal.id)")
     @Operation(summary = "Update a client", description = "Updates a client with the provided details")
     public ResponseEntity<ClientResponse> updateClient(
             @PathVariable Long id,

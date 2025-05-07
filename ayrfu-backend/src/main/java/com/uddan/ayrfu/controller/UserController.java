@@ -1,5 +1,9 @@
 package com.uddan.ayrfu.controller;
 
+import com.uddan.ayrfu.dto.request.CandidateProfileRequest;
+import com.uddan.ayrfu.dto.request.ClientProfileRequest;
+import com.uddan.ayrfu.dto.response.CandidateResponse;
+import com.uddan.ayrfu.dto.response.ClientResponse;
 import com.uddan.ayrfu.dto.response.UserResponse;
 import com.uddan.ayrfu.entity.User;
 import com.uddan.ayrfu.service.UserService;
@@ -48,6 +52,23 @@ public class UserController {
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
+    @PostMapping("/super-users")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a new super user", description = "Creates a new super user with the provided information (Admin only)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Super user created successfully",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN role")
+    })
+    public ResponseEntity<UserResponse> createSuperUser(
+            @Parameter(description = "Super user to be created", required = true)
+            @Valid @RequestBody User user) {
+        logger.info("Request to create super user with email: {}", user.getEmail());
+        UserResponse createdUser = userService.createSuperUser(user);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a user", description = "Updates an existing user with the provided information")
@@ -84,13 +105,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER') or @authService.userHasRole(authentication.principal.user, 'ROLE_ADMIN') or @authService.userHasRole(authentication.principal.user, 'ROLE_SUPER_USER') or authentication.principal.id == #id")
     @Operation(summary = "Get user by ID", description = "Retrieves a user by their ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User found",
                     content = @Content(schema = @Schema(implementation = UserResponse.class))),
             @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN or SUPER_USER role")
+            @ApiResponse(responseCode = "403", description = "Forbidden, requires appropriate permissions")
     })
     public ResponseEntity<UserResponse> getUserById(
             @Parameter(description = "User ID", required = true)
@@ -212,5 +233,65 @@ public class UserController {
         logger.info("Request to get users with role ID: {}", roleId);
         List<UserResponse> users = userService.getUsersByRole(roleId);
         return ResponseEntity.ok(users);
+    }
+
+    // Profile management endpoints
+
+    @GetMapping("/profile/candidate")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get current user's candidate profile", description = "Retrieves the candidate profile of the current authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidate profile retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = CandidateResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Candidate profile not found")
+    })
+    public ResponseEntity<CandidateResponse> getCurrentUserCandidateProfile() {
+        logger.info("Request to get candidate profile for current user");
+        CandidateResponse candidateProfile = userService.getCurrentUserCandidateProfile();
+        return ResponseEntity.ok(candidateProfile);
+    }
+
+    @PutMapping("/profile/candidate")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update current user's candidate profile", description = "Updates or creates the candidate profile of the current authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidate profile updated successfully",
+                    content = @Content(schema = @Schema(implementation = CandidateResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    public ResponseEntity<CandidateResponse> updateCurrentUserCandidateProfile(
+            @Valid @RequestBody CandidateProfileRequest profileRequest) {
+        logger.info("Request to update candidate profile for current user");
+        CandidateResponse updatedProfile = userService.updateCurrentUserCandidateProfile(profileRequest);
+        return ResponseEntity.ok(updatedProfile);
+    }
+
+    @GetMapping("/profile/client")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get current user's client profile", description = "Retrieves the client profile of the current authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Client profile retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ClientResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Client profile not found")
+    })
+    public ResponseEntity<ClientResponse> getCurrentUserClientProfile() {
+        logger.info("Request to get client profile for current user");
+        ClientResponse clientProfile = userService.getCurrentUserClientProfile();
+        return ResponseEntity.ok(clientProfile);
+    }
+
+    @PutMapping("/profile/client")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update current user's client profile", description = "Updates or creates the client profile of the current authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Client profile updated successfully",
+                    content = @Content(schema = @Schema(implementation = ClientResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    public ResponseEntity<ClientResponse> updateCurrentUserClientProfile(
+            @Valid @RequestBody ClientProfileRequest profileRequest) {
+        logger.info("Request to update client profile for current user");
+        ClientResponse updatedProfile = userService.updateCurrentUserClientProfile(profileRequest);
+        return ResponseEntity.ok(updatedProfile);
     }
 }

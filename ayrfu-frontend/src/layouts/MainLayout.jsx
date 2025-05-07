@@ -1,34 +1,33 @@
 // src/layouts/MainLayout.jsx
-import React, { useState } from 'react';
-import { Outlet, useNavigate, Link as RouterLink } from 'react-router-dom';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  Box, 
-  Container,
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
   IconButton,
   Drawer,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  useMediaQuery,
-  useTheme,
   Divider,
+  Box,
   Avatar,
-  Menu, 
-  MenuItem
+  Menu,
+  MenuItem,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
 import BusinessIcon from '@mui/icons-material/Business';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LoginIcon from '@mui/icons-material/Login';
 import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
 import { useAuth } from '../hooks/useAuth';
 import Footer from '../components/common/Footer';
@@ -71,7 +70,10 @@ const MainLayout = () => {
     navigate('/');
   };
   
-  const isAdmin = user && hasRole && (hasRole('ADMIN') || hasRole('SUPER_USER'));
+  const isAdmin = user && hasRole && (hasRole('ROLE_ADMIN'));
+  const isSuperUser = user && hasRole && (hasRole('ROLE_SUPER_USER'));
+  const isCandidate = user && hasRole && (hasRole('ROLE_CANDIDATE'));
+  const isClient = user && hasRole && (hasRole('ROLE_CLIENT'));
   
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -94,17 +96,17 @@ const MainLayout = () => {
             component={RouterLink} 
             to="/" 
             sx={{ 
-              flexGrow: 1, 
               color: 'white', 
               textDecoration: 'none',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              flexGrow: 1
             }}
           >
             AYRFU
           </Typography>
           
           {!isMobile && (
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', mr: 2 }}>
               {mainNavItems.map((item) => (
                 <Button 
                   key={item.text}
@@ -116,53 +118,53 @@ const MainLayout = () => {
                   {item.text}
                 </Button>
               ))}
-              
-              {isAuthenticated ? (
-                <Button 
-                  color="inherit"
-                  onClick={handleAccountMenuOpen}
-                  startIcon={
-                    <Avatar 
-                      sx={{ 
-                        width: 24, 
-                        height: 24, 
-                        fontSize: '0.75rem',
-                        bgcolor: 'primary.dark'
-                      }}
-                    >
-                      {user?.fullName ? user.fullName[0].toUpperCase() : 'U'}
-                    </Avatar>
-                  }
-                  sx={{ ml: 2 }}
-                >
-                  Profile
-                </Button>
-              ) : (
-                <Box sx={{ display: 'flex' }}>
-                  <Button 
-                    color="inherit"
-                    component={RouterLink}
-                    to="/login"
-                    startIcon={<LoginIcon />}
-                    sx={{ ml: 2 }}
-                  >
-                    Login
-                  </Button>
-                  <Button 
-                    color="inherit"
-                    component={RouterLink}
-                    to="/register"
-                    startIcon={<AppRegistrationIcon />}
-                    sx={{ ml: 1 }}
-                  >
-                    Register
-                  </Button>
-                </Box>
-              )}
             </Box>
           )}
           
-          {/* User Account Menu when authenticated (mobile and desktop) */}
+          {/* Login/Profile section now on the right side */}
+          {isAuthenticated ? (
+            <Button 
+              color="inherit"
+              onClick={handleAccountMenuOpen}
+              startIcon={
+                <Avatar 
+                  sx={{ 
+                    width: 24, 
+                    height: 24, 
+                    fontSize: '0.75rem',
+                    bgcolor: 'primary.dark'
+                  }}
+                >
+                  {user?.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                </Avatar>
+              }
+            >
+              Profile
+            </Button>
+          ) : (
+            <Box sx={{ display: 'flex' }}>
+              <Button 
+                color="inherit"
+                component={RouterLink}
+                to="/login"
+                startIcon={<LoginIcon />}
+                sx={{ ml: 1 }}
+              >
+                Login
+              </Button>
+              <Button 
+                color="inherit"
+                component={RouterLink}
+                to="/register"
+                startIcon={<AppRegistrationIcon />}
+                sx={{ ml: 1 }}
+              >
+                Register
+              </Button>
+            </Box>
+          )}
+          
+          {/* User Account Menu when authenticated */}
           <Menu
             id="account-menu"
             anchorEl={accountMenuAnchor}
@@ -196,17 +198,19 @@ const MainLayout = () => {
               <ListItemText primary="My Profile" />
             </MenuItem>
             
-            <MenuItem onClick={() => { 
-              handleAccountMenuClose(); 
-              navigate('/user/applications'); 
-            }}>
-              <ListItemIcon>
-                <PersonIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="My Applications" />
-            </MenuItem>
+            {isCandidate && (
+              <MenuItem onClick={() => { 
+                handleAccountMenuClose(); 
+                navigate('/user/applications'); 
+              }}>
+                <ListItemIcon>
+                  <PersonIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="My Applications" />
+              </MenuItem>
+            )}
             
-            {isAdmin && (
+            {(isAdmin || isSuperUser) && (
               <MenuItem onClick={() => { 
                 handleAccountMenuClose(); 
                 navigate('/admin/dashboard'); 
@@ -230,6 +234,7 @@ const MainLayout = () => {
         </Toolbar>
       </AppBar>
       
+      {/* Mobile menu drawer */}
       <Drawer
         anchor="left"
         open={mobileMenuOpen}
@@ -271,14 +276,16 @@ const MainLayout = () => {
                   <ListItemText primary="My Profile" />
                 </ListItem>
                 
-                <ListItem button onClick={() => handleNavigation('/user/applications')}>
-                  <ListItemIcon>
-                    <PersonIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="My Applications" />
-                </ListItem>
+                {isCandidate && (
+                  <ListItem button onClick={() => handleNavigation('/user/applications')}>
+                    <ListItemIcon>
+                      <PersonIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="My Applications" />
+                  </ListItem>
+                )}
                 
-                {isAdmin && (
+                {(isAdmin || isSuperUser) && (
                   <ListItem button onClick={() => handleNavigation('/admin/dashboard')}>
                     <ListItemIcon>
                       <DashboardIcon />

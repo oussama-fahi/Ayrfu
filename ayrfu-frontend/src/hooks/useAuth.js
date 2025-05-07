@@ -1,6 +1,6 @@
 // src/hooks/useAuth.js
 import { useState, useEffect, useCallback } from 'react';
-import axios from '../api/axios';
+import axios from 'axios';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -20,7 +20,11 @@ export const useAuth = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.get('/auth/profile');
+      const response = await axios.get('/api/auth/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       setUser(response.data);
       setIsAuthenticated(true);
       setError(null);
@@ -45,7 +49,7 @@ export const useAuth = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post('/api/auth/login', { email, password });
       
       if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
@@ -76,22 +80,44 @@ export const useAuth = () => {
     setError(null);
   }, []);
 
-  // Check for roles
-  const hasRole = useCallback((role) => {
+  // Check for roles - enhanced to handle role names properly
+  const hasRole = useCallback((roleName) => {
     if (!user || !user.roles) return false;
     
     // Handle roles as array of strings
     if (Array.isArray(user.roles) && typeof user.roles[0] === 'string') {
-      return user.roles.includes(role);
+      return user.roles.includes(roleName);
     }
     
     // Handle roles as array of objects with name property
     if (Array.isArray(user.roles) && typeof user.roles[0] === 'object') {
-      return user.roles.some(r => r.name === role);
+      return user.roles.some(r => r.name === roleName);
     }
     
     return false;
   }, [user]);
+
+  // Register function
+  const register = async (userData) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.post('/api/auth/register', userData);
+      
+      if (response.data) {
+        return response.data;
+      }
+      
+      return null;
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err.response?.data?.message || 'Registration failed.');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load user data on initial render if token exists
   useEffect(() => {
@@ -105,6 +131,7 @@ export const useAuth = () => {
     isAuthenticated,
     login,
     logout,
+    register,
     getCurrentUser,
     hasRole,
     clearAuthError

@@ -1,10 +1,15 @@
 package com.uddan.ayrfu.service;
 
+import com.uddan.ayrfu.dto.request.CandidateProfileRequest;
+import com.uddan.ayrfu.dto.request.ClientProfileRequest;
+import com.uddan.ayrfu.dto.response.CandidateResponse;
+import com.uddan.ayrfu.dto.response.ClientResponse;
 import com.uddan.ayrfu.dto.response.UserResponse;
 import com.uddan.ayrfu.entity.User;
 import java.util.List;
 
 public interface UserService {
+
 
     UserResponse createUser(User user);
 
@@ -26,7 +31,26 @@ public interface UserService {
 
     UserResponse addRoleToUser(Long userId, Long roleId);
 
+
     UserResponse removeRoleFromUser(Long userId, Long roleId);
 
+
     List<UserResponse> getUsersByRole(Long roleId);
+
+    CandidateResponse updateCurrentUserCandidateProfile(CandidateProfileRequest candidateProfileRequest);
+
+
+    ClientResponse updateCurrentUserClientProfile(ClientProfileRequest clientProfileRequest);
+
+    CandidateResponse getCurrentUserCandidateProfile();
+
+
+    ClientResponse getCurrentUserClientProfile();
+
+
+    boolean isSuperUser(User user);
+
+    boolean isAdmin(User user);
+
+    UserResponse createSuperUser(User user);
 }

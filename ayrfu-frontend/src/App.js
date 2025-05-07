@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -33,13 +34,22 @@ import ServiceForm from './pages/admin/ServiceForm';
 import CandidateMessagesPage from './pages/admin/CandidateMessagesPage';
 import ClientMessagesPage from './pages/admin/ClientMessagesPage';
 
-// Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  // Simple token check - we'll do deeper validation in the actual components
+// Protected Route Components
+const AuthRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   
   if (!token) {
     return <Navigate to="/login" />;
+  }
+  
+  return children;
+};
+
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/admin/login" />;
   }
   
   return children;
@@ -96,64 +106,66 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<MainPage />} />
-            <Route path="applicants" element={<ApplicantsPage />} />
-            <Route path="clients" element={<ClientsPage />} />
-            <Route path="positions/:id" element={<PositionDetailPage />} />
-            <Route path="services/:id" element={<ServiceDetailPage />} />
-            <Route path="apply/:positionId?" element={<ApplyPage />} />
-            <Route path="contact" element={<ContactPage />} />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
-            
-            {/* Protected User Routes */}
-            <Route path="user">
-              <Route path="profile" element={
-                <ProtectedRoute>
-                  <UserProfilePage />
-                </ProtectedRoute>
-              } />
-              <Route path="applications" element={
-                <ProtectedRoute>
-                  <UserApplicationsPage />
-                </ProtectedRoute>
-              } />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<MainPage />} />
+              <Route path="applicants" element={<ApplicantsPage />} />
+              <Route path="clients" element={<ClientsPage />} />
+              <Route path="positions/:id" element={<PositionDetailPage />} />
+              <Route path="services/:id" element={<ServiceDetailPage />} />
+              <Route path="apply/:positionId?" element={<ApplyPage />} />
+              <Route path="contact" element={<ContactPage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="register" element={<RegisterPage />} />
+              
+              {/* Protected User Routes */}
+              <Route path="user">
+                <Route path="profile" element={
+                  <AuthRoute>
+                    <UserProfilePage />
+                  </AuthRoute>
+                } />
+                <Route path="applications" element={
+                  <AuthRoute>
+                    <UserApplicationsPage />
+                  </AuthRoute>
+                } />
+              </Route>
+              
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
             
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-          
-          {/* Admin Login Page (outside of admin layout) */}
-          <Route path="/admin/login" element={<LoginPage />} />
-          
-          {/* Admin Routes (all protected) */}
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            {/* Admin Login Page (outside of admin layout) */}
+            <Route path="/admin/login" element={<LoginPage />} />
             
-            <Route path="positions" element={<PositionManagement />} />
-            <Route path="positions/create" element={<PositionForm />} />
-            <Route path="positions/edit/:id" element={<PositionForm />} />
-            
-            <Route path="services" element={<ServiceManagement />} />
-            <Route path="services/create" element={<ServiceForm />} />
-            <Route path="services/edit/:id" element={<ServiceForm />} />
-            
-            <Route path="messages/candidates" element={<CandidateMessagesPage />} />
-            <Route path="messages/clients" element={<ClientMessagesPage />} />
-            
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-        </Routes>
-      </Router>
+            {/* Admin Routes (all protected) */}
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              
+              <Route path="positions" element={<PositionManagement />} />
+              <Route path="positions/create" element={<PositionForm />} />
+              <Route path="positions/edit/:id" element={<PositionForm />} />
+              
+              <Route path="services" element={<ServiceManagement />} />
+              <Route path="services/create" element={<ServiceForm />} />
+              <Route path="services/edit/:id" element={<ServiceForm />} />
+              
+              <Route path="messages/candidates" element={<CandidateMessagesPage />} />
+              <Route path="messages/clients" element={<ClientMessagesPage />} />
+              
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 };

@@ -13,28 +13,90 @@ import {
   CircularProgress,
   Alert,
   TextField,
+  Tab,
+  Tabs,
+  Chip,
   Snackbar
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+import PersonIcon from '@mui/icons-material/Person';
+import BusinessIcon from '@mui/icons-material/Business';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import axios from 'axios';
+import { useAuth } from '../../hooks/useAuth';
+
+// TabPanel component for the tabs
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`profile-tabpanel-${index}`}
+      aria-labelledby={`profile-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
+  const { user, hasRole, getCurrentUser } = useAuth();
   
-  const [user, setUser] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   
-  const [profileData, setProfileData] = useState({
+  // User profile data
+  const [userData, setUserData] = useState({
+    fullName: '',
+    email: '',
+    roles: []
+  });
+  
+  // Candidate profile data
+  const [candidateData, setCandidateData] = useState({
     fullName: '',
     email: '',
     phoneNumber: '',
-    address: ''
+    address: '',
+    dateOfBirth: null,
+    gender: '',
+    technologies: [],
+    languages: [],
+    experienceLevel: '',
+    preferredLocation: '',
+    preferredWorkModel: '',
+    cvPath: ''
   });
+  
+  // Client profile data
+  const [clientData, setClientData] = useState({
+    companyName: '',
+    contactPerson: '',
+    email: '',
+    phoneNumber: '',
+    industry: '',
+    companySize: '',
+    requirements: ''
+  });
+  
+  const isCandidate = user && hasRole && hasRole('ROLE_CANDIDATE');
+  const isClient = user && hasRole && hasRole('ROLE_CLIENT');
+  const isAdmin = user && hasRole && hasRole('ROLE_ADMIN');
+  const isSuperUser = user && hasRole && hasRole('ROLE_SUPER_USER');
 
   // Load user data when component mounts
   useEffect(() => {
@@ -48,19 +110,71 @@ const UserProfilePage = () => {
     const fetchUserProfile = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/auth/profile', {
+        // Fetch basic user profile
+        const userResponse = await axios.get('/api/auth/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
-        setUser(response.data);
-        setProfileData({
-          fullName: response.data.fullName || '',
-          email: response.data.email || '',
-          phoneNumber: response.data.phoneNumber || '',
-          address: response.data.address || ''
+        setUserData({
+          fullName: userResponse.data.fullName || '',
+          email: userResponse.data.email || '',
+          roles: userResponse.data.roles || []
         });
+        
+        // If user has candidate role, fetch candidate profile
+        if (hasRole('ROLE_CANDIDATE')) {
+          try {
+            const candidateResponse = await axios.get('/api/users/profile/candidate', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            setCandidateData({
+              fullName: candidateResponse.data.fullName || '',
+              email: candidateResponse.data.email || '',
+              phoneNumber: candidateResponse.data.phoneNumber || '',
+              address: candidateResponse.data.address || '',
+              dateOfBirth: candidateResponse.data.dateOfBirth || null,
+              gender: candidateResponse.data.gender || '',
+              technologies: candidateResponse.data.technologies || [],
+              languages: candidateResponse.data.languages || [],
+              experienceLevel: candidateResponse.data.experienceLevel || '',
+              preferredLocation: candidateResponse.data.preferredLocation || '',
+              preferredWorkModel: candidateResponse.data.preferredWorkModel || '',
+              cvPath: candidateResponse.data.cvPath || ''
+            });
+          } catch (err) {
+            console.error('Error fetching candidate profile:', err);
+            // It's okay if candidate profile doesn't exist yet
+          }
+        }
+        
+        // If user has client role, fetch client profile
+        if (hasRole('ROLE_CLIENT')) {
+          try {
+            const clientResponse = await axios.get('/api/users/profile/client', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            setClientData({
+              companyName: clientResponse.data.companyName || '',
+              contactPerson: clientResponse.data.contactPerson || '',
+              email: clientResponse.data.email || '',
+              phoneNumber: clientResponse.data.phoneNumber || '',
+              industry: clientResponse.data.industry || '',
+              companySize: clientResponse.data.companySize || '',
+              requirements: clientResponse.data.requirements || ''
+            });
+          } catch (err) {
+            console.error('Error fetching client profile:', err);
+            // It's okay if client profile doesn't exist yet
+          }
+        }
       } catch (err) {
         console.error('Error fetching user profile:', err);
         if (err.response?.status === 401) {
@@ -73,11 +187,31 @@ const UserProfilePage = () => {
     };
     
     fetchUserProfile();
-  }, [navigate]);
+  }, [navigate, hasRole]);
 
-  const handleInputChange = (e) => {
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const handleUserInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
+    setUserData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCandidateInputChange = (e) => {
+    const { name, value } = e.target;
+    setCandidateData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleClientInputChange = (e) => {
+    const { name, value } = e.target;
+    setClientData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -89,43 +223,62 @@ const UserProfilePage = () => {
     setError(null);
     
     try {
-      // Get token for authorization
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Authentication token not found');
       }
       
-      // Make API call to update user profile
-      if (!user || !user.id) {
-        throw new Error('User ID not found');
-      }
-      
-      const userId = user.id;
-      
       // Update user profile
-      await axios.put(`/api/users/${userId}`, {
-        fullName: profileData.fullName,
-        email: profileData.email,
-        phoneNumber: profileData.phoneNumber,
-        address: profileData.address
+      await axios.put('/api/auth/profile', {
+        fullName: userData.fullName
       }, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
+      // Update candidate profile if user has candidate role
+      if (hasRole('ROLE_CANDIDATE')) {
+        await axios.put('/api/users/profile/candidate', {
+          fullName: candidateData.fullName,
+          phoneNumber: candidateData.phoneNumber,
+          address: candidateData.address,
+          dateOfBirth: candidateData.dateOfBirth,
+          gender: candidateData.gender,
+          technologies: candidateData.technologies,
+          languages: candidateData.languages,
+          experienceLevel: candidateData.experienceLevel,
+          preferredLocation: candidateData.preferredLocation,
+          preferredWorkModel: candidateData.preferredWorkModel
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+      
+      // Update client profile if user has client role
+      if (hasRole('ROLE_CLIENT')) {
+        await axios.put('/api/users/profile/client', {
+          companyName: clientData.companyName,
+          contactPerson: clientData.contactPerson,
+          phoneNumber: clientData.phoneNumber,
+          industry: clientData.industry,
+          companySize: clientData.companySize,
+          requirements: clientData.requirements
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+      
       // Show success message
       setSuccess(true);
       setEditing(false);
       
       // Refresh user data
-      const updatedUserResponse = await axios.get('/api/auth/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      setUser(updatedUserResponse.data);
+      getCurrentUser();
     } catch (err) {
       console.error('Error updating profile:', err);
       setError(
@@ -139,6 +292,21 @@ const UserProfilePage = () => {
   
   const handleCloseSuccessMessage = () => {
     setSuccess(false);
+  };
+
+  // Function to render role chips
+  const renderRoleChip = (roleName) => {
+    if (roleName === 'ROLE_ADMIN') {
+      return <Chip icon={<AdminPanelSettingsIcon />} label="Admin" color="error" sx={{ mr: 1, mb: 1 }} />;
+    } else if (roleName === 'ROLE_SUPER_USER') {
+      return <Chip icon={<SupervisorAccountIcon />} label="Super User" color="warning" sx={{ mr: 1, mb: 1 }} />;
+    } else if (roleName === 'ROLE_CANDIDATE') {
+      return <Chip icon={<PersonIcon />} label="Candidate" color="primary" sx={{ mr: 1, mb: 1 }} />;
+    } else if (roleName === 'ROLE_CLIENT') {
+      return <Chip icon={<BusinessIcon />} label="Client" color="success" sx={{ mr: 1, mb: 1 }} />;
+    } else {
+      return <Chip label={roleName} sx={{ mr: 1, mb: 1 }} />;
+    }
   };
 
   if (loading) {
@@ -162,15 +330,20 @@ const UserProfilePage = () => {
               mr: 3
             }}
           >
-            {user?.fullName ? user.fullName[0].toUpperCase() : 'U'}
+            {userData?.fullName ? userData.fullName[0].toUpperCase() : 'U'}
           </Avatar>
           <Box>
             <Typography variant="h4" gutterBottom>
-              {user?.fullName || 'User Profile'}
+              {userData?.fullName || 'User Profile'}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {user?.email || 'No email available'}
+              {userData?.email || 'No email available'}
             </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 1 }}>
+              {userData.roles?.map(role => (
+                renderRoleChip(typeof role === 'string' ? role : role.name)
+              ))}
+            </Box>
           </Box>
         </Box>
 
@@ -181,54 +354,189 @@ const UserProfilePage = () => {
             {error}
           </Alert>
         )}
-
-        {editing ? (
-          <Box component="form" onSubmit={handleSubmit}>
+        
+        <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 2 }}>
+          <Tab label="General" />
+          {isCandidate && <Tab label="Candidate Profile" />}
+          {isClient && <Tab label="Client Profile" />}
+        </Tabs>
+        
+        <form onSubmit={handleSubmit}>
+          {/* General Tab */}
+          <TabPanel value={tabValue} index={0}>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   name="fullName"
                   label="Full Name"
-                  value={profileData.fullName}
-                  onChange={handleInputChange}
+                  value={userData.fullName}
+                  onChange={handleUserInputChange}
                   fullWidth
-                  required
-                  disabled={saving}
+                  disabled={!editing || saving}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   name="email"
                   label="Email"
-                  value={profileData.email}
-                  onChange={handleInputChange}
+                  value={userData.email}
                   fullWidth
-                  required
                   disabled={true} // Email should not be editable
                   helperText="Email cannot be changed"
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  name="phoneNumber"
-                  label="Phone Number"
-                  value={profileData.phoneNumber}
-                  onChange={handleInputChange}
-                  fullWidth
-                  disabled={saving}
-                />
+            </Grid>
+          </TabPanel>
+          
+          {/* Candidate Profile Tab */}
+          {isCandidate && (
+            <TabPanel value={tabValue} index={1}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="phoneNumber"
+                    label="Phone Number"
+                    value={candidateData.phoneNumber}
+                    onChange={handleCandidateInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="address"
+                    label="Address"
+                    value={candidateData.address}
+                    onChange={handleCandidateInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="experienceLevel"
+                    label="Experience Level"
+                    value={candidateData.experienceLevel}
+                    onChange={handleCandidateInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="preferredLocation"
+                    label="Preferred Location"
+                    value={candidateData.preferredLocation}
+                    onChange={handleCandidateInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="preferredWorkModel"
+                    label="Preferred Work Model"
+                    value={candidateData.preferredWorkModel}
+                    onChange={handleCandidateInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    CV/Resume
+                  </Typography>
+                  <Typography variant="body1">
+                    {candidateData.cvPath 
+                      ? `CV Uploaded: ${candidateData.cvPath}` 
+                      : 'No CV uploaded yet'}
+                  </Typography>
+                  {/* Upload CV button would go here */}
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  name="address"
-                  label="Address"
-                  value={profileData.address}
-                  onChange={handleInputChange}
-                  fullWidth
-                  disabled={saving}
-                />
+            </TabPanel>
+          )}
+          
+          {/* Client Profile Tab */}
+          {isClient && (
+            <TabPanel value={tabValue} index={isCandidate ? 2 : 1}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="companyName"
+                    label="Company Name"
+                    value={clientData.companyName}
+                    onChange={handleClientInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="contactPerson"
+                    label="Contact Person"
+                    value={clientData.contactPerson}
+                    onChange={handleClientInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="phoneNumber"
+                    label="Phone Number"
+                    value={clientData.phoneNumber}
+                    onChange={handleClientInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="industry"
+                    label="Industry"
+                    value={clientData.industry}
+                    onChange={handleClientInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="companySize"
+                    label="Company Size"
+                    value={clientData.companySize}
+                    onChange={handleClientInputChange}
+                    fullWidth
+                    disabled={!editing || saving}
+                  />
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    name="requirements"
+                    label="Requirements"
+                    value={clientData.requirements}
+                    onChange={handleClientInputChange}
+                    fullWidth
+                    multiline
+                    rows={4}
+                    disabled={!editing || saving}
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            </TabPanel>
+          )}
+          
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            {editing ? (
+              <>
                 <Button 
                   variant="outlined" 
                   onClick={() => setEditing(false)}
@@ -245,55 +553,17 @@ const UserProfilePage = () => {
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
-              </Grid>
-            </Grid>
-          </Box>
-        ) : (
-          <>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Full Name
-                </Typography>
-                <Typography variant="body1">
-                  {profileData.fullName || 'Not provided'}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Email
-                </Typography>
-                <Typography variant="body1">
-                  {profileData.email || 'Not provided'}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Phone Number
-                </Typography>
-                <Typography variant="body1">
-                  {profileData.phoneNumber || 'Not provided'}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Address
-                </Typography>
-                <Typography variant="body1">
-                  {profileData.address || 'Not provided'}
-                </Typography>
-              </Grid>
-            </Grid>
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+              </>
+            ) : (
               <Button 
                 variant="contained" 
                 onClick={() => setEditing(true)}
               >
                 Edit Profile
               </Button>
-            </Box>
-          </>
-        )}
+            )}
+          </Box>
+        </form>
       </Paper>
       
       <Snackbar

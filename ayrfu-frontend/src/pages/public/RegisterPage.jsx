@@ -29,12 +29,13 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
-import axios from 'axios';
+import { useAuth } from '../../hooks/useAuth';
 
 const steps = ['Account Details', 'Role Selection', 'Personal Information'];
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const { register, isAuthenticated, isLoading: authLoading, error: authError } = useAuth();
   
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -44,7 +45,7 @@ const RegisterPage = () => {
     confirmPassword: '',
     
     // Role selection
-    role: 'CANDIDATE', // Default role
+    roles: [{ name: 'ROLE_CANDIDATE' }], // Default role as CANDIDATE
     
     // Personal information
     fullName: '',
@@ -56,14 +57,14 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   
   // Check if already logged in
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    if (isAuthenticated) {
       navigate('/');
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -81,6 +82,15 @@ const RegisterPage = () => {
     }
   };
   
+  const handleRoleChange = (event) => {
+    const selectedRole = event.target.value;
+    // Set the roles array with the selected role
+    setFormData(prev => ({
+      ...prev,
+      roles: [{ name: selectedRole }]
+    }));
+  };
+  
   const validateCurrentStep = () => {
     const errors = {};
     
@@ -88,6 +98,8 @@ const RegisterPage = () => {
       // Validate account details
       if (!formData.email.trim()) {
         errors.email = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        errors.email = 'Email is invalid';
       }
       
       if (!formData.password) {
@@ -103,8 +115,8 @@ const RegisterPage = () => {
       }
     } else if (activeStep === 1) {
       // Validate role selection
-      if (!formData.role) {
-        errors.role = 'Please select a role';
+      if (!formData.roles || formData.roles.length === 0) {
+        errors.roles = 'Please select a role';
       }
     } else if (activeStep === 2) {
       // Validate personal information
@@ -140,33 +152,30 @@ const RegisterPage = () => {
       setError(null);
       
       try {
-        // Extract only needed fields for registration
+        // Create registration data from form data
         const registrationData = {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
           phoneNumber: formData.phoneNumber || null,
           address: formData.address || null,
-          roles: [{ name: formData.role }] // Send role as object with name property
+          roles: formData.roles
         };
         
-        // Send registration request
-        const response = await axios.post('/ayrfu/api/auth/register', registrationData);
+        // Call register function from auth hook
+        const response = await register(registrationData);
         
-        console.log('Registration successful:', response.data);
+        console.log('Registration successful:', response);
+        setSuccess(true);
         
-        // If registration also returns a token, store it
-        if (response.data && response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          navigate('/');
-        } else {
-          // Navigate to login page with success message
+        // Navigate to login page with success message after a short delay
+        setTimeout(() => {
           navigate('/login', { 
             state: { 
               message: 'Registration successful! Please login with your new account.' 
             } 
           });
-        }
+        }, 2000);
       } catch (err) {
         console.error('Registration failed:', err);
         setError(
@@ -259,8 +268,8 @@ const RegisterPage = () => {
             <FormLabel component="legend">I am registering as a:</FormLabel>
             <RadioGroup
               name="role"
-              value={formData.role}
-              onChange={handleChange}
+              value={formData.roles[0]?.name || 'ROLE_CANDIDATE'}
+              onChange={handleRoleChange}
               sx={{ mt: 2 }}
             >
               <Paper 
@@ -268,12 +277,12 @@ const RegisterPage = () => {
                 sx={{ 
                   mb: 2, 
                   p: 2, 
-                  border: formData.role === 'CANDIDATE' ? '2px solid #5e35b1' : 'none',
-                  bgcolor: formData.role === 'CANDIDATE' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
+                  border: formData.roles[0]?.name === 'ROLE_CANDIDATE' ? '2px solid #5e35b1' : 'none',
+                  bgcolor: formData.roles[0]?.name === 'ROLE_CANDIDATE' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
                 }}
               >
                 <FormControlLabel 
-                  value="CANDIDATE" 
+                  value="ROLE_CANDIDATE" 
                   control={<Radio />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -291,12 +300,12 @@ const RegisterPage = () => {
                 elevation={3} 
                 sx={{ 
                   p: 2, 
-                  border: formData.role === 'CLIENT' ? '2px solid #5e35b1' : 'none',
-                  bgcolor: formData.role === 'CLIENT' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
+                  border: formData.roles[0]?.name === 'ROLE_CLIENT' ? '2px solid #5e35b1' : 'none',
+                  bgcolor: formData.roles[0]?.name === 'ROLE_CLIENT' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
                 }}
               >
                 <FormControlLabel 
-                  value="CLIENT" 
+                  value="ROLE_CLIENT" 
                   control={<Radio />} 
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -310,9 +319,9 @@ const RegisterPage = () => {
                 </Typography>
               </Paper>
             </RadioGroup>
-            {formErrors.role && (
+            {formErrors.roles && (
               <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                {formErrors.role}
+                {formErrors.roles}
               </Typography>
             )}
           </FormControl>
@@ -403,6 +412,18 @@ const RegisterPage = () => {
           </Alert>
         )}
         
+        {authError && (
+          <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
+            {authError}
+          </Alert>
+        )}
+        
+        {success && (
+          <Alert severity="success" sx={{ width: '100%', mb: 3 }}>
+            Registration successful! Redirecting to login page...
+          </Alert>
+        )}
+        
         <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
           {getStepContent(activeStep)}
           
@@ -419,12 +440,12 @@ const RegisterPage = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
             >
-              {isLoading ? (
+              {isLoading || authLoading ? (
                 <CircularProgress size={24} color="inherit" sx={{ mr: 1 }} />
               ) : null}
-              {isLoading ? 'Processing...' : 
+              {isLoading || authLoading ? 'Processing...' : 
                 activeStep === steps.length - 1 ? 'Register' : 'Next'}
             </Button>
           </Box>

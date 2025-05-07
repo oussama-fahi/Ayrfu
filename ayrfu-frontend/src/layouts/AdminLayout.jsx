@@ -1,41 +1,50 @@
 // src/layouts/AdminLayout.jsx
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Box, 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  IconButton,
+import { useNavigate } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Drawer,
   Divider,
-  Badge,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   Avatar,
   Menu,
   MenuItem,
-  CircularProgress
+  Badge,
+  CircularProgress,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import WorkIcon from '@mui/icons-material/Work';
-import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
-import EmailIcon from '@mui/icons-material/Email';
-import BusinessIcon from '@mui/icons-material/Business';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import HomeIcon from '@mui/icons-material/Home';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Work as WorkIcon,
+  MiscellaneousServices as MiscellaneousServicesIcon,
+  Email as EmailIcon,
+  Business as BusinessIcon,
+  Home as HomeIcon,
+  ExitToApp as ExitToAppIcon,
+  AccountCircle as AccountCircleIcon
+} from '@mui/icons-material';
+import { Outlet } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 const drawerWidth = 240;
 
 const AdminLayout = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user, logout, hasRole } = useAuth();
   
-  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
@@ -56,22 +65,11 @@ const AdminLayout = () => {
     const fetchUserProfile = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/ayrfu/api/auth/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        setUserData(response.data);
-        
         // Check if user has admin or super_user role
-        const hasAdminRole = response.data.roles && response.data.roles.some(role => {
-          const roleName = typeof role === 'string' ? role : role.name;
-          return roleName === 'ADMIN' || roleName === 'SUPER_USER';
-        });
+        const isAdminUser = user && hasRole && (hasRole('ROLE_ADMIN') || hasRole('ROLE_SUPER_USER'));
         
-        if (!hasAdminRole) {
-          // Redirect to home if not admin
+        if (!isAdminUser) {
+          // Redirect to home if not admin or super user
           navigate('/');
           return;
         }
@@ -79,7 +77,7 @@ const AdminLayout = () => {
         // Fetch unread messages count
         try {
           // Fetch unread candidate messages
-          const candidateResponse = await axios.get('/ayrfu/api/messages/unread/type/CANDIDATE', {
+          const candidateResponse = await axios.get('/api/messages/unread/type/CANDIDATE', {
             headers: { Authorization: `Bearer ${token}` }
           });
           setUnreadCandidateMessages(candidateResponse.data.length);
@@ -90,7 +88,7 @@ const AdminLayout = () => {
         
         try {
           // Fetch unread client messages
-          const clientResponse = await axios.get('/ayrfu/api/messages/unread/type/CLIENT', {
+          const clientResponse = await axios.get('/api/messages/unread/type/CLIENT', {
             headers: { Authorization: `Bearer ${token}` }
           });
           setUnreadClientMessages(clientResponse.data.length);
@@ -112,7 +110,7 @@ const AdminLayout = () => {
     };
     
     fetchUserProfile();
-  }, [navigate]);
+  }, [navigate, user, hasRole]);
   
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -132,9 +130,11 @@ const AdminLayout = () => {
   };
   
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/');
   };
+  
+  const isAdmin = user && hasRole && hasRole('ROLE_ADMIN');
   
   const drawer = (
     <div>
@@ -147,9 +147,9 @@ const AdminLayout = () => {
         <Typography variant="h6" noWrap component="div">
           AYRFU Admin
         </Typography>
-        {userData && (
+        {user && (
           <Typography variant="body2" color="text.secondary">
-            {userData.fullName || userData.email}
+            {user.fullName || user.email}
           </Typography>
         )}
       </Toolbar>
@@ -258,7 +258,7 @@ const AdminLayout = () => {
                 fontSize: '0.875rem'
               }}
             >
-              {userData?.fullName ? userData.fullName[0].toUpperCase() : 'A'}
+              {user?.fullName ? user.fullName[0].toUpperCase() : 'A'}
             </Avatar>
           </IconButton>
           

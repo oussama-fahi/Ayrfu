@@ -1,3 +1,4 @@
+// src/pages/user/UserApplicationsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,9 +17,11 @@ import {
   ListItemSecondaryAction
 } from '@mui/material';
 import axios from 'axios';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 const UserApplicationsPage = () => {
   const navigate = useNavigate();
+  const { hasRole } = useAuthContext();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,10 +33,17 @@ const UserApplicationsPage = () => {
       return;
     }
     
+    // Check if user has candidate role
+    if (!hasRole('ROLE_CANDIDATE')) {
+      navigate('/user/profile');
+      return;
+    }
+    
     const fetchApplications = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/applications/my-applications', {
+        // Get candidate applications from the API
+        const response = await axios.get('/api/users/profile/candidate/applications', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -55,7 +65,7 @@ const UserApplicationsPage = () => {
     };
 
     fetchApplications();
-  }, [navigate]);
+  }, [navigate, hasRole]);
 
   const getStatusColor = (status) => {
     switch (status) {
