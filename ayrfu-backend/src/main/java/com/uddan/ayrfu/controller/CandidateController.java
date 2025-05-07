@@ -14,12 +14,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/candidates")
-@Tag(name = "Candidate API", description = "APIs for candidate management")
+@Tag(name = "Candidates", description = "Candidate management API endpoints")
 public class CandidateController {
 
     private final CandidateService candidateService;
@@ -37,6 +36,7 @@ public class CandidateController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get candidate by ID", description = "Retrieves a candidate by its ID")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
     public ResponseEntity<CandidateResponse> getCandidateById(@PathVariable Long id) {
         CandidateResponse candidate = candidateService.getCandidateById(id);
         return ResponseEntity.ok(candidate);
@@ -44,6 +44,7 @@ public class CandidateController {
 
     @GetMapping("/email/{email}")
     @Operation(summary = "Get candidate by email", description = "Retrieves a candidate by its email")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnEmail(#email, authentication.principal.username)")
     public ResponseEntity<CandidateResponse> getCandidateByEmail(@PathVariable String email) {
         CandidateResponse candidate = candidateService.getCandidateByEmail(email);
         return ResponseEntity.ok(candidate);
@@ -59,6 +60,7 @@ public class CandidateController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update a candidate", description = "Updates a candidate with the provided details")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
     public ResponseEntity<CandidateResponse> updateCandidate(
             @PathVariable Long id,
             @Valid @RequestBody CandidateRequest candidateRequest) {
@@ -76,6 +78,7 @@ public class CandidateController {
 
     @PostMapping(value = "/{id}/cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload candidate CV", description = "Uploads a CV for a candidate")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
     public ResponseEntity<String> uploadCandidateCV(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
@@ -85,6 +88,7 @@ public class CandidateController {
 
     @PostMapping("/{id}/applications")
     @Operation(summary = "Apply for a position", description = "Submits an application for a position by a candidate")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
     public ResponseEntity<ApplicationResponse> applyForPosition(
             @PathVariable Long id,
             @Valid @RequestBody ApplicationRequest applicationRequest) {
@@ -94,6 +98,7 @@ public class CandidateController {
 
     @GetMapping("/{id}/applications")
     @Operation(summary = "Get candidate applications", description = "Retrieves all applications submitted by a candidate")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
     public ResponseEntity<List<ApplicationResponse>> getCandidateApplications(@PathVariable Long id) {
         List<ApplicationResponse> applications = candidateService.getCandidateApplications(id);
         return ResponseEntity.ok(applications);

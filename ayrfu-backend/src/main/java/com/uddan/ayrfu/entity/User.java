@@ -35,6 +35,13 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
+    // Added relationships to Candidate and Client
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Candidate candidate;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Client client;
+
     @Column(nullable = false)
     private boolean active = true;
 
@@ -46,21 +53,40 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    // Default constructor
     public User() {
     }
 
-    public User(Long id, String userName, String email, String password,
-                Set<Role> roles, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    // All-args constructor
+    public User(Long id, String userName, String email, String password, Set<Role> roles,
+                Candidate candidate, Client client, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userName = userName;
         this.email = email;
         this.password = password;
         this.roles = roles != null ? roles : new HashSet<>();
+        this.candidate = candidate;
+        this.client = client;
         this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
+    // Helper methods for role management
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+
+    public void removeRole(Role role) {
+        this.roles.remove(role);
+    }
+
+    public boolean hasRole(String roleName) {
+        return this.roles.stream()
+                .anyMatch(role -> role.getName().equals(roleName));
+    }
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -101,6 +127,22 @@ public class User {
         this.roles = roles != null ? roles : new HashSet<>();
     }
 
+    public Candidate getCandidate() {
+        return candidate;
+    }
+
+    public void setCandidate(Candidate candidate) {
+        this.candidate = candidate;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
     public boolean isActive() {
         return active;
     }
@@ -125,74 +167,78 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public void addRole(Role role) {
-        if (role != null) {
-            this.roles.add(role);
-        }
+    // Builder pattern implementation
+    public static UserBuilder builder() {
+        return new UserBuilder();
     }
 
-    public void removeRole(Role role) {
-        if (role != null) {
-            this.roles.remove(role);
-        }
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
+    public static class UserBuilder {
         private Long id;
         private String userName;
         private String email;
         private String password;
         private Set<Role> roles = new HashSet<>();
+        private Candidate candidate;
+        private Client client;
         private boolean active = true;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
-        public Builder id(Long id) {
+        UserBuilder() {
+        }
+
+        public UserBuilder id(Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder userName(String userName) {
+        public UserBuilder userName(String userName) {
             this.userName = userName;
             return this;
         }
 
-        public Builder email(String email) {
+        public UserBuilder email(String email) {
             this.email = email;
             return this;
         }
 
-        public Builder password(String password) {
+        public UserBuilder password(String password) {
             this.password = password;
             return this;
         }
 
-        public Builder roles(Set<Role> roles) {
+        public UserBuilder roles(Set<Role> roles) {
             this.roles = roles;
             return this;
         }
 
-        public Builder active(boolean active) {
+        public UserBuilder candidate(Candidate candidate) {
+            this.candidate = candidate;
+            return this;
+        }
+
+        public UserBuilder client(Client client) {
+            this.client = client;
+            return this;
+        }
+
+        public UserBuilder active(boolean active) {
             this.active = active;
             return this;
         }
 
-        public Builder createdAt(LocalDateTime createdAt) {
+        public UserBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
         }
 
-        public Builder updatedAt(LocalDateTime updatedAt) {
+        public UserBuilder updatedAt(LocalDateTime updatedAt) {
             this.updatedAt = updatedAt;
             return this;
         }
 
         public User build() {
-            return new User(id, userName, email, password, roles, active, createdAt, updatedAt);
+            return new User(id, userName, email, password, roles, candidate, client, active, createdAt, updatedAt);
         }
     }
 }

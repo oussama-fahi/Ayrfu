@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+// src/App.js
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { useDispatch, useSelector } from 'react-redux';
-import { getCurrentUser } from './redux/slices/authSlice';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -18,9 +18,14 @@ import ServiceDetailPage from './pages/public/ServiceDetailPage';
 import ApplyPage from './pages/public/ApplyPage';
 import ContactPage from './pages/public/ContactPage';
 import NotFoundPage from './pages/public/NotFoundPage';
+import LoginPage from './pages/public/LoginPage';
+import RegisterPage from './pages/public/RegisterPage';
+
+// User Pages
+import UserProfilePage from './pages/user/UserProfilePage';
+import UserApplicationsPage from './pages/user/UserApplicationsPage';
 
 // Admin Pages
-import LoginPage from './pages/admin/LoginPage';
 import Dashboard from './pages/admin/Dashboard';
 import PositionManagement from './pages/admin/PositionManagement';
 import PositionForm from './pages/admin/PositionForm';
@@ -29,8 +34,26 @@ import ServiceForm from './pages/admin/ServiceForm';
 import CandidateMessagesPage from './pages/admin/CandidateMessagesPage';
 import ClientMessagesPage from './pages/admin/ClientMessagesPage';
 
-// Routes
-import ProtectedRoute from './routes/ProtectedRoute';
+// Protected Route Components
+const AuthRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
+  
+  return children;
+};
+
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/admin/login" />;
+  }
+  
+  return children;
+};
 
 // Theme configuration
 const theme = createTheme({
@@ -80,38 +103,50 @@ const theme = createTheme({
 });
 
 const App = () => {
-  const dispatch = useDispatch();
-  const { token } = useSelector((state) => state.auth);
-  
-  useEffect(() => {
-    if (token) {
-      dispatch(getCurrentUser());
-    }
-  }, [dispatch, token]);
-  
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<MainPage />} />
-            <Route path="applicants" element={<ApplicantsPage />} />
-            <Route path="clients" element={<ClientsPage />} />
-            <Route path="positions/:id" element={<PositionDetailPage />} />
-            <Route path="services/:id" element={<ServiceDetailPage />} />
-            <Route path="apply/:positionId?" element={<ApplyPage />} />
-            <Route path="contact" element={<ContactPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-          
-          {/* Admin Login */}
-          <Route path="/admin/login" element={<LoginPage />} />
-          
-          {/* Protected Admin Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/admin" element={<AdminLayout />}>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<MainPage />} />
+              <Route path="applicants" element={<ApplicantsPage />} />
+              <Route path="clients" element={<ClientsPage />} />
+              <Route path="positions/:id" element={<PositionDetailPage />} />
+              <Route path="services/:id" element={<ServiceDetailPage />} />
+              <Route path="apply/:positionId?" element={<ApplyPage />} />
+              <Route path="contact" element={<ContactPage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="register" element={<RegisterPage />} />
+              
+              {/* Protected User Routes */}
+              <Route path="user">
+                <Route path="profile" element={
+                  <AuthRoute>
+                    <UserProfilePage />
+                  </AuthRoute>
+                } />
+                <Route path="applications" element={
+                  <AuthRoute>
+                    <UserApplicationsPage />
+                  </AuthRoute>
+                } />
+              </Route>
+              
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+            
+            {/* Admin Login Page (outside of admin layout) */}
+            <Route path="/admin/login" element={<LoginPage />} />
+            
+            {/* Admin Routes (all protected) */}
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            }>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               
@@ -128,12 +163,9 @@ const App = () => {
               
               <Route path="*" element={<NotFoundPage />} />
             </Route>
-          </Route>
-          
-          {/* Fallback redirect */}
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </Router>
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 };

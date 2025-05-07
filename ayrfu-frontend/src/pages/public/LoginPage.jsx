@@ -1,5 +1,6 @@
+// src/pages/public/LoginPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   Container, 
   Paper, 
@@ -12,17 +13,17 @@ import {
   Alert,
   InputAdornment,
   IconButton,
-  Divider,
-  Grid
+  Divider
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isLoading, error, clearAuthError } = useAuth();
+  const location = useLocation();
+  const { login, isAuthenticated, isLoading, error, clearAuthError } = useAuthContext();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -32,17 +33,27 @@ const LoginPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   
+  // Check if there's a success message from registration
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
+  
+  // Check if this is for admin login
+  const isAdminPath = location.pathname.includes('/admin');
+  
   useEffect(() => {
-    // If already authenticated, redirect to dashboard
+    // If already authenticated, redirect
     if (isAuthenticated) {
-      navigate('/admin/dashboard');
+      if (isAdminPath) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
     }
     
     // Cleanup error on unmount
     return () => {
       if (clearAuthError) clearAuthError();
     };
-  }, [isAuthenticated, navigate, clearAuthError]);
+  }, [isAuthenticated, navigate, clearAuthError, isAdminPath]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,7 +95,11 @@ const LoginPage = () => {
       return;
     }
     
-    await login(formData.email, formData.password);
+    try {
+      await login(formData.email, formData.password);
+    } catch (err) {
+      // Error is handled in the auth hook
+    }
   };
   
   const toggleShowPassword = () => {
@@ -103,13 +118,19 @@ const LoginPage = () => {
           borderRadius: 2
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
+        <Avatar sx={{ m: 1, bgcolor: isAdminPath ? 'secondary.main' : 'primary.main' }}>
           <LockOutlinedIcon />
         </Avatar>
         
         <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-          Sign in to AYRFU
+          {isAdminPath ? 'Admin Login' : 'Sign in to AYRFU'}
         </Typography>
+        
+        {successMessage && (
+          <Alert severity="success" sx={{ width: '100%', mb: 3 }}>
+            {successMessage}
+          </Alert>
+        )}
         
         {error && (
           <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
@@ -167,6 +188,7 @@ const LoginPage = () => {
             type="submit"
             fullWidth
             variant="contained"
+            color={isAdminPath ? 'secondary' : 'primary'}
             disabled={isLoading}
             sx={{ mt: 3, mb: 2, py: 1.5 }}
           >
@@ -176,26 +198,39 @@ const LoginPage = () => {
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
           
-          <Divider sx={{ my: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Or
-            </Typography>
-          </Divider>
+          {!isAdminPath && (
+            <>
+              <Divider sx={{ my: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Or
+                </Typography>
+              </Divider>
+              
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" align="center" sx={{ mb: 2 }}>
+                  Don't have an account?
+                </Typography>
+                <Button
+                  component={Link}
+                  to="/register"
+                  fullWidth
+                  variant="outlined"
+                  sx={{ mb: 2 }}
+                >
+                  Register New Account
+                </Button>
+              </Box>
+            </>
+          )}
           
-          <Grid container spacing={2} justifyContent="center">
-            <Grid item>
-              <Button 
-                component={Link} 
-                to="/"
-                color="secondary"
-                variant="outlined"
-                fullWidth
-                sx={{ mt: 1 }}
-              >
-                Return to Home
-              </Button>
-            </Grid>
-          </Grid>
+          <Button 
+            component={Link} 
+            to="/"
+            fullWidth
+            variant="text"
+          >
+            Return to Home
+          </Button>
         </Box>
       </Paper>
     </Container>
