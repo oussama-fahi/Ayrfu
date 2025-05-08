@@ -102,28 +102,7 @@ const MainPage = () => {
   };
 
   //Uddan style text
-  const gradientTextStyle = {
-    fontWeight: 'bold',
-    position: 'relative',
-    display: 'inline-block',
-    pb: 1,
-    backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
-    backgroundClip: 'text',
-    WebkitBackgroundClip: 'text',
-    color: 'transparent',  // Ensures the gradient is visible
-    fontSize: { xs: '2rem', md: '3rem' },  // Responsive font size
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      width: '60%',
-      height: '4px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      bottom: 0,
-      bgcolor: 'primary.main',  // Keep your primary color for the underline
-      borderRadius: 2,
-    },
-  };
+
 
   // Sample news data
   const newsItems = [
@@ -145,7 +124,7 @@ const MainPage = () => {
   ];
 
   return (
-    <div>
+    <>
       {/* Hero Section with carousel only */}
       <Box
         sx={{
@@ -268,7 +247,7 @@ const MainPage = () => {
       {/* Two main path cards side by side - Candidate (left) and Client (right) */}
       <Container maxWidth="lg" sx={{ mb: 10 }} ref={candidatesRef}>
         <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography sx={gradientTextStyle}
+          <Typography sx={theme.gradientTextStyle}
           >Choose Your Path</Typography>
         </Box>
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
@@ -363,7 +342,7 @@ const MainPage = () => {
       <Box sx={{ bgcolor: '#f8f9fa', py: 8 }} ref={newsRef}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography sx={gradientTextStyle}>Latest News</Typography></Box>
+            <Typography sx={theme.gradientTextStyle}>Latest News</Typography></Box>
           <Grid container spacing={4}>
             {newsItems.map((item, index) => (
               <Grid item xs={12} key={index}>
@@ -390,7 +369,7 @@ const MainPage = () => {
       <Box sx={{ py: 10 }} ref={companyInfoRef}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography sx={gradientTextStyle}
+            <Typography sx={theme.gradientTextStyle}
             >
               About UDDAN
             </Typography>
@@ -479,7 +458,7 @@ const MainPage = () => {
       <Paper sx={{ p: 4, mb: 6 }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography sx={gradientTextStyle}>Why Choose UDDAN?</Typography></Box>
+            <Typography sx={theme.gradientTextStyle}>Why Choose UDDAN?</Typography></Box>
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
             {/* Fast Delivery - Left */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -570,7 +549,7 @@ const MainPage = () => {
           100% {transform: translateY(-50%) scale(1); opacity: 1;}
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
