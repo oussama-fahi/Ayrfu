@@ -17,11 +17,11 @@ import {
   ListItemSecondaryAction
 } from '@mui/material';
 import axios from 'axios';
-import { useAuthContext } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const UserApplicationsPage = () => {
   const navigate = useNavigate();
-  const { hasRole } = useAuthContext();
+  const { hasRole } = useAuth();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

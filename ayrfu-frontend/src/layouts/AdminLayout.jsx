@@ -1,4 +1,3 @@
-// src/layouts/AdminLayout.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -20,7 +19,9 @@ import {
   Badge,
   CircularProgress,
   useMediaQuery,
-  useTheme
+  useTheme,
+  ListSubheader,
+  Collapse
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -31,11 +32,19 @@ import {
   Business as BusinessIcon,
   Home as HomeIcon,
   ExitToApp as ExitToAppIcon,
-  AccountCircle as AccountCircleIcon
+  AccountCircle as AccountCircleIcon,
+  SupervisorAccount as SupervisorAccountIcon,
+  Person as PersonIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { Outlet } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
+
+// Import UDDAN logo
+import UddanLogo from '../assets/images/uddan-logo.svg';
 
 const drawerWidth = 240;
 
@@ -44,15 +53,18 @@ const AdminLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user, logout, hasRole } = useAuth();
-  
   const [loading, setLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   
+  // Expandable menu states
+  const [messagesOpen, setMessagesOpen] = useState(false);
+  const [usersOpen, setUsersOpen] = useState(false);
+  
   // Count unread messages by type
   const [unreadCandidateMessages, setUnreadCandidateMessages] = useState(0);
   const [unreadClientMessages, setUnreadClientMessages] = useState(0);
-  
+
   useEffect(() => {
     // Check authentication
     const token = localStorage.getItem('token');
@@ -60,20 +72,19 @@ const AdminLayout = () => {
       navigate('/admin/login');
       return;
     }
-    
+
     // Fetch user profile data
     const fetchUserProfile = async () => {
       setLoading(true);
       try {
         // Check if user has admin or super_user role
         const isAdminUser = user && hasRole && (hasRole('ROLE_ADMIN') || hasRole('ROLE_SUPER_USER'));
-        
         if (!isAdminUser) {
           // Redirect to home if not admin or super user
           navigate('/');
           return;
         }
-        
+
         // Fetch unread messages count
         try {
           // Fetch unread candidate messages
@@ -85,7 +96,7 @@ const AdminLayout = () => {
           console.error('Error fetching candidate messages:', err);
           setUnreadCandidateMessages(0);
         }
-        
+
         try {
           // Fetch unread client messages
           const clientResponse = await axios.get('/api/messages/unread/type/CLIENT', {
@@ -98,7 +109,6 @@ const AdminLayout = () => {
         }
       } catch (err) {
         console.error('Error fetching user profile:', err);
-        
         // If 401 unauthorized, redirect to login
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
@@ -108,19 +118,19 @@ const AdminLayout = () => {
         setLoading(false);
       }
     };
-    
+
     fetchUserProfile();
   }, [navigate, user, hasRole]);
-  
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-  
+
   const handleNavigation = (path) => {
     navigate(path);
     setMobileOpen(false);
   };
-  
+
   const handleAccountMenuOpen = (event) => {
     setAccountMenuAnchor(event.currentTarget);
   };
@@ -128,25 +138,32 @@ const AdminLayout = () => {
   const handleAccountMenuClose = () => {
     setAccountMenuAnchor(null);
   };
-  
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
-  
+
+  const toggleMessages = () => {
+    setMessagesOpen(!messagesOpen);
+  };
+
+  const toggleUsers = () => {
+    setUsersOpen(!usersOpen);
+  };
+
   const isAdmin = user && hasRole && hasRole('ROLE_ADMIN');
-  
+  const isSuperUser = user && hasRole && hasRole('ROLE_SUPER_USER');
+
   const drawer = (
     <div>
-      <Toolbar sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'flex-start',
-        py: 2
-      }}>
-        <Typography variant="h6" noWrap component="div">
-          AYRFU Admin
-        </Typography>
+      <Toolbar sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <img src={UddanLogo} alt="UDDAN Logo" height="30" />
+          <Typography variant="h6" noWrap component="div" sx={{ ml: 1, fontWeight: 'bold' }}>
+            Admin Panel
+          </Typography>
+        </Box>
         {user && (
           <Typography variant="body2" color="text.secondary">
             {user.fullName || user.email}
@@ -154,7 +171,7 @@ const AdminLayout = () => {
         )}
       </Toolbar>
       <Divider />
-      <List>
+      <List component="nav">
         <ListItem button onClick={() => handleNavigation('/admin/dashboard')}>
           <ListItemIcon>
             <DashboardIcon />
@@ -176,26 +193,95 @@ const AdminLayout = () => {
           <ListItemText primary="Services" />
         </ListItem>
       </List>
+      
       <Divider />
-      <List>
-        <ListItem button onClick={() => handleNavigation('/admin/messages/candidates')}>
+      
+      {/* Messages section with dropdown */}
+      <List component="nav">
+        <ListItem button onClick={toggleMessages}>
           <ListItemIcon>
-            <Badge badgeContent={unreadCandidateMessages} color="error">
+            <Badge badgeContent={unreadCandidateMessages + unreadClientMessages} color="error">
               <EmailIcon />
             </Badge>
           </ListItemIcon>
-          <ListItemText primary="Candidate Messages" />
+          <ListItemText primary="Messages" />
+          {messagesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </ListItem>
-        
-        <ListItem button onClick={() => handleNavigation('/admin/messages/clients')}>
-          <ListItemIcon>
-            <Badge badgeContent={unreadClientMessages} color="error">
-              <BusinessIcon />
-            </Badge>
-          </ListItemIcon>
-          <ListItemText primary="Client Messages" />
-        </ListItem>
+        <Collapse in={messagesOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            <ListItem 
+              button 
+              sx={{ pl: 4 }} 
+              onClick={() => handleNavigation('/admin/messages/candidates')}
+            >
+              <ListItemIcon>
+                <Badge badgeContent={unreadCandidateMessages} color="error">
+                  <PersonIcon />
+                </Badge>
+              </ListItemIcon>
+              <ListItemText primary="Candidate Messages" />
+            </ListItem>
+            
+            <ListItem 
+              button 
+              sx={{ pl: 4 }} 
+              onClick={() => handleNavigation('/admin/messages/clients')}
+            >
+              <ListItemIcon>
+                <Badge badgeContent={unreadClientMessages} color="error">
+                  <BusinessIcon />
+                </Badge>
+              </ListItemIcon>
+              <ListItemText primary="Client Messages" />
+            </ListItem>
+          </List>
+        </Collapse>
       </List>
+      
+      {/* User Management section - only for admins */}
+      {(isAdmin || isSuperUser) && (
+        <>
+          <Divider />
+          <List component="nav">
+            <ListItem button onClick={toggleUsers}>
+              <ListItemIcon>
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="User Management" />
+              {usersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </ListItem>
+            <Collapse in={usersOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem 
+                  button 
+                  sx={{ pl: 4 }} 
+                  onClick={() => handleNavigation('/admin/users')}
+                >
+                  <ListItemIcon>
+                    <PersonIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Users" />
+                </ListItem>
+                
+                {/* Only Super Users can manage admin users */}
+                {isSuperUser && (
+                  <ListItem 
+                    button 
+                    sx={{ pl: 4 }} 
+                    onClick={() => handleNavigation('/admin/admins')}
+                  >
+                    <ListItemIcon>
+                      <SupervisorAccountIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Administrators" />
+                  </ListItem>
+                )}
+              </List>
+            </Collapse>
+          </List>
+        </>
+      )}
+      
       <Divider />
       <List>
         <ListItem button onClick={() => handleNavigation('/')}>
@@ -214,7 +300,7 @@ const AdminLayout = () => {
       </List>
     </div>
   );
-  
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -222,7 +308,7 @@ const AdminLayout = () => {
       </Box>
     );
   }
-  
+
   return (
     <Box sx={{ display: 'flex' }}>
       <AppBar
@@ -242,22 +328,13 @@ const AdminLayout = () => {
           >
             <MenuIcon />
           </IconButton>
+          
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            AYRFU Admin Panel
+            UDDAN Admin Panel
           </Typography>
           
-          <IconButton
-            color="inherit"
-            onClick={handleAccountMenuOpen}
-          >
-            <Avatar 
-              sx={{ 
-                width: 32, 
-                height: 32, 
-                bgcolor: 'secondary.main',
-                fontSize: '0.875rem'
-              }}
-            >
+          <IconButton color="inherit" onClick={handleAccountMenuOpen}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main', fontSize: '0.875rem' }}>
               {user?.fullName ? user.fullName[0].toUpperCase() : 'A'}
             </Avatar>
           </IconButton>
@@ -285,9 +362,9 @@ const AdminLayout = () => {
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
           >
-            <MenuItem onClick={() => { 
-              handleAccountMenuClose(); 
-              navigate('/user/profile'); 
+            <MenuItem onClick={() => {
+              handleAccountMenuClose();
+              navigate('/user/profile');
             }}>
               <ListItemIcon>
                 <AccountCircleIcon fontSize="small" />
