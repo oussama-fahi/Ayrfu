@@ -1,176 +1,316 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Box, 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  IconButton, 
-  Divider, 
-  Badge,
-  ListItemButton,
+import { useNavigate } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Drawer,
+  Divider,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   Avatar,
   Menu,
   MenuItem,
-  Tooltip,
+  Badge,
+  CircularProgress,
   useMediaQuery,
   useTheme,
-  Container
+  ListSubheader,
+  Collapse
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import WorkIcon from '@mui/icons-material/Work';
-import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
-import EmailIcon from '@mui/icons-material/Email';
-import BusinessIcon from '@mui/icons-material/Business';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Work as WorkIcon,
+  MiscellaneousServices as MiscellaneousServicesIcon,
+  Email as EmailIcon,
+  Business as BusinessIcon,
+  Home as HomeIcon,
+  ExitToApp as ExitToAppIcon,
+  AccountCircle as AccountCircleIcon,
+  SupervisorAccount as SupervisorAccountIcon,
+  Person as PersonIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Settings as SettingsIcon
+} from '@mui/icons-material';
+import { Outlet } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
-import { fetchUnreadMessagesByType } from '../redux/slices/messagesSlice';
+
+// Import UDDAN logo
+import UddanLogo from '../assets/images/uddan-logo.svg';
 
 const drawerWidth = 240;
 
 const AdminLayout = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  const { user, logout } = useAuth();
-  const { unreadMessages } = useSelector((state) => state.messages);
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user, logout, hasRole } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
+  
+  // Expandable menu states
+  const [messagesOpen, setMessagesOpen] = useState(false);
+  const [usersOpen, setUsersOpen] = useState(false);
   
   // Count unread messages by type
-  const unreadCandidateMessages = unreadMessages.filter(msg => msg.type === 'CANDIDATE').length;
-  const unreadClientMessages = unreadMessages.filter(msg => msg.type === 'CLIENT').length;
-  
+  const [unreadCandidateMessages, setUnreadCandidateMessages] = useState(0);
+  const [unreadClientMessages, setUnreadClientMessages] = useState(0);
+
   useEffect(() => {
-    // Fetch unread messages when component mounts
-    dispatch(fetchUnreadMessagesByType('CANDIDATE'));
-    dispatch(fetchUnreadMessagesByType('CLIENT'));
-    
-    // Set up polling for new messages every 30 seconds
-    const interval = setInterval(() => {
-      dispatch(fetchUnreadMessagesByType('CANDIDATE'));
-      dispatch(fetchUnreadMessagesByType('CLIENT'));
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [dispatch]);
-  
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/admin/login');
+      return;
+    }
+
+    // Fetch user profile data
+    const fetchUserProfile = async () => {
+      setLoading(true);
+      try {
+        // Check if user has admin or super_user role
+        const isAdminUser = user && hasRole && (hasRole('ROLE_ADMIN') || hasRole('ROLE_SUPER_USER'));
+        if (!isAdminUser) {
+          // Redirect to home if not admin or super user
+          navigate('/');
+          return;
+        }
+
+        // Fetch unread messages count
+        try {
+          // Fetch unread candidate messages
+          const candidateResponse = await axios.get('/api/messages/unread/type/CANDIDATE', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUnreadCandidateMessages(candidateResponse.data.length);
+        } catch (err) {
+          console.error('Error fetching candidate messages:', err);
+          setUnreadCandidateMessages(0);
+        }
+
+        try {
+          // Fetch unread client messages
+          const clientResponse = await axios.get('/api/messages/unread/type/CLIENT', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUnreadClientMessages(clientResponse.data.length);
+        } catch (err) {
+          console.error('Error fetching client messages:', err);
+          setUnreadClientMessages(0);
+        }
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+        // If 401 unauthorized, redirect to login
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/admin/login');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [navigate, user, hasRole]);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-  
-  const handleProfileMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
-  
-  const handleLogout = () => {
-    handleProfileMenuClose();
-    logout();
-    navigate('/admin/login');
-  };
-  
+
   const handleNavigation = (path) => {
     navigate(path);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
+    setMobileOpen(false);
   };
-  
-  const isActive = (path) => {
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const handleAccountMenuOpen = (event) => {
+    setAccountMenuAnchor(event.currentTarget);
   };
-  
-  const menuItems = [
-    {
-      text: 'Dashboard',
-      icon: <DashboardIcon />,
-      path: '/admin/dashboard',
-    },
-    {
-      text: 'Positions',
-      icon: <WorkIcon />,
-      path: '/admin/positions',
-    },
-    {
-      text: 'Services',
-      icon: <MiscellaneousServicesIcon />,
-      path: '/admin/services',
-    },
-    {
-      text: 'Candidate Messages',
-      icon: (
-        <Badge badgeContent={unreadCandidateMessages} color="error">
-          <EmailIcon />
-        </Badge>
-      ),
-      path: '/admin/messages/candidates',
-    },
-    {
-      text: 'Client Messages',
-      icon: (
-        <Badge badgeContent={unreadClientMessages} color="error">
-          <BusinessIcon />
-        </Badge>
-      ),
-      path: '/admin/messages/clients',
-    },
-  ];
-  
+
+  const handleAccountMenuClose = () => {
+    setAccountMenuAnchor(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const toggleMessages = () => {
+    setMessagesOpen(!messagesOpen);
+  };
+
+  const toggleUsers = () => {
+    setUsersOpen(!usersOpen);
+  };
+
+  const isAdmin = user && hasRole && hasRole('ROLE_ADMIN');
+  const isSuperUser = user && hasRole && hasRole('ROLE_SUPER_USER');
+
   const drawer = (
     <div>
-      <Toolbar sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'flex-start',
-        py: 2
-      }}>
-        <Typography variant="h6" noWrap component="div">
-          AYRFU Admin
-        </Typography>
+      <Toolbar sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <img src={UddanLogo} alt="UDDAN Logo" height="30" />
+          <Typography variant="h6" noWrap component="div" sx={{ ml: 1, fontWeight: 'bold' }}>
+            Admin Panel
+          </Typography>
+        </Box>
         {user && (
           <Typography variant="body2" color="text.secondary">
-            {user.fullName}
+            {user.fullName || user.email}
           </Typography>
         )}
       </Toolbar>
       <Divider />
+      <List component="nav">
+        <ListItem button onClick={() => handleNavigation('/admin/dashboard')}>
+          <ListItemIcon>
+            <DashboardIcon />
+          </ListItemIcon>
+          <ListItemText primary="Dashboard" />
+        </ListItem>
+        
+        <ListItem button onClick={() => handleNavigation('/admin/positions')}>
+          <ListItemIcon>
+            <WorkIcon />
+          </ListItemIcon>
+          <ListItemText primary="Positions" />
+        </ListItem>
+        
+        <ListItem button onClick={() => handleNavigation('/admin/services')}>
+          <ListItemIcon>
+            <MiscellaneousServicesIcon />
+          </ListItemIcon>
+          <ListItemText primary="Services" />
+        </ListItem>
+      </List>
+      
+      <Divider />
+      
+      {/* Messages section with dropdown */}
+      <List component="nav">
+        <ListItem button onClick={toggleMessages}>
+          <ListItemIcon>
+            <Badge badgeContent={unreadCandidateMessages + unreadClientMessages} color="error">
+              <EmailIcon />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText primary="Messages" />
+          {messagesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </ListItem>
+        <Collapse in={messagesOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            <ListItem 
+              button 
+              sx={{ pl: 4 }} 
+              onClick={() => handleNavigation('/admin/messages/candidates')}
+            >
+              <ListItemIcon>
+                <Badge badgeContent={unreadCandidateMessages} color="error">
+                  <PersonIcon />
+                </Badge>
+              </ListItemIcon>
+              <ListItemText primary="Candidate Messages" />
+            </ListItem>
+            
+            <ListItem 
+              button 
+              sx={{ pl: 4 }} 
+              onClick={() => handleNavigation('/admin/messages/clients')}
+            >
+              <ListItemIcon>
+                <Badge badgeContent={unreadClientMessages} color="error">
+                  <BusinessIcon />
+                </Badge>
+              </ListItemIcon>
+              <ListItemText primary="Client Messages" />
+            </ListItem>
+          </List>
+        </Collapse>
+      </List>
+      
+      {/* User Management section - only for admins */}
+      {(isAdmin || isSuperUser) && (
+        <>
+          <Divider />
+          <List component="nav">
+            <ListItem button onClick={toggleUsers}>
+              <ListItemIcon>
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="User Management" />
+              {usersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </ListItem>
+            <Collapse in={usersOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem 
+                  button 
+                  sx={{ pl: 4 }} 
+                  onClick={() => handleNavigation('/admin/users')}
+                >
+                  <ListItemIcon>
+                    <PersonIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Users" />
+                </ListItem>
+                
+                {/* Only Super Users can manage admin users */}
+                {isSuperUser && (
+                  <ListItem 
+                    button 
+                    sx={{ pl: 4 }} 
+                    onClick={() => handleNavigation('/admin/admins')}
+                  >
+                    <ListItemIcon>
+                      <SupervisorAccountIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Administrators" />
+                  </ListItem>
+                )}
+              </List>
+            </Collapse>
+          </List>
+        </>
+      )}
+      
+      <Divider />
       <List>
-        {menuItems.map((item) => (
-          <ListItem 
-            key={item.text} 
-            disablePadding
-            sx={{ 
-              backgroundColor: isActive(item.path) ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
-            }}
-          >
-            <ListItemButton onClick={() => handleNavigation(item.path)}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        <ListItem button onClick={() => handleNavigation('/')}>
+          <ListItemIcon>
+            <HomeIcon />
+          </ListItemIcon>
+          <ListItemText primary="Back to Site" />
+        </ListItem>
+        
+        <ListItem button onClick={handleLogout}>
+          <ListItemIcon>
+            <ExitToAppIcon />
+          </ListItemIcon>
+          <ListItemText primary="Logout" />
+        </ListItem>
       </List>
     </div>
   );
-  
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex' }}>
       <AppBar
         position="fixed"
         sx={{
@@ -188,40 +328,29 @@ const AdminLayout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            AYRFU Admin Panel
+          
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            UDDAN Admin Panel
           </Typography>
           
-          {/* User menu */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title="Account settings">
-              <IconButton
-                size="large"
-                edge="end"
-                color="inherit"
-                onClick={handleProfileMenuOpen}
-              >
-                {user?.fullName ? (
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                    {user.fullName[0]}
-                  </Avatar>
-                ) : (
-                  <AccountCircleIcon />
-                )}
-              </IconButton>
-            </Tooltip>
-          </Box>
+          <IconButton color="inherit" onClick={handleAccountMenuOpen}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main', fontSize: '0.875rem' }}>
+              {user?.fullName ? user.fullName[0].toUpperCase() : 'A'}
+            </Avatar>
+          </IconButton>
           
           <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleProfileMenuClose}
+            id="account-menu"
+            anchorEl={accountMenuAnchor}
+            open={Boolean(accountMenuAnchor)}
+            onClose={handleAccountMenuClose}
             PaperProps={{
               elevation: 0,
               sx: {
                 overflow: 'visible',
                 filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                 mt: 1.5,
+                minWidth: 180,
                 '& .MuiAvatar-root': {
                   width: 32,
                   height: 32,
@@ -233,15 +362,36 @@ const AdminLayout = () => {
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
           >
-            <MenuItem onClick={handleProfileMenuClose}>
-              <Avatar /> My Account
+            <MenuItem onClick={() => {
+              handleAccountMenuClose();
+              navigate('/user/profile');
+            }}>
+              <ListItemIcon>
+                <AccountCircleIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="My Profile" />
             </MenuItem>
+            
             <Divider />
-            <MenuItem onClick={handleLogout}>
+            
+            <MenuItem onClick={() => {
+              handleAccountMenuClose();
+              navigate('/');
+            }}>
+              <ListItemIcon>
+                <HomeIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Back to Site" />
+            </MenuItem>
+            
+            <MenuItem onClick={() => {
+              handleAccountMenuClose();
+              handleLogout();
+            }}>
               <ListItemIcon>
                 <ExitToAppIcon fontSize="small" />
               </ListItemIcon>
-              Logout
+              <ListItemText primary="Logout" />
             </MenuItem>
           </Menu>
         </Toolbar>
@@ -288,9 +438,7 @@ const AdminLayout = () => {
         }}
       >
         <Toolbar /> {/* This is for spacing below the AppBar */}
-        <Container maxWidth="xl">
-          <Outlet />
-        </Container>
+        <Outlet />
       </Box>
     </Box>
   );

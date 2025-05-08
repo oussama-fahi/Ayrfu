@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   Container,
   Typography,
@@ -15,67 +14,55 @@ import {
   ListItemText,
   Grid,
   CircularProgress,
+  Alert,
+  Breadcrumbs,
+  Link
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CodeIcon from '@mui/icons-material/Code';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import WorkIcon from '@mui/icons-material/Work';
-import TranslateIcon from '@mui/icons-material/Translate';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import { fetchPositionById } from '../../redux/slices/positionsSlice';
+import {
+  ArrowBack as ArrowBackIcon,
+  Code as CodeIcon,
+  LocationOn as LocationOnIcon,
+  Work as WorkIcon,
+  Translate as TranslateIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
+  BusinessCenter as BusinessCenterIcon,
+  CalendarToday as CalendarTodayIcon
+} from '@mui/icons-material';
+import axios from 'axios';
 
+/**
+ * PositionDetailPage component - Displays details of a specific job position
+ * 
+ * @returns {JSX.Element} The rendered component
+ */
 const PositionDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  
-  // For demo purposes, we'll use mock data instead of fetching from Redux
-  const [isLoading, setIsLoading] = useState(true);
   const [position, setPosition] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      // Mock position data
-      const mockPosition = {
-        id: id,
-        title: "Senior Java Developer",
-        description: "We are looking for a skilled Java Developer to join our team. The ideal candidate should have strong knowledge of Java, Spring Boot, and databases. You will be responsible for developing and maintaining our core applications, working in a collaborative team environment.",
-        technology: "Java",
-        location: "Remote",
-        languages: ["English", "French"],
-        experienceLevel: "Senior",
-        workModel: "Full-time",
-        responsibilities: [
-          "Design and develop high-volume, low-latency applications",
-          "Write clean, maintainable code with proper testing",
-          "Collaborate with cross-functional teams",
-          "Participate in code reviews",
-          "Troubleshoot production issues"
-        ],
-        requirements: [
-          "5+ years of experience with Java",
-          "Strong knowledge of Spring Boot and Spring Framework",
-          "Experience with relational databases and ORM technologies",
-          "Familiarity with REST APIs and microservices architecture",
-          "Good understanding of design patterns"
-        ],
-        active: true
-      };
-      
-      setPosition(mockPosition);
-      setIsLoading(false);
-    }, 1000);
+    const fetchPosition = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/positions/${id}`);
+        setPosition(response.data);
+      } catch (err) {
+        console.error('Error fetching position details:', err);
+        setError('Failed to load position details. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // In a real application, you would use:
-    // dispatch(fetchPositionById(id));
+    fetchPosition();
   }, [id]);
   
-  if (isLoading) {
+  if (loading) {
     return (
-      <Container sx={{ py: 8, textAlign: 'center' }}>
-        <CircularProgress />
+      <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress size={60} />
         <Typography variant="h6" sx={{ mt: 2 }}>
           Loading position details...
         </Typography>
@@ -85,54 +72,82 @@ const PositionDetailPage = () => {
   
   if (error) {
     return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h5" color="error" gutterBottom>
-            Error loading position
-          </Typography>
-          <Typography variant="body1" paragraph>
-            {error}
-          </Typography>
-          <Button 
-            variant="outlined" 
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/applicants')}
-          >
-            Go Back
-          </Button>
-        </Paper>
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Alert severity="error" sx={{ mb: 4 }}>
+          {error}
+        </Alert>
+        <Button 
+          variant="outlined" 
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/positions')}
+        >
+          Back to Positions
+        </Button>
       </Container>
     );
   }
   
   if (!position) {
     return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h5" gutterBottom>
-            Position not found
-          </Typography>
-          <Typography variant="body1" paragraph>
-            The position you're looking for doesn't exist or has been removed.
-          </Typography>
-          <Button 
-            variant="outlined" 
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/applicants')}
-          >
-            Go Back
-          </Button>
-        </Paper>
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Alert severity="warning" sx={{ mb: 4 }}>
+          Position not found or has been removed.
+        </Alert>
+        <Button 
+          variant="outlined" 
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/positions')}
+        >
+          Back to Positions
+        </Button>
       </Container>
     );
   }
   
+  // For mock data demonstration purposes
+  const mockResponsibilities = [
+    "Design and develop high-volume, low-latency applications",
+    "Write clean, maintainable code with proper testing",
+    "Collaborate with cross-functional teams",
+    "Participate in code reviews",
+    "Troubleshoot production issues"
+  ];
+  
+  const mockRequirements = [
+    `${position.experienceLevel} level experience in ${position.technology}`,
+    "Strong problem-solving skills",
+    "Excellent communication and teamwork abilities",
+    "Proactive attitude and willingness to learn",
+    "Ability to work in a fast-paced environment"
+  ];
+  
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
+      {/* Breadcrumbs */}
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <Link 
+          component="button"
+          underline="hover" 
+          color="inherit"
+          onClick={() => navigate('/')}
+        >
+          Home
+        </Link>
+        <Link 
+          component="button"
+          underline="hover" 
+          color="inherit"
+          onClick={() => navigate('/positions')}
+        >
+          Positions
+        </Link>
+        <Typography color="text.primary">{position.title}</Typography>
+      </Breadcrumbs>
+      
       <Button 
         variant="outlined" 
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/applicants')}
+        onClick={() => navigate('/positions')}
         sx={{ mb: 4 }}
       >
         Back to Positions
@@ -156,16 +171,16 @@ const PositionDetailPage = () => {
           Job Description
         </Typography>
         <Typography variant="body1" paragraph>
-          {position.description}
+          {position.description || 'No description provided.'}
         </Typography>
         
-        <Grid container spacing={4}>
+        <Grid container spacing={4} sx={{ mt: 2 }}>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
               Responsibilities
             </Typography>
             <List>
-              {position.responsibilities.map((item, index) => (
+              {mockResponsibilities.map((item, index) => (
                 <ListItem key={index} disableGutters>
                   <ListItemIcon sx={{ minWidth: 40 }}>
                     <CheckCircleOutlineIcon color="primary" />
@@ -181,7 +196,7 @@ const PositionDetailPage = () => {
               Requirements
             </Typography>
             <List>
-              {position.requirements.map((item, index) => (
+              {mockRequirements.map((item, index) => (
                 <ListItem key={index} disableGutters>
                   <ListItemIcon sx={{ minWidth: 40 }}>
                     <CheckCircleOutlineIcon color="primary" />
@@ -195,14 +210,44 @@ const PositionDetailPage = () => {
         
         <Divider sx={{ my: 3 }} />
         
-        <Box sx={{ mb: 3 }}>
+        {/* Additional Information */}
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={4}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <BusinessCenterIcon color="primary" sx={{ mr: 1 }} />
+              <Typography variant="subtitle1">
+                <strong>Position Type:</strong> {position.workModel}
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={4}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <LocationOnIcon color="primary" sx={{ mr: 1 }} />
+              <Typography variant="subtitle1">
+                <strong>Location:</strong> {position.location}
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={4}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CalendarTodayIcon color="primary" sx={{ mr: 1 }} />
+              <Typography variant="subtitle1">
+                <strong>Start Date:</strong> Immediate
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+        
+        <Box sx={{ mb: 3, mt: 4 }}>
           <Typography variant="subtitle1" gutterBottom>
             <TranslateIcon fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
             <strong>Languages:</strong>
           </Typography>
           
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {position.languages.map((language, index) => (
+            {position.languages && position.languages.map((language, index) => (
               <Chip key={index} label={language} />
             ))}
           </Box>
@@ -214,6 +259,7 @@ const PositionDetailPage = () => {
           variant="contained" 
           size="large"
           onClick={() => navigate(`/apply/${position.id}`)}
+          sx={{ py: 1.5, px: 4 }}
         >
           Apply Now
         </Button>

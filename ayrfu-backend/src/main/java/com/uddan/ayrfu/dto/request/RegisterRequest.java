@@ -3,7 +3,6 @@ package com.uddan.ayrfu.dto.request;
 import com.uddan.ayrfu.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,19 +22,23 @@ public class RegisterRequest {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
-    @NotEmpty(message = "At least one role is required")
+    // Role selection - will be limited to CANDIDATE/CLIENT roles in service layer
     private Set<Role> roles = new HashSet<>();
+
+    // Added fields for profile creation during registration
+    private String phoneNumber;
+
+    private String address;
+
+    // Client-specific fields
+    private String companyName;
+
+    private String industry;
+
+    private String companySize;
 
     // Default constructor
     public RegisterRequest() {
-    }
-
-    // All-args constructor
-    public RegisterRequest(String fullName, String email, String password, Set<Role> roles) {
-        this.fullName = fullName;
-        this.email = email;
-        this.password = password;
-        this.roles = roles != null ? roles : new HashSet<>();
     }
 
     // Getters and Setters
@@ -68,45 +71,46 @@ public class RegisterRequest {
     }
 
     public void setRoles(Set<Role> roles) {
-        this.roles = roles != null ? roles : new HashSet<>();
+        this.roles = roles;
     }
 
-    // Builder implementation
-    public static RegisterRequestBuilder builder() {
-        return new RegisterRequestBuilder();
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public static class RegisterRequestBuilder {
-        private String fullName;
-        private String email;
-        private String password;
-        private Set<Role> roles = new HashSet<>();
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 
-        RegisterRequestBuilder() {
-        }
+    public String getAddress() {
+        return address;
+    }
 
-        public RegisterRequestBuilder fullName(String fullName) {
-            this.fullName = fullName;
-            return this;
-        }
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-        public RegisterRequestBuilder email(String email) {
-            this.email = email;
-            return this;
-        }
+    public String getCompanyName() {
+        return companyName;
+    }
 
-        public RegisterRequestBuilder password(String password) {
-            this.password = password;
-            return this;
-        }
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
 
-        public RegisterRequestBuilder roles(Set<Role> roles) {
-            this.roles = roles;
-            return this;
-        }
+    public String getIndustry() {
+        return industry;
+    }
 
-        public RegisterRequest build() {
-            return new RegisterRequest(fullName, email, password, roles);
-        }
+    public void setIndustry(String industry) {
+        this.industry = industry;
+    }
+
+    public String getCompanySize() {
+        return companySize;
+    }
+
+    public void setCompanySize(String companySize) {
+        this.companySize = companySize;
     }
 }

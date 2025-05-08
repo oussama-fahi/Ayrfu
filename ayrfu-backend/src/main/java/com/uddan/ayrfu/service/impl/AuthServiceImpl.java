@@ -4,10 +4,13 @@ import com.uddan.ayrfu.dto.request.LoginRequest;
 import com.uddan.ayrfu.dto.request.RegisterRequest;
 import com.uddan.ayrfu.dto.response.JwtResponse;
 import com.uddan.ayrfu.dto.response.UserResponse;
+import com.uddan.ayrfu.entity.Role;
 import com.uddan.ayrfu.entity.User;
 import com.uddan.ayrfu.exception.BadRequestException;
+import com.uddan.ayrfu.repository.RoleRepository;
 import com.uddan.ayrfu.repository.UserRepository;
 import com.uddan.ayrfu.security.JwtUtil;
+import com.uddan.ayrfu.security.RoleConstants;
 import com.uddan.ayrfu.security.UserDetailsImpl;
 import com.uddan.ayrfu.service.AuthService;
 import org.slf4j.Logger;
@@ -20,6 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -27,20 +33,21 @@ public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtUtil jwtUtils;
 
-    // Constructor instead of @RequiredArgsConstructor
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            UserRepository userRepository,
+                           RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil) {
+                           JwtUtil jwtUtils) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
+        this.jwtUtils = jwtUtils;
     }
-
 
     @Override
     @Transactional
@@ -57,8 +64,8 @@ public class AuthServiceImpl implements AuthService {
         // Get user details from authentication
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        // Generate JWT token using user details (updated to match our JwtUtil)
-        String jwt = jwtUtil.generateToken(userDetails);
+        // Generate JWT token using user details
+        String jwt = jwtUtils.generateToken(userDetails);
 
         logger.info("User authenticated successfully: {}", userDetails.getUsername());
 
@@ -77,18 +84,45 @@ public class AuthServiceImpl implements AuthService {
     public UserResponse register(RegisterRequest registerRequest) {
         logger.info("Registering new user with email: {}", registerRequest.getEmail());
 
-        System.out.println("password is : "+registerRequest.getPassword());
         // Check if email already exists
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new BadRequestException("Email is already in use");
+        }
+
+        // Encode the password
+        String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
+
+        // Set up default roles
+        Set<Role> roles = new HashSet<>();
+
+        // If roles were specified in the request, assign them
+        if (registerRequest.getRoles() != null && !registerRequest.getRoles().isEmpty()) {
+            for (Role requestRole : registerRequest.getRoles()) {
+                String roleName = requestRole.getName();
+
+                // Only allow ROLE_CANDIDATE or ROLE_CLIENT for public registration
+                if (RoleConstants.ROLE_CANDIDATE.equals(roleName) ||
+                        RoleConstants.ROLE_CLIENT.equals(roleName)) {
+                    Role role = roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new BadRequestException("Role not found: " + roleName));
+                    roles.add(role);
+                } else {
+                    throw new BadRequestException("Cannot assign role: " + roleName + " during registration");
+                }
+            }
+        } else {
+            // If no role specified, default to CANDIDATE
+            Role defaultRole = roleRepository.findByName(RoleConstants.ROLE_CANDIDATE)
+                    .orElseThrow(() -> new BadRequestException("Default role not found"));
+            roles.add(defaultRole);
         }
 
         // Create new user
         User user = User.builder()
                 .userName(registerRequest.getFullName())
                 .email(registerRequest.getEmail())
-                .password(passwordEncoder.encode(registerRequest.getPassword()))
-                .roles(registerRequest.getRoles())
+                .password(encodedPassword)
+                .roles(roles)
                 .active(true)
                 .build();
 
@@ -108,6 +142,36 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
         return mapToUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateCurrentUserProfile(User updateRequest) {
+        // Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        // Update user profile (only allowed fields)
+        user.setUserName(updateRequest.getUserName());
+
+        // Only update password if provided
+        if (updateRequest.getPassword() != null && !updateRequest.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(updateRequest.getPassword()));
+        }
+
+        // Save updated user
+        User updatedUser = userRepository.save(user);
+
+        return mapToUserResponse(updatedUser);
+    }
+
+    @Override
+    public boolean userHasRole(User user, String roleName) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals(roleName));
     }
 
     /**

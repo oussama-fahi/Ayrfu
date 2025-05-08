@@ -24,26 +24,26 @@ instance.interceptors.request.use(
 );
 
 // Response interceptor
-instance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
+// instance.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   async (error) => {
+//     const originalRequest = error.config;
     
-    // Handle token expiration
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+//     // Handle token expiration
+//     if (error.response?.status === 401 && !originalRequest._retry) {
+//       originalRequest._retry = true;
       
-      // Clear token and redirect to login if authentication fails
-      localStorage.removeItem('token');
-      window.location.href = '/admin/login';
+//       // Clear token and redirect to login if authentication fails
+//       localStorage.removeItem('token');
+//       window.location.href = '/admin/login';
       
-      return Promise.reject(error);
-    }
+//       return Promise.reject(error);
+//     }
     
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 export default instance;

@@ -1,6 +1,5 @@
 package com.uddan.ayrfu.service;
 
-import com.uddan.ayrfu.dto.filter.CandidateFilterDTO;
 import com.uddan.ayrfu.dto.request.PositionRequest;
 import com.uddan.ayrfu.dto.response.PositionResponse;
 

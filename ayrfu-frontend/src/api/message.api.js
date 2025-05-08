@@ -1,3 +1,4 @@
+// src/api/message.api.js
 import axios from './axios';
 
 const MessageAPI = {
@@ -18,18 +19,33 @@ const MessageAPI = {
   },
   
   getByType: async (type) => {
-    const response = await axios.get(`/messages/type/${type}`);
-    return response.data;
+    try {
+      const response = await axios.get(`/messages/type/${type}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching messages of type ${type}:`, error);
+      return [];
+    }
   },
   
   getUnread: async () => {
-    const response = await axios.get('/messages/unread');
-    return response.data;
+    try {
+      const response = await axios.get('/messages/unread');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching unread messages:', error);
+      return [];
+    }
   },
   
   getUnreadByType: async (type) => {
-    const response = await axios.get(`/messages/unread/type/${type}`);
-    return response.data;
+    try {
+      const response = await axios.get(`/messages/unread/type/${type}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching unread messages of type ${type}:`, error);
+      return [];
+    }
   },
   
   markAsRead: async (id) => {
