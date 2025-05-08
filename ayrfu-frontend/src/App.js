@@ -120,6 +120,28 @@ const RoleRoute = ({ children, roles = [] }) => {
 
 // Theme configuration
 const theme = createTheme({
+   gradientTextStyle : {
+    fontWeight: 'bold',
+    position: 'relative',
+    display: 'inline-block',
+    pb: 1,
+    backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    color: 'transparent',  // Ensures the gradient is visible
+    fontSize: { xs: '2rem', md: '3rem' },  // Responsive font size
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      width: '60%',
+      height: '4px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      bottom: 0,
+      bgcolor: 'primary.main',  // Keep your primary color for the underline
+      borderRadius: 2,
+    },
+  },
   palette: {
     primary: {
       main: '#007aff', // Main Purple
