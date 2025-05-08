@@ -1,29 +1,30 @@
-import React, { useRef, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Container, 
-  Typography, 
-  Button, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Box, 
-  Paper, 
-  Stack, 
-  Divider, 
+import React, { useState, useRef } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import {
+  Container,
+  Typography,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  Box,
+  Paper,
+  Stack,
+  Divider,
   IconButton,
   Link as MuiLink,
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { 
-  Person as PersonIcon, 
-  Business as BusinessIcon, 
-  SupervisorAccount as AdminIcon, 
-  Speed as SpeedIcon, 
-  People as PeopleIcon, 
+import {
+  Person as PersonIcon,
+  Business as BusinessIcon,
+  Speed as SpeedIcon,
+  People as PeopleIcon,
   VerifiedUser as VerifiedIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
+  KeyboardArrowLeft as KeyboardArrowLeftIcon,
+  KeyboardArrowRight as KeyboardArrowRightIcon,
   Language as LanguageIcon,
   Business as IndustryIcon,
   People as CompanySizeIcon,
@@ -31,13 +32,11 @@ import {
   DateRange as FoundedIcon,
   Star as SpecializationsIcon,
   Article as NewsIcon,
-  ArrowForwardIos as ArrowForwardIcon,
-  ArrowBackIos as ArrowBackIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 
 /**
- * Enhanced Main Page component with horizontal scroll
+ * Enhanced MainPage component with improved layout
  * @returns {JSX.Element} The rendered component
  */
 const MainPage = () => {
@@ -45,13 +44,14 @@ const MainPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user, isAuthenticated, hasRole } = useAuth();
-  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   // Refs for scrolling
   const servicesRef = useRef(null);
   const candidatesRef = useRef(null);
   const newsRef = useRef(null);
   const companyInfoRef = useRef(null);
-  
+
   const handleCandidateClick = () => {
     navigate('/positions');
   };
@@ -60,10 +60,6 @@ const MainPage = () => {
     navigate('/clients');
   };
 
-  const handleAdminClick = () => {
-    navigate('/admin/login');
-  };
-  
   const scrollToSection = (ref) => {
     ref.current.scrollIntoView({ behavior: 'smooth' });
   };
@@ -77,24 +73,57 @@ const MainPage = () => {
   // Carousel images
   const carouselImages = [
     {
-      src: 'https://via.placeholder.com/600x400?text=OutSystems+Solutions',
+      src: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
       alt: 'OutSystems Solutions',
       title: 'OutSystems Solutions',
       description: 'Accelerate your digital transformation'
     },
     {
-      src: 'https://via.placeholder.com/600x400?text=Software+Development',
+      src: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
       alt: 'Software Development',
       title: 'Custom Software Development',
       description: 'Enterprise-grade solutions for your business'
     },
     {
-      src: 'https://via.placeholder.com/600x400?text=IT+Consulting',
+      src: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80',
       alt: 'IT Consulting',
       title: 'IT Consulting Services',
       description: 'Expert advice to optimize your IT infrastructure'
     }
   ];
+
+  // Navigation function for hero carousel
+  const navigateCarousel = (direction) => {
+    if (direction === 'next') {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % carouselImages.length);
+    } else {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + carouselImages.length) % carouselImages.length);
+    }
+  };
+
+  //Uddan style text
+  const gradientTextStyle = {
+    fontWeight: 'bold',
+    position: 'relative',
+    display: 'inline-block',
+    pb: 1,
+    backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    color: 'transparent',  // Ensures the gradient is visible
+    fontSize: { xs: '2rem', md: '3rem' },  // Responsive font size
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      width: '60%',
+      height: '4px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      bottom: 0,
+      bgcolor: 'primary.main',  // Keep your primary color for the underline
+      borderRadius: 2,
+    },
+  };
 
   // Sample news data
   const newsItems = [
@@ -117,106 +146,117 @@ const MainPage = () => {
 
   return (
     <div>
-      {/* Hero Section with horizontal scroll */}
-      <Box sx={{ 
-        bgcolor: 'primary.main', 
-        color: 'white', 
-        py: { xs: 4, md: 6 }, 
-        mb: 4,
-        position: 'relative',
-        backgroundImage: 'linear-gradient(45deg, rgba(94, 53, 177, 0.9), rgba(94, 53, 177, 0.7))',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}>
+      {/* Hero Section with carousel only */}
+      <Box
+        sx={{
+          bgcolor: 'primary.main',
+          color: 'white',
+          py: { xs: 1, md: 1 },
+          mb: 1,
+          position: 'relative',
+          backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
         <Container maxWidth="xl">
-          <Grid container spacing={3} alignItems="center">
-            {/* Main title section */}
-            <Grid item xs={12} md={5}>
-              <Box sx={{ textAlign: { xs: 'center', md: 'left' }, py: 4 }}>
-                <Typography variant="h2" component="h1" sx={{ mb: 2, fontWeight: 'bold' }}>AYRFU</Typography>
-                <Typography variant="h4" sx={{ mb: 3 }}>Are You Ready For UDDAN?</Typography>
-                <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                  Connect with UDDAN for job opportunities and innovative business solutions.
-                </Typography>
-                
-                {/* Admin Dashboard button for admin users */}
-                {isAuthenticated && (isAdmin || isSuperUser) && (
-                  <Button 
-                    variant="outlined" 
-                    color="inherit" 
-                    size="large" 
-                    component={Link} 
-                    to="/admin/dashboard"
-                    sx={{ px: 4, py: 1.5, mt: 2 }}
-                  >
-                    Admin Dashboard
-                  </Button>
-                )}
-              </Box>
-            </Grid>
-            
-            {/* Horizontal image carousel */}
-            <Grid item xs={12} md={7}>
-              <Box sx={{ 
-                position: 'relative', 
-                overflowX: 'auto',
-                scrollSnapType: 'x mandatory',
-                display: 'flex',
-                borderRadius: 2,
-                '&::-webkit-scrollbar': {
-                  display: 'none'
-                },
-                msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
-              }}>
-                {carouselImages.map((image, index) => (
-                  <Box 
-                    key={index}
-                    sx={{
-                      minWidth: { xs: '100%', md: '85%' },
-                      height: { xs: 220, sm: 300, md: 350 },
-                      scrollSnapAlign: 'start',
-                      position: 'relative',
-                      mr: 2,
-                      borderRadius: 2,
-                      overflow: 'hidden',
-                      boxShadow: 3
-                    }}
-                  >
-                    <Box 
-                      component="img"
-                      src={image.src}
-                      alt={image.alt}
-                      sx={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                    <Box sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      padding: 2,
-                      background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-                      color: 'white'
-                    }}>
-                      <Typography variant="h6">{image.title}</Typography>
-                      <Typography variant="body2">{image.description}</Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-          
+          <Box
+            sx={{
+              position: 'relative',
+              height: { xs: 900, md: 500 },
+              mx: '10%', // ← adds 10% left and right margin inside the container
+            }}
+          >
+            {/* Carousel images */}
+            {carouselImages.map((image, index) => (
+              <Box
+                key={index}
+                component="img"
+                src={image.src}
+                alt={image.alt}
+                sx={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  opacity: index === currentImageIndex ? 1 : 0,
+                  transition: 'opacity 0.5s ease-in-out',
+                  borderRadius: 1,
+                }}
+              />
+            ))}
+
+            {/* Image caption */}
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: 2,
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                color: 'white',
+                borderBottomLeftRadius: 2,
+                borderBottomRightRadius: 2,
+              }}
+            >
+              <Typography variant="h6">{carouselImages[currentImageIndex]?.title}</Typography>
+              <Typography variant="body2">{carouselImages[currentImageIndex]?.description}</Typography>
+            </Box>
+
+            {/* Navigation arrows */}
+            <IconButton
+              onClick={() => navigateCarousel('prev')}
+              sx={{
+                position: 'absolute',
+                left: -50,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                bgcolor: 'rgba(255,255,255,0.3)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+                zIndex: 1,
+              }}
+            >
+              <KeyboardArrowLeftIcon fontSize="large" />
+            </IconButton>
+
+            <IconButton
+              onClick={() => navigateCarousel('next')}
+              sx={{
+                position: 'absolute',
+                right: -50,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                bgcolor: 'rgba(255,255,255,0.3)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+                zIndex: 1,
+              }}
+            >
+              <KeyboardArrowRightIcon fontSize="large" />
+            </IconButton>
+          </Box>
+
           {/* Scroll indicator */}
-          <Box sx={{ position: 'absolute', bottom: 20, left: 0, right: 0, textAlign: 'center', display: { xs: 'none', md: 'block' } }}>
-            <IconButton 
-              color="inherit" 
-              onClick={() => scrollToSection(candidatesRef)} 
-              sx={{ animation: 'bounce 2s infinite' }}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 20,
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              display: { xs: 'none', md: 'block' },
+            }}
+          >
+            <IconButton
+              color="inherit"
+              onClick={() => scrollToSection(candidatesRef)}
+              sx={{
+                animation: 'bounce 2s infinite',
+                bgcolor: 'rgba(255,255,255,0.3)',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+              }}
             >
               <KeyboardArrowDownIcon fontSize="large" />
             </IconButton>
@@ -224,15 +264,16 @@ const MainPage = () => {
         </Container>
       </Box>
 
-      {/* Three main path cards in one line */}
-      <Container maxWidth="lg" sx={{ mb: 10 }} ref={candidatesRef}>
-        <Typography variant="h4" sx={{ textAlign: 'center', mb: 5 }}>
-          Choose Your Path
-        </Typography>
 
-        <Grid container spacing={3} justifyContent="center">
-          {/* For Candidates Card */}
-          <Grid item xs={12} sm={4}>
+      {/* Two main path cards side by side - Candidate (left) and Client (right) */}
+      <Container maxWidth="lg" sx={{ mb: 10 }} ref={candidatesRef}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography sx={gradientTextStyle}
+          >Choose Your Path</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+          {/* For Candidates Card - Left Side */}
+          <Box sx={{ flex: 1 }}>
             <Card
               sx={{
                 display: 'flex',
@@ -247,25 +288,20 @@ const MainPage = () => {
               }}
               onClick={handleCandidateClick}
             >
-              <Box sx={{ 
-                bgcolor: 'primary.main', 
-                py: 2, 
-                display: 'flex', 
-                alignItems: 'center',
-                px: 2
-              }}>
+              <Box sx={{ bgcolor: 'primary.main', py: 2, display: 'flex', alignItems: 'center', px: 2 }}>
                 <PersonIcon sx={{ fontSize: 30, color: 'white', mr: 1 }} />
-                <Typography variant="h6" color="white">
-                  For Candidates
-                </Typography>
+                <Typography variant="h6" color="white">For Candidates</Typography>
               </Box>
               <CardContent sx={{ flexGrow: 1, py: 2 }}>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  Explore our open positions and join our team of professionals.
+                <Typography variant="body1" sx={{ mb: 3 }}>
+                  Looking for a new career opportunity? Explore our open positions and join our team of professionals. We offer competitive salaries, comprehensive benefits, and a collaborative work environment.
                 </Typography>
-                <Button 
-                  variant="contained" 
-                  size="small"
+                <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+                  Browse through available positions, filter by technology, experience level, and location to find the perfect match for your skills and career goals.
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="large"
                   fullWidth
                   onClick={(e) => {
                     e.stopPropagation();
@@ -276,10 +312,10 @@ const MainPage = () => {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
 
-          {/* For Clients Card */}
-          <Grid item xs={12} sm={4}>
+          {/* For Clients Card - Right Side */}
+          <Box sx={{ flex: 1 }}>
             <Card
               sx={{
                 display: 'flex',
@@ -294,26 +330,21 @@ const MainPage = () => {
               }}
               onClick={handleClientClick}
             >
-              <Box sx={{ 
-                bgcolor: 'secondary.main', 
-                py: 2, 
-                display: 'flex', 
-                alignItems: 'center',
-                px: 2 
-              }}>
-                <BusinessIcon sx={{ fontSize: 30, color: 'white', mr: 1 }} />
-                <Typography variant="h6" color="white">
-                  For Clients
-                </Typography>
+              <Box sx={{ bgcolor: 'secondary.main', py: 2, display: 'flex', alignItems: 'center', px: 2 }}>
+                <BusinessIcon sx={{ fontSize: 30, color: 'secondary', mr: 1 }} />
+                <Typography variant="h6" color="text.secondary">For Clients</Typography>
               </Box>
               <CardContent sx={{ flexGrow: 1, py: 2 }}>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  Discover how UDDAN can help your business grow with specialized solutions.
+                <Typography variant="body1" sx={{ mb: 3 }}>
+                  Discover how UDDAN can help your business grow with specialized solutions tailored to your needs. Our team of experts will work with you to identify the right technologies and strategies.
                 </Typography>
-                <Button 
-                  variant="contained" 
-                  color="secondary" 
-                  size="small"
+                <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+                  From custom software development to IT consulting, we offer comprehensive services to drive your digital transformation and achieve your business goals.
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  size="large"
                   fullWidth
                   onClick={(e) => {
                     e.stopPropagation();
@@ -324,225 +355,159 @@ const MainPage = () => {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
-
-          {/* UDDAN Team Card */}
-          <Grid item xs={12} sm={4}>
-            <Card
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-                '&:hover': {
-                  transform: 'translateY(-5px)',
-                  boxShadow: 6,
-                },
-                cursor: 'pointer',
-                height: '100%'
-              }}
-              onClick={handleAdminClick}
-            >
-              <Box sx={{ 
-                bgcolor: '#5c6bc0', 
-                py: 2, 
-                display: 'flex', 
-                alignItems: 'center',
-                px: 2
-              }}>
-                <AdminIcon sx={{ fontSize: 30, color: 'white', mr: 1 }} />
-                <Typography variant="h6" color="white">
-                  UDDAN Team
-                </Typography>
-              </Box>
-              <CardContent sx={{ flexGrow: 1, py: 2 }}>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  Authorized personnel only. Access the back office to manage services.
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  sx={{ bgcolor: '#5c6bc0', '&:hover': { bgcolor: '#3f51b5' } }}
-                  size="small"
-                  fullWidth
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAdminClick();
-                  }}
-                >
-                  Team Login
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
 
-      {/* News Section */}
+      {/* News Section - Full width items with equal sizing */}
       <Box sx={{ bgcolor: '#f8f9fa', py: 8 }} ref={newsRef}>
         <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ textAlign: 'center', mb: 5 }}>
-            Latest News
-          </Typography>
-
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography sx={gradientTextStyle}>Latest News</Typography></Box>
           <Grid container spacing={4}>
             {newsItems.map((item, index) => (
-              <Grid item xs={12} md={4} key={index}>
+              <Grid item xs={12} key={index}>
                 <Card sx={{ height: '100%' }}>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <NewsIcon color="primary" sx={{ mr: 1 }} />
-                      <Typography variant="overline" color="text.secondary">
-                        {item.date}
-                      </Typography>
+                      <Typography variant="overline" color="text.secondary">{item.date}</Typography>
                     </Box>
-                    <Typography variant="h6" gutterBottom>
-                      {item.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.summary}
-                    </Typography>
+                    <Typography variant="h6" gutterBottom>{item.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">{item.summary}</Typography>
                   </CardContent>
                 </Card>
               </Grid>
             ))}
           </Grid>
-
           <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Button variant="outlined" color="primary">
-              View All News
-            </Button>
+            <Button variant="outlined" color="primary">View All News</Button>
           </Box>
         </Container>
       </Box>
 
       {/* Company Info Section */}
-      <Box sx={{ py: 8 }} ref={companyInfoRef}>
+      <Box sx={{ py: 10 }} ref={companyInfoRef}>
         <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ textAlign: 'center', mb: 5 }}>
-            About UDDAN
-          </Typography>
-
-          <Paper elevation={3} sx={{ p: { xs: 3, md: 5 }, borderRadius: 2, mb: 6 }}>
-            <Typography variant="h5" gutterBottom sx={{ color: 'primary.main' }}>
-              Vue d'ensemble
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography sx={gradientTextStyle}
+            >
+              About UDDAN
             </Typography>
-            <Typography variant="body1" paragraph>
-              UDDAN is an IT Consulting Company, specialized in Outsystems and Low-Code solutions with over 50 employees based in Belgium (Brussels), Portugal (Lisbon & Castelo Branco), the Netherlands (Amsterdam) and Sweden (Stockholm and Malmö). Working closely with several customers and partners implementing challenging OutSystems solutions, our projects are currently and mainly in the Benelux, US/Canada, South America and Portugal.
-            </Typography>
-            <Typography variant="body1" paragraph>
-              We also work with a group of highly talented and skilled professionals on a variety of technologies such as Java, JavaScript, .net, security and others. Other part of our working effort consists in staffing our client's teams. Our focus is on client satisfaction, employee happiness and business innovation, making sure that companies adopt a ContinuousNEXT approach to digital transformation as UDDAN is. If you need our support, say something to UDDAN.
-            </Typography>
+          </Box>
 
-            <Grid container spacing={3} sx={{ mt: 3 }}>
-              <Grid item xs={12} sm={6} md={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <LanguageIcon color="primary" sx={{ mr: 2 }} />
-                  <Typography variant="h6">Site web</Typography>
-                </Box>
-                <Typography variant="body1">
-                  <MuiLink href="https://uddanit.com" target="_blank" rel="noopener noreferrer">
-                    https://uddanit.com
-                  </MuiLink>
-                </Typography>
-              </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <IndustryIcon color="primary" sx={{ mr: 2 }} />
-                  <Typography variant="h6">Secteur</Typography>
-                </Box>
-                <Typography variant="body1">
-                  Développement de logiciels
-                </Typography>
-              </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <CompanySizeIcon color="primary" sx={{ mr: 2 }} />
-                  <Typography variant="h6">Taille de l'entreprise</Typography>
-                </Box>
-                <Typography variant="body1">
-                  201-500 employés
-                </Typography>
-              </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <MembersIcon color="primary" sx={{ mr: 2 }} />
-                  <Typography variant="h6">Membres LinkedIn</Typography>
-                </Box>
-                <Typography variant="body1">
-                  118 membres associés
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Membres LinkedIn ayant indiqué UDDAN comme étant leur lieu de travail actuel sur leur profil.
-                </Typography>
-              </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <FoundedIcon color="primary" sx={{ mr: 2 }} />
-                  <Typography variant="h6">Fondée en</Typography>
-                </Box>
-                <Typography variant="body1">
-                  2015
-                </Typography>
-              </Grid>
+          <Paper elevation={3} sx={{ p: { xs: 3, md: 5 }, borderRadius: 3 }}>
+            {/* Overview Section */}
+            <Box sx={{ mb: 5 }}>
+              <Typography variant="h5" color="primary" gutterBottom>
+                Vue d'ensemble
+              </Typography>
+              <Typography variant="body1" paragraph>
+                UDDAN is an IT Consulting Company, specialized in Outsystems and Low-Code solutions with over 50 employees based in Belgium (Brussels), Portugal (Lisbon & Castelo Branco), the Netherlands (Amsterdam), and Sweden (Stockholm and Malmö). We work closely with clients to deliver challenging OutSystems solutions, with projects across the Benelux, US/Canada, South America, and Portugal.
+              </Typography>
+              <Typography variant="body1" paragraph>
+                We also collaborate with skilled professionals in Java, JavaScript, .NET, security, and more. A part of our operations includes staffing for client teams. Our priorities are client satisfaction, employee happiness, and business innovation—helping organizations embrace a Continuous NEXT digital transformation journey.
+              </Typography>
+            </Box>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <SpecializationsIcon color="primary" sx={{ mr: 2 }} />
-                  <Typography variant="h6">Spécialisations</Typography>
-                </Box>
-                <Typography variant="body1">
-                  Outsystems et Software development
-                </Typography>
-              </Grid>
+            {/* Company Info Grid */}
+            <Grid container spacing={4}>
+              {[
+                {
+                  icon: <LanguageIcon color="primary" />,
+                  label: 'Site web',
+                  value: (
+                    <MuiLink href="https://uddanit.com" target="_blank" rel="noopener noreferrer">
+                      uddanit.com
+                    </MuiLink>
+                  ),
+                },
+                {
+                  icon: <IndustryIcon color="primary" />,
+                  label: 'Secteur',
+                  value: 'Développement de logiciels',
+                },
+                {
+                  icon: <CompanySizeIcon color="primary" />,
+                  label: "Taille de l'entreprise",
+                  value: '201–500 employés',
+                },
+                {
+                  icon: <MembersIcon color="primary" />,
+                  label: 'Membres LinkedIn',
+                  value: (
+                    <>
+                      118 membres associés
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Membres LinkedIn ayant indiqué UDDAN comme leur lieu de travail.
+                      </Typography>
+                    </>
+                  ),
+                },
+                {
+                  icon: <FoundedIcon color="primary" />,
+                  label: 'Fondée en',
+                  value: '2015',
+                },
+                {
+                  icon: <SpecializationsIcon color="primary" />,
+                  label: 'Spécialisations',
+                  value: 'Outsystems et Software Development',
+                },
+              ].map((item, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                    {item.icon}
+                    <Typography variant="subtitle1" sx={{ ml: 1 }}>
+                      {item.label}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2">{item.value}</Typography>
+                </Grid>
+              ))}
             </Grid>
           </Paper>
         </Container>
       </Box>
 
-      {/* Why Choose section */}
+
+      {/* Why Choose section - with three items in same line */}
       <Paper sx={{ p: 4, mb: 6 }}>
         <Container maxWidth="lg">
-          <Typography variant="h4" sx={{ textAlign: 'center', mb: 4 }}>
-            Why Choose UDDAN?
-          </Typography>
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                <SpeedIcon color="primary" sx={{ fontSize: 48, mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Fast Delivery
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Quickly implement solutions that drive immediate business value.
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                <PeopleIcon color="primary" sx={{ fontSize: 48, mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Expert Team
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Skilled professionals with deep industry knowledge and experience.
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                <VerifiedIcon color="primary" sx={{ fontSize: 48, mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Quality Assured
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Rigorous quality control to ensure reliable and robust solutions.
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography sx={gradientTextStyle}>Why Choose UDDAN?</Typography></Box>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+            {/* Fast Delivery - Left */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <SpeedIcon color="primary" sx={{ fontSize: 48, mb: 2 }} />
+              <Typography variant="h6" gutterBottom>Fast Delivery</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Quickly implement solutions that drive immediate business value.
+              </Typography>
+            </Box>
+
+            {/* Expert Team - Center */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <PeopleIcon color="primary" sx={{ fontSize: 48, mb: 2 }} />
+              <Typography variant="h6" gutterBottom>Expert Team</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Skilled professionals with deep industry knowledge and experience.
+              </Typography>
+            </Box>
+
+            {/* Quality Assured - Right */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <VerifiedIcon color="primary" sx={{ fontSize: 48, mb: 2 }} />
+              <Typography variant="h6" gutterBottom>Quality Assured</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Rigorous quality control to ensure reliable and robust solutions.
+              </Typography>
+            </Box>
+          </Box>
         </Container>
       </Paper>
 
@@ -554,40 +519,37 @@ const MainPage = () => {
               {isAuthenticated ? 'Quick Access' : 'Get Started'}
             </Typography>
           </Divider>
-
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={2} 
-            justifyContent="center" 
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            justifyContent="center"
             sx={{ maxWidth: 600, mx: 'auto' }}
           >
             {isAuthenticated ? (
               <>
                 {isCandidate && (
-                  <Button variant="outlined" component={Link} to="/user/applications">
+                  <Button variant="outlined" component={RouterLink} to="/user/applications">
                     My Applications
                   </Button>
                 )}
+                {isClient && (
+                  <Button variant="outlined" component={RouterLink} to="/client/dashboard">
+                    Client Dashboard
+                  </Button>
+                )}
                 {(isAdmin || isSuperUser) && (
-                  <Button 
-                    variant="outlined" 
-                    component={Link} 
-                    to="/admin/dashboard" 
-                    startIcon={<AdminIcon />}
-                  >
+                  <Button variant="outlined" component={RouterLink} to="/admin/dashboard">
                     Admin Dashboard
                   </Button>
                 )}
               </>
             ) : (
               <>
-                <Button 
-                  variant="outlined" 
-                  component={Link} 
-                  to="/admin/login" 
-                  startIcon={<AdminIcon />}
-                >
-                  Admin Login
+                <Button variant="outlined" component={RouterLink} to="/login">
+                  Sign In
+                </Button>
+                <Button variant="contained" component={RouterLink} to="/register">
+                  Register
                 </Button>
               </>
             )}
@@ -598,15 +560,14 @@ const MainPage = () => {
       {/* Custom CSS for animations */}
       <style jsx="true">{`
         @keyframes bounce {
-          0%, 20%, 50%, 80%, 100% {
-            transform: translateY(0);
-          }
-          40% {
-            transform: translateY(-10px);
-          }
-          60% {
-            transform: translateY(-5px);
-          }
+          0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+          40% {transform: translateY(-10px);}
+          60% {transform: translateY(-5px);}
+        }
+        @keyframes pulse {
+          0% {transform: translateY(-50%) scale(1); opacity: 1;}
+          50% {transform: translateY(-50%) scale(1.1); opacity: 0.8;}
+          100% {transform: translateY(-50%) scale(1); opacity: 1;}
         }
       `}</style>
     </div>

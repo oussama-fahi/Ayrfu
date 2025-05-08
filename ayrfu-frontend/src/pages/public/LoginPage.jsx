@@ -1,9 +1,16 @@
-// src/pages/public/LoginPage.jsx - Fix login redirection
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import {
-  Container, Box, Paper, Typography, TextField, Button, Link,
-  Divider, Alert, CircularProgress, Tabs, Tab
+  Container,
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Link,
+  Divider,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '../../hooks/useAuth';
@@ -17,38 +24,16 @@ const LoginPage = () => {
     email: '',
     password: ''
   });
-  
   const [formErrors, setFormErrors] = useState({});
-  const [loginType, setLoginType] = useState(0); // 0 = candidate/client, 1 = admin/super-user
   const [loggingIn, setLoggingIn] = useState(false);
 
   // Check if user is already authenticated
   useEffect(() => {
-    // Clear any previous auth errors
-    if (clearAuthError) clearAuthError();
-    
-    // If authenticated and not loading anymore, redirect
     if (isAuthenticated && !isLoading) {
       const redirectTo = getRedirectionPath();
-      // Add a small delay to ensure state updates are complete
-      setTimeout(() => {
-        navigate(redirectTo, { replace: true });
-      }, 100);
+      navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, getRedirectionPath, clearAuthError]);
-
-  // Set login type based on URL
-  useEffect(() => {
-    if (location.pathname.includes('/admin')) {
-      setLoginType(1);
-    }
-  }, [location]);
-
-  const handleLoginTypeChange = (event, newValue) => {
-    setLoginType(newValue);
-    clearAuthError();
-    setFormErrors({});
-  };
+  }, [isAuthenticated, isLoading, navigate, getRedirectionPath]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +41,7 @@ const LoginPage = () => {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear errors on input change
     if (formErrors[name]) {
       setFormErrors(prev => ({
@@ -91,12 +76,12 @@ const LoginPage = () => {
     
     setLoggingIn(true);
     try {
-      // Call login function and wait for it to complete
-      await login(formData.email, formData.password);
-      // No need to navigate here - the useEffect will handle redirection
+      const result = await login(formData.email, formData.password);
+      if (result) {
+        // Redirection will be handled by the AuthContext
+      }
     } catch (err) {
       console.error('Login error:', err);
-      // Error state is already set in the login function
     } finally {
       setLoggingIn(false);
     }
@@ -114,21 +99,10 @@ const LoginPage = () => {
             Sign in to UDDAN
           </Typography>
           
-          <Tabs value={loginType} onChange={handleLoginTypeChange} sx={{ mb: 3, width: '100%' }}>
-            <Tab label="Candidate/Client" />
-            <Tab label="Administration" />
-          </Tabs>
-          
-          {loginType === 0 ? (
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Access your candidate or client account
-            </Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Access the admin interface
-            </Typography>
-          )}
-          
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Access your account - candidates, clients and administrators
+          </Typography>
+
           {formErrors.email && (
             <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
               {formErrors.email}
@@ -152,7 +126,7 @@ const LoginPage = () => {
               {location.state.message}
             </Alert>
           )}
-          
+
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
             <TextField
               margin="normal"
@@ -207,41 +181,15 @@ const LoginPage = () => {
               <Link component={RouterLink} to="/forgot-password" variant="body2">
                 Forgot password?
               </Link>
-              
-              {loginType === 0 && (
-                <Link component={RouterLink} to="/register" variant="body2">
-                  Create an account
-                </Link>
-              )}
+              <Link component={RouterLink} to="/register" variant="body2">
+                Create an account
+              </Link>
             </Box>
             
-            {loginType === 0 && (
-              <>
-                <Divider sx={{ width: '100%', my: 3 }} />
-                <Box sx={{ width: '100%', textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Are you a recruiter or a company?
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    component={RouterLink}
-                    to="/contact"
-                    sx={{ mt: 1 }}
-                  >
-                    Contact us
-                  </Button>
-                </Box>
-              </>
-            )}
+            <Divider sx={{ width: '100%', my: 3 }} />
             
             <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Button
-                component={RouterLink}
-                to="/"
-                variant="text"
-                size="small"
-              >
+              <Button component={RouterLink} to="/" variant="text" size="small">
                 Return to Home
               </Button>
             </Box>

@@ -122,10 +122,10 @@ const RoleRoute = ({ children, roles = [] }) => {
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#5e35b1', // Main Purple
+      main: '#007aff', // Main Purple
     },
     secondary: {
-      main: '#2e7d32', // Green for client sections
+      main: '#01e8c8', // Green for client sections
     },
     background: {
       default: '#f5f5f5',

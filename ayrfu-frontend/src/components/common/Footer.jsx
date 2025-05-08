@@ -20,12 +20,13 @@ const Footer = () => {
     <Box 
       component="footer" 
       sx={{ 
-        bgcolor: '#0A1929', 
-        color: 'white',
+        bgcolor: 'primary.main', 
+        color: '#D3D3D3',
         pt: 8,
         pb: 4,
         mt: 'auto',
         position: 'relative',
+        backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -33,7 +34,7 @@ const Footer = () => {
           left: 0,
           right: 0,
           height: '4px',
-          background: 'linear-gradient(90deg, #0066CC, #4D94E0, #FF5722)',
+          backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
         }
       }}
     >
@@ -42,7 +43,7 @@ const Footer = () => {
           <Grid item xs={12} md={4} data-aos="fade-right" data-aos-delay="100">
             <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
               <img src={UddanLogo} alt="UDDAN Logo" height="40" />
-              <Typography variant="h5" sx={{ ml: 1, fontWeight: 'bold' }}>
+              <Typography variant="h5" color="white" sx={{ ml: 1, fontWeight: 'bold' }}>
                 UDDAN
               </Typography>
             </Box>
@@ -106,7 +107,7 @@ const Footer = () => {
           </Grid>
           
           <Grid item xs={12} md={2} data-aos="fade-up" data-aos-delay="200">
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+            <Typography variant="h6" color="white" gutterBottom sx={{ fontWeight: 600 }}>
               Quick Links
             </Typography>
             <Link 
@@ -188,7 +189,7 @@ const Footer = () => {
           </Grid>
           
           <Grid item xs={12} md={3} data-aos="fade-up" data-aos-delay="300">
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+            <Typography variant="h6" color="white" gutterBottom sx={{ fontWeight: 600 }}>
               Our Services
             </Typography>
             <Link 
@@ -266,7 +267,7 @@ const Footer = () => {
           </Grid>
           
           <Grid item xs={12} md={3} data-aos="fade-left" data-aos-delay="400">
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+            <Typography variant="h6" color="white" gutterBottom sx={{ fontWeight: 600 }}>
               Contact Us
             </Typography>
             
@@ -278,7 +279,7 @@ const Footer = () => {
               '&:hover': { opacity: 1 },
               transition: 'all 0.2s ease',
             }}>
-              <LocationOnIcon sx={{ mr: 1, color: '#4D94E0' }} />
+              <LocationOnIcon sx={{ mr: 1, color: 'white' }} />
               <Typography variant="body2">
                 123 Technology Park, Business District, Paris, France
               </Typography>
@@ -292,7 +293,7 @@ const Footer = () => {
               '&:hover': { opacity: 1 },
               transition: 'all 0.2s ease',
             }}>
-              <EmailIcon sx={{ mr: 1, color: '#4D94E0' }} />
+              <EmailIcon sx={{ mr: 1, color: 'white' }} />
               <Typography variant="body2">
                 contact@uddan.com
               </Typography>
@@ -306,7 +307,7 @@ const Footer = () => {
               '&:hover': { opacity: 1 },
               transition: 'all 0.2s ease',
             }}>
-              <PhoneIcon sx={{ mr: 1, color: '#4D94E0' }} />
+              <PhoneIcon sx={{ mr: 1, color: 'white' }} />
               <Typography variant="body2">
                 +33 (1) 234-5678
               </Typography>

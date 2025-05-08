@@ -260,7 +260,7 @@ const ClientDocumentsPage = () => {
         return <DescriptionIcon style={{ color: '#1565c0' }} />;
       case 'xls':
       case 'xlsx':
-        return <DescriptionIcon style={{ color: '#2e7d32' }} />;
+        return <DescriptionIcon style={{ color: '#01e8c8' }} />;
       case 'jpg':
       case 'jpeg':
       case 'png':
