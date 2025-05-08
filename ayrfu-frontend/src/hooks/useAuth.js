@@ -1,8 +1,22 @@
-// src/hooks/useAuth.js
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext, createContext } from 'react';
 import axios from 'axios';
 
+// Create context for authentication
+const AuthContext = createContext();
+
+// Provider component that wraps the app and provides auth context
+export const AuthProvider = ({ children }) => {
+  const auth = useProvideAuth();
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+};
+
+// Hook to use authentication context
 export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+// Provider hook that creates auth object and handles state
+function useProvideAuth() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,18 +35,16 @@ export const useAuth = () => {
     setIsLoading(true);
     try {
       const response = await axios.get('/api/auth/profile', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data);
       setIsAuthenticated(true);
       setError(null);
     } catch (err) {
-      console.error('Error fetching user profile:', err);
-      setError(err.response?.data?.message || 'Failed to fetch user profile');
+      console.error('Error fetching profile:', err);
+      setError(err.response?.data?.message || 'Unable to retrieve profile');
       
-      // Clear token if unauthorized
+      // Remove token if unauthorized
       if (err.response?.status === 401) {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
@@ -55,32 +67,62 @@ export const useAuth = () => {
         localStorage.setItem('token', response.data.token);
         setUser(response.data);
         setIsAuthenticated(true);
+        
+        // Load complete user profile after login
+        await getCurrentUser();
+        
         return response.data;
       }
-      
       return null;
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(err.response?.data?.message || 'Login failed. Check your credentials.');
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Get redirection path based on user roles
+  const getRedirectionPath = useCallback(() => {
+    if (!user || !user.roles) return '/';
+    
+    const userRoles = user.roles.map(role => typeof role === 'string' ? role : role.name);
+    
+    if (userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_SUPER_USER')) {
+      return '/admin/dashboard';
+    } else if (userRoles.includes('ROLE_CANDIDATE')) {
+      return '/candidate/dashboard';
+    } else if (userRoles.includes('ROLE_CLIENT')) {
+      return '/client/dashboard';
+    }
+    
+    return '/';
+  }, [user]);
+
   // Logout function
   const logout = useCallback(() => {
     localStorage.removeItem('token');
+    sessionStorage.clear();
+    
+    // Clear all cookies
+    document.cookie.split(";").forEach(c => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
     setUser(null);
     setIsAuthenticated(false);
+    
+    // Force a page reload to clear any component state
+    window.location.href = '/';
   }, []);
 
-  // Clear authentication error
+  // Clear authentication errors
   const clearAuthError = useCallback(() => {
     setError(null);
   }, []);
 
-  // Check for roles - enhanced to handle role names properly
+  // Check if user has a specific role
   const hasRole = useCallback((roleName) => {
     if (!user || !user.roles) return false;
     
@@ -89,7 +131,7 @@ export const useAuth = () => {
       return user.roles.includes(roleName);
     }
     
-    // Handle roles as array of objects with name property
+    // Handle roles as array of objects with a name property
     if (Array.isArray(user.roles) && typeof user.roles[0] === 'object') {
       return user.roles.some(r => r.name === roleName);
     }
@@ -104,11 +146,9 @@ export const useAuth = () => {
     
     try {
       const response = await axios.post('/api/auth/register', userData);
-      
       if (response.data) {
         return response.data;
       }
-      
       return null;
     } catch (err) {
       console.error('Registration error:', err);
@@ -124,6 +164,25 @@ export const useAuth = () => {
     getCurrentUser();
   }, [getCurrentUser]);
 
+  // Setup interceptor to handle token expiration
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response?.status === 401 && isAuthenticated) {
+          // Token expired or invalid
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+    
+    return () => {
+      // Cleanup interceptor on component unmount
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [isAuthenticated, logout]);
+
   return {
     user,
     isLoading,
@@ -134,8 +193,9 @@ export const useAuth = () => {
     register,
     getCurrentUser,
     hasRole,
-    clearAuthError
+    clearAuthError,
+    getRedirectionPath
   };
-};
+}
 
 export default useAuth;

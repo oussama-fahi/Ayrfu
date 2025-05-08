@@ -277,7 +277,7 @@ const RegisterPage = () => {
                 sx={{ 
                   mb: 2, 
                   p: 2, 
-                  border: formData.roles[0]?.name === 'ROLE_CANDIDATE' ? '2px solid #5e35b1' : 'none',
+                  border: formData.roles[0]?.name === 'ROLE_CANDIDATE' ? '2px solid #007aff' : 'none',
                   bgcolor: formData.roles[0]?.name === 'ROLE_CANDIDATE' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
                 }}
               >
@@ -300,7 +300,7 @@ const RegisterPage = () => {
                 elevation={3} 
                 sx={{ 
                   p: 2, 
-                  border: formData.roles[0]?.name === 'ROLE_CLIENT' ? '2px solid #5e35b1' : 'none',
+                  border: formData.roles[0]?.name === 'ROLE_CLIENT' ? '2px solid #007aff' : 'none',
                   bgcolor: formData.roles[0]?.name === 'ROLE_CLIENT' ? 'rgba(94, 53, 177, 0.08)' : 'inherit'
                 }}
               >
