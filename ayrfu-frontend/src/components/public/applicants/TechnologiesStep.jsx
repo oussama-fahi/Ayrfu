@@ -47,7 +47,7 @@ const TechnologiesStep = ({ selectedTechnologies = [], onChange }) => {
   };
   
   return (
-    <div>
+    <>
       <Typography variant="h5" gutterBottom>
         Select Technologies You're Experienced With
       </Typography>
@@ -122,7 +122,7 @@ const TechnologiesStep = ({ selectedTechnologies = [], onChange }) => {
           No technologies found matching your search. Try a different term.
         </Typography>
       )}
-    </div>
+    </>
   );
 };
 

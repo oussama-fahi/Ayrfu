@@ -29,7 +29,7 @@ const ExperienceStep = ({ selectedExperience, onChange }) => {
   };
   
   return (
-    <div>
+    <>
       <Typography variant="h5" gutterBottom>
         Select Your Experience Level
       </Typography>
@@ -71,7 +71,7 @@ const ExperienceStep = ({ selectedExperience, onChange }) => {
           </Grid>
         </RadioGroup>
       </FormControl>
-    </div>
+    </>
   );
 };
 

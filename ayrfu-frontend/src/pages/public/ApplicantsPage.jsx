@@ -1,6 +1,5 @@
 // src/pages/public/ApplicantsPage.js
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -11,38 +10,37 @@ import {
   StepLabel,
   Button,
   Paper,
-  Grid,
+  useTheme,
   CircularProgress,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import SearchIcon from '@mui/icons-material/Search';
 
-// Components
+// Step Components
 import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
 import LanguagesStep from '../../components/public/applicants/LanguagesStep';
 import LocationStep from '../../components/public/applicants/LocationStep';
 import ExperienceStep from '../../components/public/applicants/ExperienceStep';
 import WorkModelStep from '../../components/public/applicants/WorkModelStep';
-import MatchingPositions from '../../components/public/applicants/MatchingPositions';
-
-// Redux
-import { fetchMatchingPositions, clearMatchingPositions } from '../../redux/slices/positionsSlice';
+import PersonalInfoStep from '../../components/public/applicants/PersonalInfoStep';
+import UploadCVStep from '../../components/public/applicants/UploadCVStep';
+import MotivationLetterStep from '../../components/public/applicants/MotivationLetterStep';
 
 const steps = [
   'Technologies',
   'Languages',
-  'Location',
+  'Work Location',
   'Experience',
-  'Work Model',
-  'Matching Positions',
+  'Employment Type',
+  'Personal Information',
+  'Upload CV',
+  'Motivation Letter',
 ];
 
 const ApplicantsPage = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { matchingPositions, isLoading } = useSelector((state) => state.positions);
-  
+  const theme = useTheme();
+
   const [activeStep, setActiveStep] = useState(0);
   const [criteria, setCriteria] = useState({
     technologies: [],
@@ -50,20 +48,26 @@ const ApplicantsPage = () => {
     location: null,
     experienceLevel: '',
     workModel: '',
+    personalInfo: {
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+    },
+    cvFile: null,
+    motivationLetter: '',
   });
-  
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleNext = () => {
-    if (activeStep === steps.length - 2) {
-      // Last step before results, fetch matching positions
-      dispatch(fetchMatchingPositions(criteria));
-    }
     setActiveStep((prevStep) => prevStep + 1);
   };
-  
+
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
-  
+
   const handleReset = () => {
     setActiveStep(0);
     setCriteria({
@@ -72,17 +76,34 @@ const ApplicantsPage = () => {
       location: null,
       experienceLevel: '',
       workModel: '',
+      personalInfo: {
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+      },
+      cvFile: null,
+      motivationLetter: '',
     });
-    dispatch(clearMatchingPositions());
   };
-  
+
   const handleCriteriaChange = (field, value) => {
     setCriteria((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-  
+
+  const handleSubmit = () => {
+    setIsSubmitting(true);
+
+    // Simulate submission logic (e.g., API call)
+    setTimeout(() => {
+      setIsSubmitting(false);
+      navigate('/apply/confirmation');
+    }, 2000);
+  };
+
   const getStepContent = (step) => {
     switch (step) {
       case 0:
@@ -121,18 +142,57 @@ const ApplicantsPage = () => {
           />
         );
       case 5:
-        return <MatchingPositions positions={matchingPositions} />;
+        return (
+          <PersonalInfoStep
+            data={criteria.personalInfo}
+            onChange={(info) => handleCriteriaChange('personalInfo', info)}
+          />
+        );
+      case 6:
+        return (
+          <UploadCVStep
+            file={criteria.cvFile}
+            onChange={(file) => handleCriteriaChange('cvFile', file)}
+          />
+        );
+      case 7:
+        return (
+          <MotivationLetterStep
+            letter={criteria.motivationLetter}
+            onChange={(text) => handleCriteriaChange('motivationLetter', text)}
+          />
+        );
       default:
         return 'Unknown step';
     }
   };
-  
+
+  const isStepInvalid = () => {
+    const { technologies, languages, location, experienceLevel, workModel, personalInfo, cvFile } = criteria;
+    switch (activeStep) {
+      case 0: return technologies.length === 0;
+      case 1: return languages.length === 0;
+      case 2: return !location;
+      case 3: return !experienceLevel;
+      case 4: return !workModel;
+      case 5: return !personalInfo.name || !personalInfo.phone;
+      case 6: return !cvFile;
+      default: return false;
+    }
+  };
+
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
-      <Typography variant="h3" component="h1" gutterBottom textAlign="center">
-        Find Your Perfect Job at UDDAN
+      <Typography
+        variant="h3"
+        component="h1"
+        gutterBottom
+        textAlign="center"
+        sx={theme.gradientTextStyle}
+      >
+        Job Application
       </Typography>
-      
+
       <Paper sx={{ p: 4, mt: 4 }}>
         <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
           {steps.map((label) => (
@@ -141,11 +201,9 @@ const ApplicantsPage = () => {
             </Step>
           ))}
         </Stepper>
-        
-        <Box sx={{ mt: 4, mb: 4 }}>
-          {getStepContent(activeStep)}
-        </Box>
-        
+
+        <Box sx={{ mt: 4, mb: 4 }}>{getStepContent(activeStep)}</Box>
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
           <Button
             disabled={activeStep === 0}
@@ -154,52 +212,32 @@ const ApplicantsPage = () => {
           >
             Back
           </Button>
-          
+
           <Box>
-            {activeStep === steps.length - 1 && (
-              <Button
-                variant="outlined"
-                onClick={handleReset}
-                sx={{ mr: 2 }}
-              >
-                Start Again
-              </Button>
-            )}
-            
-            {activeStep < steps.length - 1 ? (
+            {activeStep === steps.length - 1 ? (
               <Button
                 variant="contained"
-                onClick={handleNext}
-                endIcon={activeStep === steps.length - 2 ? <SearchIcon /> : <ArrowForwardIcon />}
-                disabled={
-                  (activeStep === 0 && criteria.technologies.length === 0) ||
-                  (activeStep === 1 && criteria.languages.length === 0) ||
-                  (activeStep === 2 && !criteria.location) ||
-                  (activeStep === 3 && !criteria.experienceLevel) ||
-                  (activeStep === 4 && !criteria.workModel) ||
-                  isLoading
-                }
+                color="primary"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
               >
-                {activeStep === steps.length - 2 ? (
-                  isLoading ? (
-                    <>
-                      <CircularProgress size={24} sx={{ mr: 1 }} />
-                      Finding Positions...
-                    </>
-                  ) : (
-                    'Find Matching Positions'
-                  )
+                {isSubmitting ? (
+                  <>
+                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                    Submitting...
+                  </>
                 ) : (
-                  'Next'
+                  'Submit Application'
                 )}
               </Button>
             ) : (
               <Button
                 variant="contained"
-                color="primary"
-                onClick={() => navigate('/apply')}
+                onClick={handleNext}
+                endIcon={<ArrowForwardIcon />}
+                disabled={isStepInvalid()}
               >
-                Apply Now
+                Next
               </Button>
             )}
           </Box>
