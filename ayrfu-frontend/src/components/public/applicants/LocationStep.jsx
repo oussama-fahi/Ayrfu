@@ -1,28 +1,23 @@
-import React from 'react';
+import LaptopIcon from '@mui/icons-material/Laptop';
+import PublicIcon from '@mui/icons-material/Public';
+import WorkIcon from '@mui/icons-material/Work';
 import {
-  Typography,
-  Grid,
   Card,
   CardContent,
+  FormControl,
+  FormControlLabel,
+  Grid,
   Radio,
   RadioGroup,
-  FormControlLabel,
-  FormControl,
+  Typography,
 } from '@mui/material';
-import PlaceIcon from '@mui/icons-material/Place';
-import PublicIcon from '@mui/icons-material/Public';
-import LaptopIcon from '@mui/icons-material/Laptop';
+import React from 'react';
+
 
 const locations = [
-  { id: 'remote', label: 'Remote', icon: <LaptopIcon fontSize="large" color="primary" /> },
-  { id: 'onsite', label: 'On-site', icon: <PlaceIcon fontSize="large" color="primary" /> },
-  { id: 'hybrid', label: 'Hybrid', icon: <PublicIcon fontSize="large" color="primary" /> },
-  { id: 'europe', label: 'Europe', icon: <PublicIcon fontSize="large" color="primary" /> },
-  { id: 'northAmerica', label: 'North America', icon: <PublicIcon fontSize="large" color="primary" /> },
-  { id: 'southAmerica', label: 'South America', icon: <PublicIcon fontSize="large" color="primary" /> },
-  { id: 'asia', label: 'Asia', icon: <PublicIcon fontSize="large" color="primary" /> },
-  { id: 'africa', label: 'Africa', icon: <PublicIcon fontSize="large" color="primary" /> },
-  { id: 'australia', label: 'Australia & Oceania', icon: <PublicIcon fontSize="large" color="primary" /> },
+  { id: 'remote', label: 'Remote', icon: <PublicIcon fontSize="large" color="primary" /> },
+  { id: 'onsite', label: 'On-site', icon: <WorkIcon fontSize="large" color="primary" /> },
+  { id: 'hybrid', label: 'Hybrid', icon: <LaptopIcon fontSize="large" color="primary" /> },
 ];
 
 const LocationStep = ({ selectedLocation, onChange }) => {
@@ -33,7 +28,7 @@ const LocationStep = ({ selectedLocation, onChange }) => {
   return (
     <div>
       <Typography variant="h5" gutterBottom>
-        Select Your Preferred Location
+        Select Your Preferred Work Location
       </Typography>
       <Typography variant="body1" color="textSecondary" paragraph>
         Choose your preferred work location. This will help us find positions that match your preferences.

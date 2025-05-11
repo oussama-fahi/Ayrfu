@@ -18,7 +18,8 @@ import {
   CircularProgress,
   Divider,
   Alert,
-  Paper
+  Paper,
+  Tooltip
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -193,110 +194,122 @@ const PositionsPage = () => {
       
       {/* Search and filters */}
       <Paper sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              placeholder="Search positions..."
-              variant="outlined"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                )
-              }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <FilterListIcon color="primary" />
-              <Typography variant="body2" sx={{ mr: 1 }}>
-                Filters:
-              </Typography>
-              
-              <Button 
-                size="small" 
-                onClick={handleClearFilters}
-                sx={{ ml: 'auto' }}
-              >
-                Clear All
-              </Button>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Technology</InputLabel>
-              <Select
-                name="technology"
-                value={filters.technology}
-                label="Technology"
-                onChange={handleFilterChange}
-              >
-                <MenuItem value="">All</MenuItem>
-                {filterOptions.technologies.map(tech => (
-                  <MenuItem key={tech} value={tech}>{tech}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Experience</InputLabel>
-              <Select
-                name="experienceLevel"
-                value={filters.experienceLevel}
-                label="Experience"
-                onChange={handleFilterChange}
-              >
-                <MenuItem value="">All</MenuItem>
-                {filterOptions.experienceLevels.map(exp => (
-                  <MenuItem key={exp} value={exp}>{exp}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Location</InputLabel>
-              <Select
-                name="location"
-                value={filters.location}
-                label="Location"
-                onChange={handleFilterChange}
-              >
-                <MenuItem value="">All</MenuItem>
-                {filterOptions.locations.map(loc => (
-                  <MenuItem key={loc} value={loc}>{loc}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Work Model</InputLabel>
-              <Select
-                name="workModel"
-                value={filters.workModel}
-                label="Work Model"
-                onChange={handleFilterChange}
-              >
-                <MenuItem value="">All</MenuItem>
-                {filterOptions.workModels.map(model => (
-                  <MenuItem key={model} value={model}>{model}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Paper>
+  <Grid container spacing={2} alignItems="center">
+    {/* Search field */}
+    <Grid item xs={12} md={6}>
+      <TextField
+        fullWidth
+        placeholder="Search positions..."
+        variant="outlined"
+        value={searchTerm}
+        onChange={handleSearchChange}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          )
+        }}
+      />
+    </Grid>
+    
+    {/* Filter title and clear button */}
+    <Grid item xs={12} md={6}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <FilterListIcon color="primary" />
+        
+        <Button 
+          size="small" 
+          onClick={handleClearFilters}
+          sx={{ ml: 'auto' }}
+        >
+          Clear All
+        </Button>
+      </Box>
+    </Grid>
+    
+    {/* Filter selects - using a more compact approach */}
+    <Grid item xs={12}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        {/* Technology Filter */}
+        <Box sx={{ minWidth: '180px', flex: '1 1 180px' }}>
+          <FormControl fullWidth variant="outlined" size="small">
+            <InputLabel id="tech-label" sx={{ bgcolor: 'background.paper', px: 0.5 }}>Technology</InputLabel>
+            <Select
+              labelId="tech-label"
+              name="technology"
+              value={filters.technology}
+              label="Technology"
+              onChange={handleFilterChange}
+            >
+              <MenuItem value="">All</MenuItem>
+              {filterOptions.technologies.map(tech => (
+                <MenuItem key={tech} value={tech}>{tech}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Experience Filter */}
+        <Box sx={{ minWidth: '180px', flex: '1 1 180px' }}>
+          <FormControl fullWidth variant="outlined" size="small">
+            <InputLabel id="exp-label" sx={{ bgcolor: 'background.paper', px: 0.5 }}>Experience</InputLabel>
+            <Select
+              labelId="exp-label"
+              name="experienceLevel"
+              value={filters.experienceLevel}
+              label="Experience"
+              onChange={handleFilterChange}
+            >
+              <MenuItem value="">All</MenuItem>
+              {filterOptions.experienceLevels.map(exp => (
+                <MenuItem key={exp} value={exp}>{exp}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Location Filter */}
+        <Box sx={{ minWidth: '180px', flex: '1 1 180px' }}>
+          <FormControl fullWidth variant="outlined" size="small">
+            <InputLabel id="loc-label" sx={{ bgcolor: 'background.paper', px: 0.5 }}>Location</InputLabel>
+            <Select
+              labelId="loc-label"
+              name="location"
+              value={filters.location}
+              label="Location"
+              onChange={handleFilterChange}
+            >
+              <MenuItem value="">All</MenuItem>
+              {filterOptions.locations.map(loc => (
+                <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+        
+        {/* Work Model Filter */}
+        <Box sx={{ minWidth: '180px', flex: '1 1 180px' }}>
+          <FormControl fullWidth variant="outlined" size="small">
+            <InputLabel id="work-label" sx={{ bgcolor: 'background.paper', px: 0.5 }}>Work Model</InputLabel>
+            <Select
+              labelId="work-label"
+              name="workModel"
+              value={filters.workModel}
+              label="Work Model"
+              onChange={handleFilterChange}
+            >
+              <MenuItem value="">All</MenuItem>
+              {filterOptions.workModels.map(model => (
+                <MenuItem key={model} value={model}>{model}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
+    </Grid>
+  </Grid>
+</Paper>
       
       {/* Results */}
       <Box>

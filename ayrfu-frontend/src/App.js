@@ -20,7 +20,6 @@ import ApplicantsPage from './pages/public/ApplicantsPage';
 import ClientsPage from './pages/public/ClientsPage';
 import PositionDetailPage from './pages/public/PositionDetailPage';
 import ServiceDetailPage from './pages/public/ServiceDetailPage';
-import ApplyPage from './pages/public/ApplyPage';
 import ContactPage from './pages/public/ContactPage';
 import NotFoundPage from './pages/public/NotFoundPage';
 import LoginPage from './pages/public/LoginPage';
@@ -202,7 +201,7 @@ const App = () => {
               <Route path="positions" element={<PositionsPage />} />
               <Route path="positions/:id" element={<PositionDetailPage />} />
               <Route path="services/:id" element={<ServiceDetailPage />} />
-              <Route path="apply/:positionId?" element={<ApplyPage />} />
+              <Route path="apply/:positionId?" element={<ApplicantsPage />} />
               <Route path="contact" element={<ContactPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />
