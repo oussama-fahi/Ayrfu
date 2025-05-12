@@ -72,9 +72,11 @@ public class ApplicationController {
             @ApiResponse(responseCode = "200", description = "Applications retrieved successfully"),
             @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN or SUPER_USER role")
     })
-    public ResponseEntity<List<ApplicationResponse>> getAllApplications() {
-        logger.info("Request to get all applications");
-        List<ApplicationResponse> applications = applicationService.getAllApplications();
+    public ResponseEntity<List<ApplicationResponse>> getAllApplications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        logger.info("Request to get all applications, page: {}, size: {}", page, size);
+        List<ApplicationResponse> applications = applicationService.getAllApplications(page, size);
         return ResponseEntity.ok(applications);
     }
 
@@ -122,6 +124,23 @@ public class ApplicationController {
         logger.info("Request to get applications with status: {}", status);
         List<ApplicationResponse> applications = applicationService.getApplicationsByStatus(status);
         return ResponseEntity.ok(applications);
+    }
+
+    @GetMapping("/my-applications")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Get my applications", description = "Retrieves applications for the current logged-in candidate")
+    public ResponseEntity<List<ApplicationResponse>> getMyApplications() {
+        logger.info("Request to get applications for current logged-in candidate");
+        List<ApplicationResponse> applications = applicationService.getMyApplications();
+        return ResponseEntity.ok(applications);
+    }
+    @PostMapping("/{id}/withdraw")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Withdraw application", description = "Withdraws an application (for candidates)")
+    public ResponseEntity<ApplicationResponse> withdrawApplication(@PathVariable Long id) {
+        logger.info("Request to withdraw application with ID: {}", id);
+        ApplicationResponse withdrawnApplication = applicationService.withdrawApplication(id);
+        return ResponseEntity.ok(withdrawnApplication);
     }
 
     @PatchMapping("/{id}/status")

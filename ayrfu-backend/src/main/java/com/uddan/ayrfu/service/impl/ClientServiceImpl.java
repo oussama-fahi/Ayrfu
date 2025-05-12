@@ -9,6 +9,9 @@ import com.uddan.ayrfu.repository.ClientRepository;
 import com.uddan.ayrfu.service.ClientService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +23,9 @@ public class ClientServiceImpl implements ClientService {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
     private final ClientRepository clientRepository;
-    
-    public ClientServiceImpl(ClientRepository clientRepository){
-        this.clientRepository=clientRepository;
+
+    public ClientServiceImpl(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
     }
 
     @Override
@@ -75,10 +78,13 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ClientResponse> getAllClients() {
-        logger.info("Fetching all clients");
+    public List<ClientResponse> getAllClients(int page, int size) {
+        logger.info("Fetching all clients, page: {}, size: {}", page, size);
 
-        return clientRepository.findAll().stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Client> clients = clientRepository.findAll(pageable);
+
+        return clients.getContent().stream()
                 .map(this::mapToClientResponse)
                 .collect(Collectors.toList());
     }
@@ -122,6 +128,19 @@ public class ClientServiceImpl implements ClientService {
         clientRepository.delete(client);
 
         logger.info("Client deleted with ID: {}", id);
+    }
+
+    @Override
+    public boolean isOwnProfile(Long clientId, Long userId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found with ID: " + clientId));
+
+        return client.getUser() != null && client.getUser().getId().equals(userId);
+    }
+
+    @Override
+    public boolean isOwnEmail(String email, String userEmail) {
+        return email.equals(userEmail);
     }
 
     /**

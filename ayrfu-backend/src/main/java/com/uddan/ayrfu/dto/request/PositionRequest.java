@@ -1,44 +1,40 @@
 package com.uddan.ayrfu.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class PositionRequest {
-
     @NotBlank(message = "Title is required")
-    @Size(max = 100, message = "Title must be less than 100 characters")
     private String title;
 
-    @Size(max = 2000, message = "Description must be less than 2000 characters")
     private String description;
 
     @NotBlank(message = "Technology is required")
-    @Size(max = 100, message = "Technology must be less than 100 characters")
     private String technology;
 
     @NotBlank(message = "Location is required")
-    @Size(max = 100, message = "Location must be less than 100 characters")
     private String location;
 
-    @NotEmpty(message = "At least one language is required")
     private Set<String> languages = new HashSet<>();
 
     @NotBlank(message = "Experience level is required")
-    @Size(max = 50, message = "Experience level must be less than 50 characters")
     private String experienceLevel;
 
     @NotBlank(message = "Work model is required")
-    @Size(max = 50, message = "Work model must be less than 50 characters")
     private String workModel;
 
+    private boolean active = true;
+
+    // Default constructor
     public PositionRequest() {
     }
 
+    // All-args constructor
     public PositionRequest(String title, String description, String technology, String location,
-                           Set<String> languages, String experienceLevel, String workModel) {
+                           Set<String> languages, String experienceLevel, String workModel, boolean active) {
         this.title = title;
         this.description = description;
         this.technology = technology;
@@ -46,8 +42,10 @@ public class PositionRequest {
         this.languages = languages != null ? languages : new HashSet<>();
         this.experienceLevel = experienceLevel;
         this.workModel = workModel;
+        this.active = active;
     }
 
+    // Getters and setters
     public String getTitle() {
         return title;
     }
@@ -104,6 +102,50 @@ public class PositionRequest {
         this.workModel = workModel;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    // equals, hashCode, and toString methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PositionRequest that = (PositionRequest) o;
+        return active == that.active &&
+                Objects.equals(title, that.title) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(technology, that.technology) &&
+                Objects.equals(location, that.location) &&
+                Objects.equals(languages, that.languages) &&
+                Objects.equals(experienceLevel, that.experienceLevel) &&
+                Objects.equals(workModel, that.workModel);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, description, technology, location, languages, experienceLevel, workModel, active);
+    }
+
+    @Override
+    public String toString() {
+        return "PositionRequest{" +
+                "title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", technology='" + technology + '\'' +
+                ", location='" + location + '\'' +
+                ", languages=" + languages +
+                ", experienceLevel='" + experienceLevel + '\'' +
+                ", workModel='" + workModel + '\'' +
+                ", active=" + active +
+                '}';
+    }
+
+    // Builder pattern
     public static Builder builder() {
         return new Builder();
     }
@@ -116,6 +158,10 @@ public class PositionRequest {
         private Set<String> languages = new HashSet<>();
         private String experienceLevel;
         private String workModel;
+        private boolean active = true;
+
+        private Builder() {
+        }
 
         public Builder title(String title) {
             this.title = title;
@@ -138,7 +184,7 @@ public class PositionRequest {
         }
 
         public Builder languages(Set<String> languages) {
-            this.languages = languages != null ? languages : new HashSet<>();
+            this.languages = languages;
             return this;
         }
 
@@ -152,9 +198,13 @@ public class PositionRequest {
             return this;
         }
 
+        public Builder active(boolean active) {
+            this.active = active;
+            return this;
+        }
+
         public PositionRequest build() {
-            return new PositionRequest(title, description, technology, location,
-                    languages, experienceLevel, workModel);
+            return new PositionRequest(title, description, technology, location, languages, experienceLevel, workModel, active);
         }
     }
 }

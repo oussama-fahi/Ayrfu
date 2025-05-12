@@ -1,34 +1,31 @@
 package com.uddan.ayrfu.dto.request;
 
-import com.uddan.ayrfu.enumeration.MessageType;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-public class MessageRequest {
+import com.uddan.ayrfu.enumeration.MessageType;
 
+import java.util.Objects;
+
+public class MessageRequest {
     @NotNull(message = "Message type is required")
     private MessageType type;
 
     @NotBlank(message = "Sender name is required")
-    @Size(max = 100, message = "Sender name must be less than 100 characters")
     private String senderName;
 
     @NotBlank(message = "Sender email is required")
-    @Email(message = "Sender email must be valid")
-    @Size(max = 100, message = "Sender email must be less than 100 characters")
     private String senderEmail;
 
-    @Size(max = 20, message = "Sender phone must be less than 20 characters")
     private String senderPhone;
 
-    @NotBlank(message = "Message content is required")
-    @Size(max = 2000, message = "Message content must be less than 2000 characters")
+    @NotBlank(message = "Content is required")
     private String content;
 
+    // Default constructor
     public MessageRequest() {
     }
 
+    // All-args constructor
     public MessageRequest(MessageType type, String senderName, String senderEmail, String senderPhone, String content) {
         this.type = type;
         this.senderName = senderName;
@@ -37,6 +34,7 @@ public class MessageRequest {
         this.content = content;
     }
 
+    // Getters and setters
     public MessageType getType() {
         return type;
     }
@@ -77,6 +75,36 @@ public class MessageRequest {
         this.content = content;
     }
 
+    // equals, hashCode, and toString methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MessageRequest that = (MessageRequest) o;
+        return type == that.type &&
+                Objects.equals(senderName, that.senderName) &&
+                Objects.equals(senderEmail, that.senderEmail) &&
+                Objects.equals(senderPhone, that.senderPhone) &&
+                Objects.equals(content, that.content);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, senderName, senderEmail, senderPhone, content);
+    }
+
+    @Override
+    public String toString() {
+        return "MessageRequest{" +
+                "type=" + type +
+                ", senderName='" + senderName + '\'' +
+                ", senderEmail='" + senderEmail + '\'' +
+                ", senderPhone='" + senderPhone + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
+
+    // Builder pattern
     public static Builder builder() {
         return new Builder();
     }
@@ -87,6 +115,9 @@ public class MessageRequest {
         private String senderEmail;
         private String senderPhone;
         private String content;
+
+        private Builder() {
+        }
 
         public Builder type(MessageType type) {
             this.type = type;

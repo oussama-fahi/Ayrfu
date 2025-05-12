@@ -9,23 +9,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface CandidateService {
-
     CandidateResponse createCandidate(CandidateRequest candidateRequest);
-
     CandidateResponse getCandidateById(Long id);
-
     CandidateResponse getCandidateByEmail(String email);
-
-    List<CandidateResponse> getAllCandidates();
-
+    List<CandidateResponse> getAllCandidates(int page, int size);
     CandidateResponse updateCandidate(Long id, CandidateRequest candidateRequest);
-
     void deleteCandidate(Long id);
-
     String uploadCandidateCV(Long candidateId, MultipartFile file);
-
-    ApplicationResponse applyForPosition(Long candidateId, ApplicationRequest applicationRequest);
-
     List<ApplicationResponse> getCandidateApplications(Long candidateId);
+    boolean isOwnProfile(Long candidateId, Long userId);
+    boolean isOwnEmail(String email, String userEmail);
 }
-

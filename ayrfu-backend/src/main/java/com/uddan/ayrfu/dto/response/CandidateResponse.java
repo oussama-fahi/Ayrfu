@@ -2,7 +2,6 @@ package com.uddan.ayrfu.dto.response;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Set;
 
 public record CandidateResponse(
@@ -22,11 +21,7 @@ public record CandidateResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public CandidateResponse {
-        technologies = technologies != null ? technologies : new HashSet<>();
-        languages = languages != null ? languages : new HashSet<>();
-    }
-
+    // Builder pattern for records
     public static Builder builder() {
         return new Builder();
     }
@@ -39,14 +34,17 @@ public record CandidateResponse(
         private String address;
         private LocalDate dateOfBirth;
         private String gender;
-        private Set<String> technologies = new HashSet<>();
-        private Set<String> languages = new HashSet<>();
+        private Set<String> technologies;
+        private Set<String> languages;
         private String experienceLevel;
         private String preferredLocation;
         private String preferredWorkModel;
         private String cvPath;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+
+        private Builder() {
+        }
 
         public Builder id(Long id) {
             this.id = id;
@@ -84,12 +82,12 @@ public record CandidateResponse(
         }
 
         public Builder technologies(Set<String> technologies) {
-            this.technologies = technologies != null ? technologies : new HashSet<>();
+            this.technologies = technologies;
             return this;
         }
 
         public Builder languages(Set<String> languages) {
-            this.languages = languages != null ? languages : new HashSet<>();
+            this.languages = languages;
             return this;
         }
 
@@ -125,9 +123,8 @@ public record CandidateResponse(
 
         public CandidateResponse build() {
             return new CandidateResponse(id, fullName, email, phoneNumber, address, dateOfBirth, gender,
-                    technologies, languages, experienceLevel, preferredLocation,
-                    preferredWorkModel, cvPath, createdAt, updatedAt);
+                    technologies, languages, experienceLevel, preferredLocation, preferredWorkModel,
+                    cvPath, createdAt, updatedAt);
         }
     }
 }
-

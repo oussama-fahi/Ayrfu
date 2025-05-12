@@ -9,23 +9,14 @@ import java.util.Set;
 public interface PositionService {
     PositionResponse createPosition(PositionRequest positionRequest);
     PositionResponse getPositionById(Long id);
-    List<PositionResponse> getAllPositions();
-
-    List<PositionResponse> getAllActivePositions();
-
+    List<PositionResponse> getAllPositions(int page, int size);
+    List<PositionResponse> getAllActivePositions(int page, int size);
     PositionResponse updatePosition(Long id, PositionRequest positionRequest);
-
-    void activatePosition(Long id);
-
-    void deactivatePosition(Long id);
-
+    PositionResponse activatePosition(Long id);
+    PositionResponse deactivatePosition(Long id);
     void deletePosition(Long id);
-
-    List<PositionResponse> findPositionsMatchingCriteria(
-            String technology,
-            String location,
-            String experienceLevel,
-            String workModel,
-            Set<String> languages);
+    List<PositionResponse> findPositionsMatchingCriteria(String technology, String location,
+                                                         String experienceLevel, String workModel,
+                                                         Set<String> languages);
+    List<PositionResponse> getRecommendedPositions();
 }
-

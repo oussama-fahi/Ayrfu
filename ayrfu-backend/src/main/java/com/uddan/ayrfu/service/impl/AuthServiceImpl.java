@@ -7,6 +7,7 @@ import com.uddan.ayrfu.dto.response.UserResponse;
 import com.uddan.ayrfu.entity.Role;
 import com.uddan.ayrfu.entity.User;
 import com.uddan.ayrfu.exception.BadRequestException;
+import com.uddan.ayrfu.exception.ResourceNotFoundException;
 import com.uddan.ayrfu.repository.RoleRepository;
 import com.uddan.ayrfu.repository.UserRepository;
 import com.uddan.ayrfu.security.JwtUtil;
@@ -54,29 +55,46 @@ public class AuthServiceImpl implements AuthService {
     public JwtResponse login(LoginRequest loginRequest) {
         logger.info("Authenticating user with email: {}", loginRequest.getEmail());
 
-        // Authenticate the user
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+        try {
+            // Authenticate the user
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
-        // Set authentication in security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            // Set authentication in security context
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Get user details from authentication
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            // Get user details from authentication
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        // Generate JWT token using user details
-        String jwt = jwtUtils.generateToken(userDetails);
+            // Get user entity to check if account is active
+            User user = userRepository.findById(userDetails.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        logger.info("User authenticated successfully: {}", userDetails.getUsername());
+            if (!user.isActive()) {
+                logger.warn("Login attempt for inactive account: {}", loginRequest.getEmail());
+                throw new BadRequestException("Account is not active. Please contact support.");
+            }
 
-        // Build and return JWT response
-        return JwtResponse.builder()
-                .token(jwt)
-                .id(userDetails.getId())
-                .email(userDetails.getEmail())
-                .fullName(userDetails.getUsername())
-                .roles(userDetails.getRoles())
-                .build();
+            // Generate JWT token using user details
+            String jwt = jwtUtils.generateToken(userDetails);
+
+            logger.info("User authenticated successfully: {}", userDetails.getUsername());
+
+            // Build and return JWT response
+            return JwtResponse.builder()
+                    .token(jwt)
+                    .id(userDetails.getId())
+                    .email(userDetails.getEmail())
+                    .fullName(userDetails.getUsername())
+                    .roles(userDetails.getRoles())
+                    .build();
+        } catch (BadRequestException e) {
+            // Re-throw BadRequestException
+            throw e;
+        } catch (Exception e) {
+            logger.error("Authentication failed for user: {}", loginRequest.getEmail(), e);
+            throw new BadRequestException("Invalid credentials");
+        }
     }
 
     @Override
@@ -86,7 +104,14 @@ public class AuthServiceImpl implements AuthService {
 
         // Check if email already exists
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
+            logger.warn("Registration failed: Email already in use: {}", registerRequest.getEmail());
             throw new BadRequestException("Email is already in use");
+        }
+
+        // Validate password
+        if (registerRequest.getPassword() == null || registerRequest.getPassword().length() < 8) {
+            logger.warn("Registration failed: Password too short");
+            throw new BadRequestException("Password must be at least 8 characters long");
         }
 
         // Encode the password
@@ -107,6 +132,7 @@ public class AuthServiceImpl implements AuthService {
                             .orElseThrow(() -> new BadRequestException("Role not found: " + roleName));
                     roles.add(role);
                 } else {
+                    logger.warn("Registration failed: Attempted to assign unauthorized role: {}", roleName);
                     throw new BadRequestException("Cannot assign role: " + roleName + " during registration");
                 }
             }
@@ -136,10 +162,16 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public UserResponse getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            logger.error("Failed to get current user: No valid authentication found");
+            throw new BadRequestException("User not authenticated");
+        }
+
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         User user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new BadRequestException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return mapToUserResponse(user);
     }
@@ -149,27 +181,44 @@ public class AuthServiceImpl implements AuthService {
     public UserResponse updateCurrentUserProfile(User updateRequest) {
         // Get current authenticated user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            logger.error("Failed to update profile: No valid authentication found");
+            throw new BadRequestException("User not authenticated");
+        }
+
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         User user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new BadRequestException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Update user profile (only allowed fields)
-        user.setUserName(updateRequest.getUserName());
+        if (updateRequest.getUserName() != null && !updateRequest.getUserName().isBlank()) {
+            user.setUserName(updateRequest.getUserName());
+        }
 
         // Only update password if provided
         if (updateRequest.getPassword() != null && !updateRequest.getPassword().isEmpty()) {
+            // Validate password
+            if (updateRequest.getPassword().length() < 8) {
+                logger.warn("Profile update failed: Password too short for user ID: {}", user.getId());
+                throw new BadRequestException("Password must be at least 8 characters long");
+            }
             user.setPassword(passwordEncoder.encode(updateRequest.getPassword()));
         }
 
         // Save updated user
         User updatedUser = userRepository.save(user);
+        logger.info("User profile updated successfully for ID: {}", updatedUser.getId());
 
         return mapToUserResponse(updatedUser);
     }
 
     @Override
     public boolean userHasRole(User user, String roleName) {
+        if (user == null || roleName == null) {
+            return false;
+        }
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals(roleName));
     }

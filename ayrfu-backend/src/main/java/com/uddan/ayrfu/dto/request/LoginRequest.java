@@ -2,14 +2,17 @@ package com.uddan.ayrfu.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import java.util.Objects;
 
 public class LoginRequest {
-
     @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
+    @Email(message = "Email should be valid")
     private String email;
 
     @NotBlank(message = "Password is required")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
     private String password;
 
     // Default constructor
@@ -22,7 +25,7 @@ public class LoginRequest {
         this.password = password;
     }
 
-    // Getters and Setters
+    // Getters and setters
     public String getEmail() {
         return email;
     }
@@ -39,24 +42,47 @@ public class LoginRequest {
         this.password = password;
     }
 
-    // Builder pattern implementation
-    public static LoginRequestBuilder builder() {
-        return new LoginRequestBuilder();
+    // equals, hashCode, and toString methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LoginRequest that = (LoginRequest) o;
+        return Objects.equals(email, that.email) &&
+                Objects.equals(password, that.password);
     }
 
-    public static class LoginRequestBuilder {
+    @Override
+    public int hashCode() {
+        return Objects.hash(email, password);
+    }
+
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+                "email='" + email + '\'' +
+                ", password='[PROTECTED]'" +
+                '}';
+    }
+
+    // Builder pattern
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
         private String email;
         private String password;
 
-        LoginRequestBuilder() {
+        private Builder() {
         }
 
-        public LoginRequestBuilder email(String email) {
+        public Builder email(String email) {
             this.email = email;
             return this;
         }
 
-        public LoginRequestBuilder password(String password) {
+        public Builder password(String password) {
             this.password = password;
             return this;
         }

@@ -2,32 +2,26 @@ package com.uddan.ayrfu.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
+import java.util.Objects;
 
 public class ClientRequest {
     @NotBlank(message = "Company name is required")
-    @Size(max = 100, message = "Company name must be less than 100 characters")
     private String companyName;
 
     @NotBlank(message = "Contact person is required")
-    @Size(max = 100, message = "Contact person must be less than 100 characters")
     private String contactPerson;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    @Size(max = 100, message = "Email must be less than 100 characters")
+    @Email(message = "Email should be valid")
     private String email;
 
-    @Size(max = 20, message = "Phone number must be less than 20 characters")
     private String phoneNumber;
 
-    @Size(max = 50, message = "Industry must be less than 50 characters")
     private String industry;
 
-    @Size(max = 50, message = "Company size must be less than 50 characters")
     private String companySize;
 
-    @Size(max = 1000, message = "Requirements must be less than 1000 characters")
     private String requirements;
 
     // Default constructor
@@ -35,8 +29,8 @@ public class ClientRequest {
     }
 
     // All-args constructor
-    public ClientRequest(String companyName, String contactPerson, String email, String phoneNumber,
-                         String industry, String companySize, String requirements) {
+    public ClientRequest(String companyName, String contactPerson, String email,
+                         String phoneNumber, String industry, String companySize, String requirements) {
         this.companyName = companyName;
         this.contactPerson = contactPerson;
         this.email = email;
@@ -46,7 +40,7 @@ public class ClientRequest {
         this.requirements = requirements;
     }
 
-    // Getters and Setters
+    // Getters and setters
     public String getCompanyName() {
         return companyName;
     }
@@ -103,12 +97,45 @@ public class ClientRequest {
         this.requirements = requirements;
     }
 
-    // Builder implementation
-    public static ClientRequestBuilder builder() {
-        return new ClientRequestBuilder();
+    // equals, hashCode, and toString methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ClientRequest that = (ClientRequest) o;
+        return Objects.equals(companyName, that.companyName) &&
+                Objects.equals(contactPerson, that.contactPerson) &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(phoneNumber, that.phoneNumber) &&
+                Objects.equals(industry, that.industry) &&
+                Objects.equals(companySize, that.companySize) &&
+                Objects.equals(requirements, that.requirements);
     }
 
-    public static class ClientRequestBuilder {
+    @Override
+    public int hashCode() {
+        return Objects.hash(companyName, contactPerson, email, phoneNumber, industry, companySize, requirements);
+    }
+
+    @Override
+    public String toString() {
+        return "ClientRequest{" +
+                "companyName='" + companyName + '\'' +
+                ", contactPerson='" + contactPerson + '\'' +
+                ", email='" + email + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", industry='" + industry + '\'' +
+                ", companySize='" + companySize + '\'' +
+                ", requirements='" + requirements + '\'' +
+                '}';
+    }
+
+    // Builder pattern
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
         private String companyName;
         private String contactPerson;
         private String email;
@@ -117,47 +144,46 @@ public class ClientRequest {
         private String companySize;
         private String requirements;
 
-        ClientRequestBuilder() {
+        private Builder() {
         }
 
-        public ClientRequestBuilder companyName(String companyName) {
+        public Builder companyName(String companyName) {
             this.companyName = companyName;
             return this;
         }
 
-        public ClientRequestBuilder contactPerson(String contactPerson) {
+        public Builder contactPerson(String contactPerson) {
             this.contactPerson = contactPerson;
             return this;
         }
 
-        public ClientRequestBuilder email(String email) {
+        public Builder email(String email) {
             this.email = email;
             return this;
         }
 
-        public ClientRequestBuilder phoneNumber(String phoneNumber) {
+        public Builder phoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
             return this;
         }
 
-        public ClientRequestBuilder industry(String industry) {
+        public Builder industry(String industry) {
             this.industry = industry;
             return this;
         }
 
-        public ClientRequestBuilder companySize(String companySize) {
+        public Builder companySize(String companySize) {
             this.companySize = companySize;
             return this;
         }
 
-        public ClientRequestBuilder requirements(String requirements) {
+        public Builder requirements(String requirements) {
             this.requirements = requirements;
             return this;
         }
 
         public ClientRequest build() {
-            return new ClientRequest(companyName, contactPerson, email, phoneNumber,
-                    industry, companySize, requirements);
+            return new ClientRequest(companyName, contactPerson, email, phoneNumber, industry, companySize, requirements);
         }
     }
 }

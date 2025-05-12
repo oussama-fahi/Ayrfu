@@ -1,6 +1,5 @@
 package com.uddan.ayrfu.service.impl;
 
-
 import com.uddan.ayrfu.dto.request.MessageRequest;
 import com.uddan.ayrfu.dto.response.MessageResponse;
 import com.uddan.ayrfu.entity.Message;
@@ -10,6 +9,9 @@ import com.uddan.ayrfu.repository.MessageRepository;
 import com.uddan.ayrfu.service.MessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,8 +26,8 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
 
-    public MessageServiceImpl(MessageRepository messageRepository){
-        this.messageRepository=messageRepository;
+    public MessageServiceImpl(MessageRepository messageRepository) {
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -60,40 +62,52 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MessageResponse> getAllMessages() {
-        logger.info("Fetching all messages");
+    public List<MessageResponse> getAllMessages(int page, int size) {
+        logger.info("Fetching all messages, page: {}, size: {}", page, size);
 
-        return messageRepository.findAll().stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Message> messages = messageRepository.findAll(pageable);
+
+        return messages.getContent().stream()
                 .map(this::mapToMessageResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<MessageResponse> getMessagesByType(MessageType type) {
-        logger.info("Fetching messages with type: {}", type);
+    public List<MessageResponse> getMessagesByType(MessageType type, int page, int size) {
+        logger.info("Fetching messages with type: {}, page: {}, size: {}", type, page, size);
 
-        return messageRepository.findByType(type).stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Message> messages = messageRepository.findByType(type, pageable);
+
+        return messages.getContent().stream()
                 .map(this::mapToMessageResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<MessageResponse> getUnreadMessages() {
-        logger.info("Fetching unread messages");
+    public List<MessageResponse> getUnreadMessages(int page, int size) {
+        logger.info("Fetching unread messages, page: {}, size: {}", page, size);
 
-        return messageRepository.findByRead(false).stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Message> messages = messageRepository.findByRead(false, pageable);
+
+        return messages.getContent().stream()
                 .map(this::mapToMessageResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<MessageResponse> getUnreadMessagesByType(MessageType type) {
-        logger.info("Fetching unread messages with type: {}", type);
+    public List<MessageResponse> getUnreadMessagesByType(MessageType type, int page, int size) {
+        logger.info("Fetching unread messages with type: {}, page: {}, size: {}", type, page, size);
 
-        return messageRepository.findByTypeAndRead(type, false).stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Message> messages = messageRepository.findByTypeAndRead(type, false, pageable);
+
+        return messages.getContent().stream()
                 .map(this::mapToMessageResponse)
                 .collect(Collectors.toList());
     }
@@ -117,6 +131,39 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
+    public int markMultipleMessagesAsRead(List<Long> messageIds) {
+        logger.info("Marking {} messages as read", messageIds.size());
+
+        if (messageIds.isEmpty()) {
+            return 0;
+        }
+
+        int updatedCount = 0;
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Long id : messageIds) {
+            try {
+                Message message = messageRepository.findById(id)
+                        .orElse(null);
+
+                if (message != null && !message.isRead()) {
+                    message.setRead(true);
+                    message.setReadAt(now);
+                    messageRepository.save(message);
+                    updatedCount++;
+                }
+            } catch (Exception e) {
+                logger.error("Error marking message with ID: {} as read", id, e);
+                // Continue with the next message
+            }
+        }
+
+        logger.info("Successfully marked {} messages as read", updatedCount);
+        return updatedCount;
+    }
+
+    @Override
+    @Transactional
     public void deleteMessage(Long id) {
         logger.info("Deleting message with ID: {}", id);
 
@@ -127,7 +174,6 @@ public class MessageServiceImpl implements MessageService {
 
         logger.info("Message deleted with ID: {}", id);
     }
-
 
     private MessageResponse mapToMessageResponse(Message message) {
         return MessageResponse.builder()

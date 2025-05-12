@@ -2,9 +2,7 @@ package com.uddan.ayrfu.service.impl;
 
 import com.uddan.ayrfu.dto.request.ApplicationRequest;
 import com.uddan.ayrfu.dto.request.CandidateRequest;
-import com.uddan.ayrfu.dto.response.ApplicationResponse;
-import com.uddan.ayrfu.dto.response.CandidateResponse;
-import com.uddan.ayrfu.dto.response.PositionResponse;
+import com.uddan.ayrfu.dto.response.*;
 import com.uddan.ayrfu.entity.Application;
 import com.uddan.ayrfu.entity.Candidate;
 import com.uddan.ayrfu.entity.Position;
@@ -18,6 +16,8 @@ import com.uddan.ayrfu.service.CandidateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,10 +46,11 @@ public class CandidateServiceImpl implements CandidateService {
             PositionRepository positionRepository,
             ApplicationRepository applicationRepository
     ){
-        this.candidateRepository=candidateRepository;
-        this.positionRepository=positionRepository;
-        this.applicationRepository=applicationRepository;
+        this.candidateRepository = candidateRepository;
+        this.positionRepository = positionRepository;
+        this.applicationRepository = applicationRepository;
     }
+
     @Value("${file.upload-dir}")
     private String uploadDir;
 
@@ -107,10 +108,12 @@ public class CandidateServiceImpl implements CandidateService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CandidateResponse> getAllCandidates() {
-        logger.info("Fetching all candidates");
+    public List<CandidateResponse> getAllCandidates(int page, int size) {
+        logger.info("Fetching all candidates, page: {}, size: {}", page, size);
 
-        return candidateRepository.findAll().stream()
+        Page<Candidate> candidates = candidateRepository.findAll(PageRequest.of(page, size));
+
+        return candidates.getContent().stream()
                 .map(this::mapToCandidateResponse)
                 .collect(Collectors.toList());
     }
@@ -177,8 +180,14 @@ public class CandidateServiceImpl implements CandidateService {
 
             // Generate unique filename
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".pdf";
+            String fileExtension = originalFilename != null ?
+                    originalFilename.substring(originalFilename.lastIndexOf(".")) : ".pdf";
             String filename = UUID.randomUUID().toString() + fileExtension;
+
+            // Validate file type
+            if (!isValidFileType(fileExtension)) {
+                throw new BadRequestException("Invalid file type. Only PDF, DOC, and DOCX are allowed.");
+            }
 
             // Save file
             Path filePath = uploadPath.resolve(filename);
@@ -198,41 +207,6 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     @Override
-    @Transactional
-    public ApplicationResponse applyForPosition(Long candidateId, ApplicationRequest applicationRequest) {
-        logger.info("Candidate with ID: {} applying for position with ID: {}", candidateId, applicationRequest.getPositionId());
-
-        Candidate candidate = candidateRepository.findById(candidateId)
-                .orElseThrow(() -> new ResourceNotFoundException("Candidate not found with ID: " + candidateId));
-
-        Position position = positionRepository.findById(applicationRequest.getPositionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Position not found with ID: " + applicationRequest.getPositionId()));
-
-        // Check if candidate has already applied for this position
-        Optional<Application> existingApplication = applicationRepository.findByCandidateAndPosition(candidate, position);
-        if (existingApplication.isPresent()) {
-            throw new BadRequestException("Candidate has already applied for this position");
-        }
-
-        // Check if candidate has uploaded a CV
-        if (candidate.getCvPath() == null || candidate.getCvPath().isEmpty()) {
-            throw new BadRequestException("Candidate must upload a CV before applying");
-        }
-
-        Application application = Application.builder()
-                .candidate(candidate)
-                .position(position)
-                .coverLetter(applicationRequest.getCoverLetter())
-                .status(ApplicationStatus.PENDING)
-                .build();
-
-        Application savedApplication = applicationRepository.save(application);
-        logger.info("Application created with ID: {}", savedApplication.getId());
-
-        return mapToApplicationResponse(savedApplication);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public List<ApplicationResponse> getCandidateApplications(Long candidateId) {
         logger.info("Fetching applications for candidate with ID: {}", candidateId);
@@ -247,9 +221,73 @@ public class CandidateServiceImpl implements CandidateService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public boolean isOwnProfile(Long candidateId, Long userId) {
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate not found with ID: " + candidateId));
+
+        return candidate.getUser() != null && candidate.getUser().getId().equals(userId);
+    }
+
+    @Override
+    public boolean isOwnEmail(String email, String userEmail) {
+        return email.equals(userEmail);
+    }
+
+    /**
+     * Validate file type for CV uploads
+     */
+    private boolean isValidFileType(String fileExtension) {
+        return fileExtension.equalsIgnoreCase(".pdf") ||
+                fileExtension.equalsIgnoreCase(".doc") ||
+                fileExtension.equalsIgnoreCase(".docx");
+    }
+
     /**
      * Maps a Candidate entity to a CandidateResponse DTO
      */
+    private ApplicationResponse mapToApplicationResponse(Application application) {
+        return ApplicationResponse.builder()
+                .id(application.getId())
+                .candidate(mapToCandidateBasicResponse(application.getCandidate()))
+                .position(mapToPositionBasicResponse(application.getPosition()))
+                .status(application.getStatus())
+                .coverLetter(application.getCoverLetter())
+                .appliedAt(application.getAppliedAt())
+                .updatedAt(application.getAppliedAt()) // We can use appliedAt as updatedAt initially
+                .build();
+    }
+
+    /**
+     * Maps a Candidate entity to a CandidateBasicResponse DTO
+     */
+    private CandidateBasicResponse mapToCandidateBasicResponse(Candidate candidate) {
+        return CandidateBasicResponse.builder()
+                .id(candidate.getId())
+                .fullName(candidate.getFullName())
+                .email(candidate.getEmail())
+                .phoneNumber(candidate.getPhoneNumber())
+                .technologies(candidate.getTechnologies())
+                .languages(candidate.getLanguages())
+                .experienceLevel(candidate.getExperienceLevel())
+                .build();
+    }
+
+    /**
+     * Maps a Position entity to a PositionBasicResponse DTO
+     */
+    private PositionBasicResponse mapToPositionBasicResponse(Position position) {
+        return PositionBasicResponse.builder()
+                .id(position.getId())
+                .title(position.getTitle())
+                .technology(position.getTechnology())
+                .location(position.getLocation())
+                .experienceLevel(position.getExperienceLevel())
+                .workModel(position.getWorkModel())
+                .build();
+    }
+
+    // The full CandidateResponse mapping remains for other methods
     private CandidateResponse mapToCandidateResponse(Candidate candidate) {
         return CandidateResponse.builder()
                 .id(candidate.getId())
@@ -267,39 +305,6 @@ public class CandidateServiceImpl implements CandidateService {
                 .cvPath(candidate.getCvPath())
                 .createdAt(candidate.getCreatedAt())
                 .updatedAt(candidate.getUpdatedAt())
-                .build();
-    }
-
-    /**
-     * Maps an Application entity to an ApplicationResponse DTO
-     */
-    private ApplicationResponse mapToApplicationResponse(Application application) {
-        return ApplicationResponse.builder()
-                .id(application.getId())
-                .candidate(mapToCandidateResponse(application.getCandidate()))
-                .position(mapToPositionResponse(application.getPosition()))
-                .appliedAt(application.getAppliedAt())
-                .coverLetter(application.getCoverLetter())
-                .status(application.getStatus())
-                .build();
-    }
-
-    /**
-     * Maps a Position entity to a PositionResponse DTO
-     */
-    private PositionResponse mapToPositionResponse(Position position) {
-        return PositionResponse.builder()
-                .id(position.getId())
-                .title(position.getTitle())
-                .description(position.getDescription())
-                .technology(position.getTechnology())
-                .location(position.getLocation())
-                .languages(position.getLanguages())
-                .experienceLevel(position.getExperienceLevel())
-                .workModel(position.getWorkModel())
-                .active(position.isActive())
-                .createdAt(position.getCreatedAt())
-                .updatedAt(position.getUpdatedAt())
                 .build();
     }
 }

@@ -1,4 +1,3 @@
-// src/pages/candidate/CandidateApplicationDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -25,21 +24,21 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
 } from '@mui/material';
 import {
   Business as BusinessIcon,
   LocationOn as LocationIcon,
   Work as WorkIcon,
-  Description as DescriptionIcon,
   Send as SendIcon,
   Schedule as ScheduleIcon,
   Event as EventIcon,
   CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon
+  Cancel as CancelIcon,
 } from '@mui/icons-material';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { useAuth } from '../../hooks/useAuth';
-import axios from 'axios';
+import candidateService from '../../api/services/candidate.service';
 
 const CandidateApplicationDetailPage = () => {
   const { id } = useParams();
@@ -52,99 +51,104 @@ const CandidateApplicationDetailPage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [withdrawDialog, setWithdrawDialog] = useState(false);
-  
+  const [attaching, setAttaching] = useState(false);
+  const [file, setFile] = useState(null);
+
   useEffect(() => {
     fetchApplicationDetails();
   }, [id]);
-  
+
   const fetchApplicationDetails = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/applications/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const response = await candidateService.getApplicationById(id);
       setApplication(response.data);
       setError(null);
     } catch (err) {
-      console.error('Erreur lors de la récupération des détails de la candidature:', err);
-      setError('Impossible de charger les détails de la candidature. Veuillez réessayer plus tard.');
+      console.error('Error while fetching application details:', err);
+      setError('Unable to load application details. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !file) return;
     
     setSendingMessage(true);
-    
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('/api/applications/messages', {
-        applicationId: id,
-        content: newMessage
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      let response;
       
-      // Mettre à jour les messages dans la candidature
+      if (file) {
+        // Send message with attachment
+        response = await candidateService.addApplicationMessageWithAttachment(id, newMessage, file);
+      } else {
+        // Send message without attachment
+        response = await candidateService.addApplicationMessage(id, newMessage);
+      }
+      
+      // Update application messages
       setApplication({
         ...application,
         messages: [...application.messages, response.data]
       });
       
+      // Clear inputs
       setNewMessage('');
+      setFile(null);
     } catch (err) {
-      console.error('Erreur lors de l\'envoi du message:', err);
-      setError('Erreur lors de l\'envoi du message. Veuillez réessayer.');
+      console.error('Error sending message:', err);
+      setError('Error sending message. Please try again.');
     } finally {
       setSendingMessage(false);
     }
   };
-  
+
   const handleOpenWithdrawDialog = () => {
     setWithdrawDialog(true);
   };
-  
+
   const handleCloseWithdrawDialog = () => {
     setWithdrawDialog(false);
   };
-  
+
   const handleWithdrawApplication = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`/api/applications/${id}/withdraw`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Mettre à jour le statut de la candidature
+      const response = await candidateService.withdrawApplication(id);
       setApplication({
         ...application,
         status: 'WITHDRAWN'
       });
-      
       handleCloseWithdrawDialog();
     } catch (err) {
-      console.error('Erreur lors du retrait de la candidature:', err);
-      setError('Erreur lors du retrait de la candidature. Veuillez réessayer.');
+      console.error('Error withdrawing application:', err);
+      setError('Error withdrawing application. Please try again.');
       handleCloseWithdrawDialog();
     }
   };
-  
+
+  const handleFileChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setFile(event.target.files[0]);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+  };
+
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'PENDING': return 'En attente';
-      case 'REVIEWING': return 'En cours d\'examen';
-      case 'INTERVIEW': return 'Entretien';
-      case 'ACCEPTED': return 'Acceptée';
-      case 'REJECTED': return 'Refusée';
-      case 'WITHDRAWN': return 'Retirée';
+      case 'PENDING': return 'Pending';
+      case 'REVIEWING': return 'In Review';
+      case 'INTERVIEW': return 'Interview';
+      case 'ACCEPTED': return 'Accepted';
+      case 'REJECTED': return 'Rejected';
+      case 'WITHDRAWN': return 'Withdrawn';
       default: return status;
     }
   };
-  
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'PENDING': return 'primary';
@@ -156,7 +160,7 @@ const CandidateApplicationDetailPage = () => {
       default: return 'default';
     }
   };
-  
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, {
       year: 'numeric',
@@ -164,9 +168,10 @@ const CandidateApplicationDetailPage = () => {
       day: 'numeric'
     });
   };
+
+  // Steps for progress stepper
+  const steps = ['Application submitted', 'Under review', 'Interview', 'Decision'];
   
-  // Étapes de progression
-  const steps = ['Candidature soumise', 'En cours d\'examen', 'Entretien', 'Décision'];
   const getActiveStep = (status) => {
     switch (status) {
       case 'PENDING': return 0;
@@ -174,100 +179,85 @@ const CandidateApplicationDetailPage = () => {
       case 'INTERVIEW': return 2;
       case 'ACCEPTED':
       case 'REJECTED':
-      case 'WITHDRAWN':
-        return 3;
+      case 'WITHDRAWN': return 3;
       default: return 0;
     }
   };
-  
+
   if (loading) {
     return (
       <Container sx={{ py: 4, textAlign: 'center' }}>
         <CircularProgress />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Chargement des détails...
-        </Typography>
+        <Typography variant="h6" sx={{ mt: 2 }}>Loading details...</Typography>
       </Container>
     );
   }
-  
+
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
+        <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>
         <Button 
           variant="contained" 
           onClick={() => navigate('/candidate/applications')}
         >
-          Retour à mes candidatures
+          Return to my applications
         </Button>
       </Container>
     );
   }
-  
+
   if (!application) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="info" sx={{ mb: 4 }}>
-          Candidature non trouvée.
-        </Alert>
+        <Alert severity="info" sx={{ mb: 4 }}>Application not found.</Alert>
         <Button 
           variant="contained" 
           onClick={() => navigate('/candidate/applications')}
         >
-          Retour à mes candidatures
+          Return to my applications
         </Button>
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4">
-          Détails de ma candidature
-        </Typography>
+        <Typography variant="h4">Application Details</Typography>
         <Chip 
           label={getStatusLabel(application.status)} 
-          color={getStatusColor(application.status)} 
+          color={getStatusColor(application.status)}
           size="large"
         />
       </Box>
-      
+
       <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h5" gutterBottom>
-              {application.position.title}
-            </Typography>
+            <Typography variant="h5" gutterBottom>{application.position.title}</Typography>
             
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <BusinessIcon color="action" sx={{ mr: 1 }} />
               <Typography variant="body1">
-                {application.position.company}
+                {application.position.company || 'Company not specified'}
               </Typography>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <LocationIcon color="action" sx={{ mr: 1 }} />
-              <Typography variant="body1">
-                {application.position.location}
-              </Typography>
+              <Typography variant="body1">{application.position.location}</Typography>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <WorkIcon color="action" sx={{ mr: 1 }} />
-              <Typography variant="body1">
-                {application.position.workModel}
-              </Typography>
+              <Typography variant="body1">{application.position.workModel}</Typography>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <ScheduleIcon color="action" sx={{ mr: 1 }} />
               <Typography variant="body1">
-                Candidature soumise le {formatDate(application.appliedAt)}
+                Application submitted on {formatDate(application.appliedAt)}
               </Typography>
             </Box>
             
@@ -275,7 +265,7 @@ const CandidateApplicationDetailPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <EventIcon color="action" sx={{ mr: 1 }} />
                 <Typography variant="body1">
-                  Entretien programmé le {formatDate(application.interviewDate)}
+                  Interview scheduled for {formatDate(application.interviewDate)}
                 </Typography>
               </Box>
             )}
@@ -284,7 +274,7 @@ const CandidateApplicationDetailPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <CheckCircleIcon color="success" sx={{ mr: 1 }} />
                 <Typography variant="body1" color="success.main">
-                  Candidature acceptée le {formatDate(application.updatedAt)}
+                  Application accepted on {formatDate(application.updatedAt)}
                 </Typography>
               </Box>
             )}
@@ -293,7 +283,7 @@ const CandidateApplicationDetailPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <CancelIcon color="error" sx={{ mr: 1 }} />
                 <Typography variant="body1" color="error.main">
-                  Candidature refusée le {formatDate(application.updatedAt)}
+                  Application rejected on {formatDate(application.updatedAt)}
                 </Typography>
               </Box>
             )}
@@ -302,14 +292,18 @@ const CandidateApplicationDetailPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <CancelIcon color="action" sx={{ mr: 1 }} />
                 <Typography variant="body1" color="text.secondary">
-                  Candidature retirée le {formatDate(application.updatedAt)}
+                  Application withdrawn on {formatDate(application.updatedAt)}
                 </Typography>
               </Box>
             )}
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <Stepper activeStep={getActiveStep(application.status)} alternativeLabel sx={{ mb: 4 }}>
+            <Stepper 
+              activeStep={getActiveStep(application.status)} 
+              alternativeLabel
+              sx={{ mb: 4 }}
+            >
               {steps.map((label) => (
                 <Step key={label}>
                   <StepLabel>{label}</StepLabel>
@@ -319,33 +313,27 @@ const CandidateApplicationDetailPage = () => {
             
             {application.notes && (
               <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Notes:
-                </Typography>
-                <Typography variant="body2">
-                  {application.notes}
-                </Typography>
+                <Typography variant="subtitle1" gutterBottom>Notes:</Typography>
+                <Typography variant="body2">{application.notes}</Typography>
               </Paper>
             )}
             
             {application.status === 'PENDING' && (
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                <Button
-                  variant="outlined"
-                  color="error"
+                <Button 
+                  variant="outlined" 
+                  color="error" 
                   onClick={handleOpenWithdrawDialog}
                 >
-                  Retirer ma candidature
+                  Withdraw my application
                 </Button>
               </Box>
             )}
           </Grid>
         </Grid>
       </Paper>
-      
-      <Typography variant="h5" gutterBottom>
-        Messages
-      </Typography>
+
+      <Typography variant="h5" gutterBottom>Messages</Typography>
       
       <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
         <Box sx={{ height: '300px', overflow: 'auto', mb: 3 }}>
@@ -354,30 +342,55 @@ const CandidateApplicationDetailPage = () => {
               {application.messages.map((message) => (
                 <ListItem key={message.id} alignItems="flex-start">
                   <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: message.senderId === user.id ? 'primary.main' : 'secondary.main' }}>
+                    <Avatar sx={{ bgcolor: message.sender.id === user.id ? 'primary.main' : 'secondary.main' }}>
                       {message.sender.name[0].toUpperCase()}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="subtitle2">
-                          {message.sender.name}
-                        </Typography>
+                        <Typography variant="subtitle2">{message.sender.name}</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {formatDate(message.sentAt)}
                         </Typography>
                       </Box>
                     }
                     secondary={
-                      <Typography
-                        component="span"
-                        variant="body2"
-                        color="text.primary"
-                        sx={{ display: 'inline', mt: 1 }}
-                      >
-                        {message.content}
-                      </Typography>
+                      <>
+                        <Typography 
+                          component="span" 
+                          variant="body2" 
+                          color="text.primary"
+                          sx={{ display: 'inline', mt: 1 }}
+                        >
+                          {message.content}
+                        </Typography>
+                        
+                        {message.attachmentUrl && (
+                          <Box 
+                            component="a"
+                            href={message.attachmentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ 
+                              display: 'block', 
+                              mt: 1,
+                              p: 1,
+                              bgcolor: 'background.default',
+                              borderRadius: 1,
+                              textDecoration: 'none',
+                              color: 'inherit'
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <AttachFileIcon fontSize="small" sx={{ mr: 1 }} />
+                              <Typography variant="body2">
+                                {message.attachmentName || 'Attachment'}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        )}
+                      </>
                     }
                   />
                 </ListItem>
@@ -385,45 +398,76 @@ const CandidateApplicationDetailPage = () => {
             </List>
           ) : (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-              <Typography color="text.secondary">
-                Aucun message pour l'instant.
-              </Typography>
+              <Typography color="text.secondary">No messages yet.</Typography>
             </Box>
           )}
         </Box>
         
         <Divider sx={{ my: 2 }} />
         
+        {file && (
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            p: 1, 
+            mb: 2, 
+            bgcolor: 'background.default',
+            borderRadius: 1
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <AttachFileIcon fontSize="small" sx={{ mr: 1 }} />
+              <Typography variant="body2">{file.name}</Typography>
+            </Box>
+            <Button size="small" color="error" onClick={handleRemoveFile}>Remove</Button>
+          </Box>
+        )}
+        
         <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
           <TextField
             fullWidth
-            label="Votre message"
+            label="Your message"
             multiline
             rows={3}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            disabled={application.status === 'WITHDRAWN'}
+            disabled={application.status === 'WITHDRAWN' || sendingMessage}
             sx={{ mr: 2 }}
           />
-          <Button
-            variant="contained"
-            color="primary"
-            endIcon={<SendIcon />}
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sendingMessage || application.status === 'WITHDRAWN'}
-            sx={{ height: '56px' }}
-          >
-            Envoyer
-          </Button>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Button
+              variant="outlined"
+              component="label"
+              disabled={application.status === 'WITHDRAWN' || sendingMessage}
+            >
+              Attach File
+              <input
+                type="file"
+                hidden
+                onChange={handleFileChange}
+              />
+            </Button>
+            
+            <Button
+              variant="contained"
+              color="primary"
+              endIcon={<SendIcon />}
+              onClick={handleSendMessage}
+              disabled={(!newMessage.trim() && !file) || sendingMessage || application.status === 'WITHDRAWN'}
+            >
+              Send
+            </Button>
+          </Box>
         </Box>
       </Paper>
-      
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Button 
           variant="outlined" 
           onClick={() => navigate('/candidate/applications')}
         >
-          Retour à mes candidatures
+          Return to my applications
         </Button>
         
         <Button 
@@ -431,26 +475,25 @@ const CandidateApplicationDetailPage = () => {
           color="primary"
           onClick={() => navigate(`/positions/${application.position.id}`)}
         >
-          Voir l'offre d'emploi
+          View job posting
         </Button>
       </Box>
-      
-      {/* Dialogue de confirmation pour retirer la candidature */}
+
+      {/* Withdraw confirmation dialog */}
       <Dialog
         open={withdrawDialog}
         onClose={handleCloseWithdrawDialog}
       >
-        <DialogTitle>Confirmer le retrait</DialogTitle>
+        <DialogTitle>Confirm Withdrawal</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Êtes-vous sûr de vouloir retirer votre candidature pour le poste de {application.position.title} ?
-            Cette action est irréversible.
+            Are you sure you want to withdraw your application for the position of {application.position.title}? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseWithdrawDialog}>Annuler</Button>
+          <Button onClick={handleCloseWithdrawDialog}>Cancel</Button>
           <Button onClick={handleWithdrawApplication} color="error">
-            Retirer ma candidature
+            Withdraw my application
           </Button>
         </DialogActions>
       </Dialog>

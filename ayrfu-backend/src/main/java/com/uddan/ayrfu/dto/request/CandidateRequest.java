@@ -2,49 +2,35 @@ package com.uddan.ayrfu.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Size;
+
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class CandidateRequest {
-
     @NotBlank(message = "Full name is required")
-    @Size(max = 100, message = "Full name must be less than 100 characters")
     private String fullName;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    @Size(max = 100, message = "Email must be less than 100 characters")
+    @Email(message = "Email should be valid")
     private String email;
 
-    @Size(max = 20, message = "Phone number must be less than 20 characters")
     private String phoneNumber;
-
-    @Size(max = 200, message = "Address must be less than 200 characters")
     private String address;
-
-    @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
-
-    @Size(max = 20, message = "Gender must be less than 20 characters")
     private String gender;
-
     private Set<String> technologies = new HashSet<>();
-
     private Set<String> languages = new HashSet<>();
-
     private String experienceLevel;
-
     private String preferredLocation;
-
     private String preferredWorkModel;
 
-
+    // Default constructor
     public CandidateRequest() {
     }
 
+    // All-args constructor
     public CandidateRequest(String fullName, String email, String phoneNumber, String address,
                             LocalDate dateOfBirth, String gender, Set<String> technologies,
                             Set<String> languages, String experienceLevel, String preferredLocation,
@@ -55,13 +41,14 @@ public class CandidateRequest {
         this.address = address;
         this.dateOfBirth = dateOfBirth;
         this.gender = gender;
-        this.technologies = technologies != null ? technologies : new HashSet<>();
-        this.languages = languages != null ? languages : new HashSet<>();
+        this.technologies = technologies != null ? new HashSet<>(technologies) : new HashSet<>();
+        this.languages = languages != null ? new HashSet<>(languages) : new HashSet<>();
         this.experienceLevel = experienceLevel;
         this.preferredLocation = preferredLocation;
         this.preferredWorkModel = preferredWorkModel;
     }
 
+    // Getters and setters
     public String getFullName() {
         return fullName;
     }
@@ -111,19 +98,19 @@ public class CandidateRequest {
     }
 
     public Set<String> getTechnologies() {
-        return technologies;
+        return new HashSet<>(technologies);
     }
 
     public void setTechnologies(Set<String> technologies) {
-        this.technologies = technologies != null ? technologies : new HashSet<>();
+        this.technologies = technologies != null ? new HashSet<>(technologies) : new HashSet<>();
     }
 
     public Set<String> getLanguages() {
-        return languages;
+        return new HashSet<>(languages);
     }
 
     public void setLanguages(Set<String> languages) {
-        this.languages = languages != null ? languages : new HashSet<>();
+        this.languages = languages != null ? new HashSet<>(languages) : new HashSet<>();
     }
 
     public String getExperienceLevel() {
@@ -150,7 +137,49 @@ public class CandidateRequest {
         this.preferredWorkModel = preferredWorkModel;
     }
 
+    // equals, hashCode, and toString methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CandidateRequest that = (CandidateRequest) o;
+        return Objects.equals(fullName, that.fullName) &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(phoneNumber, that.phoneNumber) &&
+                Objects.equals(address, that.address) &&
+                Objects.equals(dateOfBirth, that.dateOfBirth) &&
+                Objects.equals(gender, that.gender) &&
+                Objects.equals(technologies, that.technologies) &&
+                Objects.equals(languages, that.languages) &&
+                Objects.equals(experienceLevel, that.experienceLevel) &&
+                Objects.equals(preferredLocation, that.preferredLocation) &&
+                Objects.equals(preferredWorkModel, that.preferredWorkModel);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(fullName, email, phoneNumber, address, dateOfBirth, gender,
+                technologies, languages, experienceLevel, preferredLocation, preferredWorkModel);
+    }
+
+    @Override
+    public String toString() {
+        return "CandidateRequest{" +
+                "fullName='" + fullName + '\'' +
+                ", email='" + email + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", address='" + address + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                ", gender='" + gender + '\'' +
+                ", technologies=" + technologies +
+                ", languages=" + languages +
+                ", experienceLevel='" + experienceLevel + '\'' +
+                ", preferredLocation='" + preferredLocation + '\'' +
+                ", preferredWorkModel='" + preferredWorkModel + '\'' +
+                '}';
+    }
+
+    // Builder pattern
     public static Builder builder() {
         return new Builder();
     }
@@ -167,6 +196,9 @@ public class CandidateRequest {
         private String experienceLevel;
         private String preferredLocation;
         private String preferredWorkModel;
+
+        private Builder() {
+        }
 
         public Builder fullName(String fullName) {
             this.fullName = fullName;
@@ -199,12 +231,12 @@ public class CandidateRequest {
         }
 
         public Builder technologies(Set<String> technologies) {
-            this.technologies = technologies != null ? technologies : new HashSet<>();
+            this.technologies = technologies != null ? new HashSet<>(technologies) : new HashSet<>();
             return this;
         }
 
         public Builder languages(Set<String> languages) {
-            this.languages = languages != null ? languages : new HashSet<>();
+            this.languages = languages != null ? new HashSet<>(languages) : new HashSet<>();
             return this;
         }
 
@@ -224,10 +256,8 @@ public class CandidateRequest {
         }
 
         public CandidateRequest build() {
-            return new CandidateRequest(
-                    fullName, email, phoneNumber, address, dateOfBirth, gender,
-                    technologies, languages, experienceLevel, preferredLocation, preferredWorkModel
-            );
+            return new CandidateRequest(fullName, email, phoneNumber, address, dateOfBirth, gender,
+                    technologies, languages, experienceLevel, preferredLocation, preferredWorkModel);
         }
     }
 }

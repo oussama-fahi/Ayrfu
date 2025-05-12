@@ -9,11 +9,12 @@ public record UserResponse(
         Long id,
         String fullName,
         String email,
-        boolean active,
         Set<Role> roles,
+        boolean active,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
+    // Builder pattern for records
     public static Builder builder() {
         return new Builder();
     }
@@ -22,10 +23,13 @@ public record UserResponse(
         private Long id;
         private String fullName;
         private String email;
-        private boolean active;
         private Set<Role> roles;
+        private boolean active;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+
+        private Builder() {
+        }
 
         public Builder id(Long id) {
             this.id = id;
@@ -42,13 +46,13 @@ public record UserResponse(
             return this;
         }
 
-        public Builder active(boolean active) {
-            this.active = active;
+        public Builder roles(Set<Role> roles) {
+            this.roles = roles;
             return this;
         }
 
-        public Builder roles(Set<Role> roles) {
-            this.roles = roles;
+        public Builder active(boolean active) {
+            this.active = active;
             return this;
         }
 
@@ -63,7 +67,7 @@ public record UserResponse(
         }
 
         public UserResponse build() {
-            return new UserResponse(id, fullName, email, active, roles, createdAt, updatedAt);
+            return new UserResponse(id, fullName, email, roles, active, createdAt, updatedAt);
         }
     }
 }

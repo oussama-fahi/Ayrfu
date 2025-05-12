@@ -4,44 +4,38 @@ import com.uddan.ayrfu.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class RegisterRequest {
-
     @NotBlank(message = "Full name is required")
-    @Size(max = 100, message = "Full name must be less than 100 characters")
     private String fullName;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    @Size(max = 100, message = "Email must be less than 100 characters")
+    @Email(message = "Email should be valid")
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @Size(min = 8, message = "Password must be at least 8 characters long")
     private String password;
 
-    // Role selection - will be limited to CANDIDATE/CLIENT roles in service layer
     private Set<Role> roles = new HashSet<>();
-
-    // Added fields for profile creation during registration
-    private String phoneNumber;
-
-    private String address;
-
-    // Client-specific fields
-    private String companyName;
-
-    private String industry;
-
-    private String companySize;
 
     // Default constructor
     public RegisterRequest() {
     }
 
-    // Getters and Setters
+    // All-args constructor
+    public RegisterRequest(String fullName, String email, String password, Set<Role> roles) {
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+        this.roles = roles != null ? new HashSet<>(roles) : new HashSet<>();
+    }
+
+    // Getters and setters
     public String getFullName() {
         return fullName;
     }
@@ -67,50 +61,76 @@ public class RegisterRequest {
     }
 
     public Set<Role> getRoles() {
-        return roles;
+        return new HashSet<>(roles);
     }
 
     public void setRoles(Set<Role> roles) {
-        this.roles = roles;
+        this.roles = roles != null ? new HashSet<>(roles) : new HashSet<>();
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    // equals, hashCode, and toString methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RegisterRequest that = (RegisterRequest) o;
+        return Objects.equals(fullName, that.fullName) &&
+                Objects.equals(email, that.email) &&
+                Objects.equals(password, that.password) &&
+                Objects.equals(roles, that.roles);
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    @Override
+    public int hashCode() {
+        return Objects.hash(fullName, email, password, roles);
     }
 
-    public String getAddress() {
-        return address;
+    @Override
+    public String toString() {
+        return "RegisterRequest{" +
+                "fullName='" + fullName + '\'' +
+                ", email='" + email + '\'' +
+                ", password='[PROTECTED]'" +
+                ", roles=" + roles +
+                '}';
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    // Builder pattern
+    public static Builder builder() {
+        return new Builder();
     }
 
-    public String getCompanyName() {
-        return companyName;
-    }
+    public static class Builder {
+        private String fullName;
+        private String email;
+        private String password;
+        private Set<Role> roles = new HashSet<>();
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
+        private Builder() {
+        }
 
-    public String getIndustry() {
-        return industry;
-    }
+        public Builder fullName(String fullName) {
+            this.fullName = fullName;
+            return this;
+        }
 
-    public void setIndustry(String industry) {
-        this.industry = industry;
-    }
+        public Builder email(String email) {
+            this.email = email;
+            return this;
+        }
 
-    public String getCompanySize() {
-        return companySize;
-    }
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
 
-    public void setCompanySize(String companySize) {
-        this.companySize = companySize;
+        public Builder roles(Set<Role> roles) {
+            this.roles = roles != null ? new HashSet<>(roles) : new HashSet<>();
+            return this;
+        }
+
+        public RegisterRequest build() {
+            return new RegisterRequest(fullName, email, password, roles);
+        }
     }
 }

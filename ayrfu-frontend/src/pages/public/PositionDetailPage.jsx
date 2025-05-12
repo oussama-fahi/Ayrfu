@@ -10,7 +10,7 @@ import {
   Divider,
   List,
   ListItem,
-  ListItemIcon,
+  ListItemIcon, 
   ListItemText,
   Grid,
   CircularProgress,
@@ -29,19 +29,20 @@ import {
   CalendarToday as CalendarTodayIcon
 } from '@mui/icons-material';
 import axios from 'axios';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * PositionDetailPage component - Displays details of a specific job position
- * 
  * @returns {JSX.Element} The rendered component
  */
 const PositionDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [position, setPosition] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   useEffect(() => {
     const fetchPosition = async () => {
       try {
@@ -55,60 +56,56 @@ const PositionDetailPage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchPosition();
   }, [id]);
-  
+
+  const handleApplyNow = (positionId) => {
+  // Check if user is authenticated
+  if (!isAuthenticated) {
+    // If not authenticated, redirect to login with position info
+    navigate('/login', { state: { from: { pathname: '/positions' }, positionId: positionId } });
+  } else {
+    // If authenticated, proceed to application
+    navigate(`/apply/${positionId}`);
+  }
+};
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
         <CircularProgress size={60} />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading position details...
-        </Typography>
+        <Typography variant="h6" sx={{ mt: 2 }}>Loading position details...</Typography>
       </Container>
     );
   }
-  
+
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-        <Button 
-          variant="outlined" 
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/positions')}
-        >
+        <Alert severity="error" sx={{ mb: 4 }}>{error}</Alert>
+        <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/positions')}>
           Back to Positions
         </Button>
       </Container>
     );
   }
-  
+
   if (!position) {
     return (
       <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Alert severity="warning" sx={{ mb: 4 }}>
-          Position not found or has been removed.
-        </Alert>
-        <Button 
-          variant="outlined" 
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/positions')}
-        >
+        <Alert severity="warning" sx={{ mb: 4 }}>Position not found or has been removed.</Alert>
+        <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/positions')}>
           Back to Positions
         </Button>
       </Container>
     );
   }
-  
+
   // For mock data demonstration purposes
   const mockResponsibilities = [
-    "Design and develop high-volume, low-latency applications",
-    "Write clean, maintainable code with proper testing",
-    "Collaborate with cross-functional teams",
+    "Design and develop high-volume, low-latency applications", 
+    "Write clean, maintainable code with proper testing", 
+    "Collaborate with cross-functional teams", 
     "Participate in code reviews",
     "Troubleshoot production issues"
   ];
@@ -120,43 +117,31 @@ const PositionDetailPage = () => {
     "Proactive attitude and willingness to learn",
     "Ability to work in a fast-paced environment"
   ];
-  
+
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
-        <Link 
-          component="button"
-          underline="hover" 
-          color="inherit"
-          onClick={() => navigate('/')}
-        >
+        <Link component="button" underline="hover" color="inherit" onClick={() => navigate('/')}>
           Home
         </Link>
-        <Link 
-          component="button"
-          underline="hover" 
-          color="inherit"
-          onClick={() => navigate('/positions')}
-        >
+        <Link component="button" underline="hover" color="inherit" onClick={() => navigate('/positions')}>
           Positions
         </Link>
         <Typography color="text.primary">{position.title}</Typography>
       </Breadcrumbs>
-      
+
       <Button 
         variant="outlined" 
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate('/positions')}
+        startIcon={<ArrowBackIcon />} 
+        onClick={() => navigate('/positions')} 
         sx={{ mb: 4 }}
       >
         Back to Positions
       </Button>
-      
+
       <Paper sx={{ p: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          {position.title}
-        </Typography>
+        <Typography variant="h4" gutterBottom>{position.title}</Typography>
         
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
           <Chip icon={<CodeIcon />} label={position.technology} />
@@ -164,21 +149,17 @@ const PositionDetailPage = () => {
           <Chip icon={<WorkIcon />} label={position.workModel} />
           <Chip label={`Experience: ${position.experienceLevel}`} />
         </Box>
-        
+
         <Divider sx={{ my: 3 }} />
-        
-        <Typography variant="h6" gutterBottom>
-          Job Description
-        </Typography>
+
+        <Typography variant="h6" gutterBottom>Job Description</Typography>
         <Typography variant="body1" paragraph>
           {position.description || 'No description provided.'}
         </Typography>
-        
+
         <Grid container spacing={4} sx={{ mt: 2 }}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" gutterBottom>
-              Responsibilities
-            </Typography>
+            <Typography variant="h6" gutterBottom>Responsibilities</Typography>
             <List>
               {mockResponsibilities.map((item, index) => (
                 <ListItem key={index} disableGutters>
@@ -190,11 +171,9 @@ const PositionDetailPage = () => {
               ))}
             </List>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
-            <Typography variant="h6" gutterBottom>
-              Requirements
-            </Typography>
+            <Typography variant="h6" gutterBottom>Requirements</Typography>
             <List>
               {mockRequirements.map((item, index) => (
                 <ListItem key={index} disableGutters>
@@ -207,9 +186,9 @@ const PositionDetailPage = () => {
             </List>
           </Grid>
         </Grid>
-        
+
         <Divider sx={{ my: 3 }} />
-        
+
         {/* Additional Information */}
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6} md={4}>
@@ -239,13 +218,12 @@ const PositionDetailPage = () => {
             </Box>
           </Grid>
         </Grid>
-        
+
         <Box sx={{ mb: 3, mt: 4 }}>
           <Typography variant="subtitle1" gutterBottom>
             <TranslateIcon fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
             <strong>Languages:</strong>
           </Typography>
-          
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {position.languages && position.languages.map((language, index) => (
               <Chip key={index} label={language} />
@@ -253,12 +231,12 @@ const PositionDetailPage = () => {
           </Box>
         </Box>
       </Paper>
-      
+
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Button 
-          variant="contained" 
-          size="large"
-          onClick={() => navigate(`/apply/${position.id}`)}
+          variant="contained"
+          size="large" 
+          onClick={() => handleApplyNow(position.id)}
           sx={{ py: 1.5, px: 4 }}
         >
           Apply Now

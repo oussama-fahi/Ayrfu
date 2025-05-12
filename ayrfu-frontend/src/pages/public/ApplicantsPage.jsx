@@ -1,6 +1,5 @@
-// src/pages/public/ApplicantsPage.js
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -15,6 +14,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { useAuth } from '../../hooks/useAuth';
 
 // Step Components
 import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
@@ -40,7 +40,10 @@ const steps = [
 const ApplicantsPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-
+  const { positionId } = useParams();
+  const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  
   const [activeStep, setActiveStep] = useState(0);
   const [criteria, setCriteria] = useState({
     technologies: [],
@@ -57,8 +60,42 @@ const ApplicantsPage = () => {
     cvFile: null,
     motivationLetter: '',
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [position, setPosition] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Check if user is authenticated on initial load
+  useEffect(() => {
+    // If there's a position ID, try to load the position details
+    if (positionId) {
+      setLoading(true);
+      // Fetch position details
+      fetch(`/api/positions/${positionId}`)
+        .then(response => response.json())
+        .then(data => {
+          setPosition(data);
+          // Pre-fill some criteria based on the position
+          if (data.technology) {
+            setCriteria(prev => ({
+              ...prev,
+              technologies: [data.technology]
+            }));
+          }
+        })
+        .catch(error => console.error('Error fetching position:', error))
+        .finally(() => setLoading(false));
+    }
+
+    // Check authentication - redirect to login if not authenticated
+    if (!isAuthenticated && positionId) {
+      navigate('/login', { 
+        state: { 
+          from: { pathname: `/apply/${positionId}` },
+          positionId: positionId
+        } 
+      });
+    }
+  }, [isAuthenticated, positionId, navigate]);
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -94,14 +131,52 @@ const ApplicantsPage = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
+    
+    try {
+      // Prepare application data
+      const applicationData = {
+        positionId: positionId,
+        technologies: criteria.technologies,
+        languages: criteria.languages,
+        preferredLocation: criteria.location,
+        experienceLevel: criteria.experienceLevel,
+        workModel: criteria.workModel,
+        motivationLetter: criteria.motivationLetter,
+        // Any other fields needed
+      };
 
-    // Simulate submission logic (e.g., API call)
-    setTimeout(() => {
+      // File needs special handling with FormData
+      const formData = new FormData();
+      formData.append('application', JSON.stringify(applicationData));
+      if (criteria.cvFile) {
+        formData.append('cvFile', criteria.cvFile);
+      }
+
+      // Submit application to backend
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        // Navigate to confirmation page or dashboard
+        navigate('/candidate/applications', { 
+          state: { message: 'Application submitted successfully!' } 
+        });
+      } else {
+        throw new Error('Failed to submit application');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert('There was an error submitting your application. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      navigate('/apply/confirmation');
-    }, 2000);
+    }
   };
 
   const getStepContent = (step) => {
@@ -170,16 +245,33 @@ const ApplicantsPage = () => {
   const isStepInvalid = () => {
     const { technologies, languages, location, experienceLevel, workModel, personalInfo, cvFile } = criteria;
     switch (activeStep) {
-      case 0: return technologies.length === 0;
-      case 1: return languages.length === 0;
-      case 2: return !location;
-      case 3: return !experienceLevel;
-      case 4: return !workModel;
-      case 5: return !personalInfo.name || !personalInfo.phone;
-      case 6: return !cvFile;
-      default: return false;
+      case 0:
+        return technologies.length === 0;
+      case 1:
+        return languages.length === 0;
+      case 2:
+        return !location;
+      case 3:
+        return !experienceLevel;
+      case 4:
+        return !workModel;
+      case 5:
+        return !personalInfo.name || !personalInfo.phone;
+      case 6:
+        return !cvFile;
+      default:
+        return false;
     }
   };
+
+  if (loading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ mt: 2 }}>Loading application form...</Typography>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
@@ -190,7 +282,7 @@ const ApplicantsPage = () => {
         textAlign="center"
         sx={theme.gradientTextStyle}
       >
-        Job Application
+        {position ? `Apply for ${position.title}` : 'Job Application'}
       </Typography>
 
       <Paper sx={{ p: 4, mt: 4 }}>

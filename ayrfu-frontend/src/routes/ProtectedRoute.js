@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
-import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 /**
  * A wrapper component for protected routes that requires authentication
@@ -16,26 +16,21 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
+  const { getCurrentUser, hasRole } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
     if (!token) {
       setIsAuthenticated(false);
       setIsLoading(false);
       return;
     }
-    
+
     // Verify token and get user info
     const checkAuth = async () => {
       try {
-        const response = await axios.get('/api/auth/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        setUser(response.data);
+        const userData = await getCurrentUser();
+        setUser(userData);
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Authentication error:', error);
@@ -45,9 +40,9 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
         setIsLoading(false);
       }
     };
-    
+
     checkAuth();
-  }, []);
+  }, [getCurrentUser]);
 
   // Check if the user has required roles
   const hasRequiredRole = () => {
@@ -55,12 +50,12 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
       return true; // No roles required or user has no roles
     }
     
-    return user.roles.some(role => {
-      // Handle roles as strings or objects with name property
-      const roleName = typeof role === 'string' ? role : role.name;
-      return requiredRoles.includes(roleName);
-    });
+    return requiredRoles.some(role => hasRole(role));
   };
+
+  // Special check for candidate routes - check if the route is under /candidate
+  const isCandidateRoute = location.pathname.startsWith('/candidate');
+  const isCandidate = user && hasRole && hasRole('ROLE_CANDIDATE');
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -78,6 +73,14 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
 
   // Redirect to home if authenticated but doesn't have required roles
   if (!hasRequiredRole()) {
+    // Redirect based on user's role
+    if (hasRole('ROLE_ADMIN') || hasRole('ROLE_SUPER_USER')) {
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (hasRole('ROLE_CANDIDATE')) {
+      return <Navigate to="/candidate/dashboard" replace />;
+    } else if (hasRole('ROLE_CLIENT')) {
+      return <Navigate to="/client/dashboard" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 

@@ -8,18 +8,13 @@ import java.util.List;
 
 public interface ApplicationService {
     ApplicationResponse createApplication(Long candidateId, ApplicationRequest applicationRequest);
-
     ApplicationResponse getApplicationById(Long id);
-
-    List<ApplicationResponse> getAllApplications();
-
+    List<ApplicationResponse> getAllApplications(int page, int size);
     List<ApplicationResponse> getApplicationsByCandidate(Long candidateId);
-
     List<ApplicationResponse> getApplicationsByPosition(Long positionId);
-
     List<ApplicationResponse> getApplicationsByStatus(ApplicationStatus status);
-
+    List<ApplicationResponse> getMyApplications();
+    ApplicationResponse withdrawApplication(Long id);
     ApplicationResponse updateApplicationStatus(Long id, ApplicationStatus status);
-
     void deleteApplication(Long id);
 }

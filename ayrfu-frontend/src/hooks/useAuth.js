@@ -1,131 +1,78 @@
+// src/hooks/useAuth.js
 import { useState, useEffect, useCallback, useContext, createContext } from 'react';
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { login as loginAction, logout as logoutAction, getCurrentUser as fetchCurrentUserAction } from '../redux/slices/authSlice';
+import { fetchCandidateProfile } from '../redux/slices/candidatesSlice';
 
 // Create context for authentication
 const AuthContext = createContext();
 
 // Provider component that wraps the app and provides auth context
 export const AuthProvider = ({ children }) => {
-  const auth = useProvideAuth();
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
-};
+  const dispatch = useDispatch();
+  const { 
+    user, 
+    isLoading, 
+    error, 
+    isAuthenticated 
+  } = useSelector(state => state.auth);
+  
+  const { 
+    currentCandidate, 
+    error: candidateError 
+  } = useSelector(state => state.candidates);
 
-// Hook to use authentication context
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+  const [hasCandidateProfile, setHasCandidateProfile] = useState(false);
 
-// Provider hook that creates auth object and handles state
-function useProvideAuth() {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  // Check if candidate profile exists when component mounts
+  useEffect(() => {
+    if (isAuthenticated && hasRole('ROLE_CANDIDATE')) {
+      dispatch(fetchCandidateProfile())
+        .unwrap()
+        .then(candidateData => {
+          if (candidateData && candidateData.id) {
+            setHasCandidateProfile(true);
+          } else {
+            setHasCandidateProfile(false);
+          }
+        })
+        .catch(() => {
+          setHasCandidateProfile(false);
+        });
+    }
+  }, [dispatch, isAuthenticated, user]);
 
   // Get current user data from backend
   const getCurrentUser = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setIsAuthenticated(false);
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
     try {
-      const response = await axios.get('/api/auth/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(response.data);
-      setIsAuthenticated(true);
-      setError(null);
+      const result = await dispatch(fetchCurrentUserAction()).unwrap();
+      return result;
     } catch (err) {
-      console.error('Error fetching profile:', err);
-      setError(err.response?.data?.message || 'Unable to retrieve profile');
-      
-      // Remove token if unauthorized
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    } finally {
-      setIsLoading(false);
+      console.error('Error fetching current user:', err);
+      throw err;
     }
-  }, []);
+  }, [dispatch]);
 
   // Login function
-  const login = async (email, password) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const login = useCallback(async (email, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      
-      if (response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data);
-        setIsAuthenticated(true);
-        
-        // Load complete user profile after login
-        await getCurrentUser();
-        
-        return response.data;
-      }
-      return null;
+      const result = await dispatch(loginAction({ email, password })).unwrap();
+      return result;
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Login failed. Check your credentials.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  // Get redirection path based on user roles
-  const getRedirectionPath = useCallback(() => {
-    if (!user || !user.roles) return '/';
-    
-    const userRoles = user.roles.map(role => typeof role === 'string' ? role : role.name);
-    
-    if (userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_SUPER_USER')) {
-      return '/admin/dashboard';
-    } else if (userRoles.includes('ROLE_CANDIDATE')) {
-      return '/candidate/dashboard';
-    } else if (userRoles.includes('ROLE_CLIENT')) {
-      return '/client/dashboard';
-    }
-    
-    return '/';
-  }, [user]);
+  }, [dispatch]);
 
   // Logout function
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    sessionStorage.clear();
-    
-    // Clear all cookies
-    document.cookie.split(";").forEach(c => {
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-    
-    setUser(null);
-    setIsAuthenticated(false);
-    
-    // Force a page reload to clear any component state
-    window.location.href = '/';
-  }, []);
-
-  // Clear authentication errors
-  const clearAuthError = useCallback(() => {
-    setError(null);
-  }, []);
+    dispatch(logoutAction());
+  }, [dispatch]);
 
   // Check if user has a specific role
   const hasRole = useCallback((roleName) => {
     if (!user || !user.roles) return false;
-    
+
     // Handle roles as array of strings
     if (Array.isArray(user.roles) && typeof user.roles[0] === 'string') {
       return user.roles.includes(roleName);
@@ -139,63 +86,53 @@ function useProvideAuth() {
     return false;
   }, [user]);
 
-  // Register function
-  const register = async (userData) => {
-    setIsLoading(true);
-    setError(null);
+  // Get redirection path based on user roles
+  const getRedirectionPath = useCallback(() => {
+    if (!user || !user.roles) return '/';
     
-    try {
-      const response = await axios.post('/api/auth/register', userData);
-      if (response.data) {
-        return response.data;
-      }
-      return null;
-    } catch (err) {
-      console.error('Registration error:', err);
-      setError(err.response?.data?.message || 'Registration failed.');
-      throw err;
-    } finally {
-      setIsLoading(false);
+    if (hasRole('ROLE_ADMIN') || hasRole('ROLE_SUPER_USER')) {
+      return '/admin/dashboard';
+    } else if (hasRole('ROLE_CANDIDATE')) {
+      return '/candidate/dashboard';
+    } else if (hasRole('ROLE_CLIENT')) {
+      return '/client/dashboard';
     }
-  };
-
-  // Load user data on initial render if token exists
-  useEffect(() => {
-    getCurrentUser();
-  }, [getCurrentUser]);
-
-  // Setup interceptor to handle token expiration
-  useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
-      response => response,
-      error => {
-        if (error.response?.status === 401 && isAuthenticated) {
-          // Token expired or invalid
-          logout();
-        }
-        return Promise.reject(error);
-      }
-    );
     
-    return () => {
-      // Cleanup interceptor on component unmount
-      axios.interceptors.response.eject(interceptor);
-    };
-  }, [isAuthenticated, logout]);
+    return '/';
+  }, [user, hasRole]);
 
-  return {
+  // Clear authentication errors
+  const clearAuthError = useCallback(() => {
+    // This would be handled by a Redux action
+  }, []);
+
+  // Provide the auth context value
+  const authContext = {
     user,
     isLoading,
     error,
     isAuthenticated,
     login,
     logout,
-    register,
     getCurrentUser,
     hasRole,
     clearAuthError,
-    getRedirectionPath
+    getRedirectionPath,
+    hasCandidateProfile,
+    candidateProfile: currentCandidate,
+    candidateError
   };
-}
 
-export default useAuth;
+  return <AuthContext.Provider value={authContext}>{children}</AuthContext.Provider>;
+};
+
+// Hook to use authentication context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext;

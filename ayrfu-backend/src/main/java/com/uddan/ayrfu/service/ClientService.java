@@ -1,22 +1,17 @@
 package com.uddan.ayrfu.service;
 
-
 import com.uddan.ayrfu.dto.request.ClientRequest;
 import com.uddan.ayrfu.dto.response.ClientResponse;
 
 import java.util.List;
 
 public interface ClientService {
-
     ClientResponse createClient(ClientRequest clientRequest);
-
     ClientResponse getClientById(Long id);
-
     ClientResponse getClientByEmail(String email);
-
-    List<ClientResponse> getAllClients();
-
+    List<ClientResponse> getAllClients(int page, int size);
     ClientResponse updateClient(Long id, ClientRequest clientRequest);
-
     void deleteClient(Long id);
+    boolean isOwnProfile(Long clientId, Long userId);
+    boolean isOwnEmail(String email, String userEmail);
 }
