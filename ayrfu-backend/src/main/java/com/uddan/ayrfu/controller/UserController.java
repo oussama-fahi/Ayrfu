@@ -1,5 +1,6 @@
 package com.uddan.ayrfu.controller;
 
+import com.uddan.ayrfu.dto.request.AdminCreationRequest;
 import com.uddan.ayrfu.dto.request.CandidateProfileRequest;
 import com.uddan.ayrfu.dto.request.ClientProfileRequest;
 import com.uddan.ayrfu.dto.response.CandidateResponse;
@@ -293,5 +294,33 @@ public class UserController {
         logger.info("Request to update client profile for current user");
         ClientResponse updatedProfile = userService.updateCurrentUserClientProfile(profileRequest);
         return ResponseEntity.ok(updatedProfile);
+    }
+    @PostMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a new admin", description = "Creates a new admin user (Admin only)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Admin created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN role")
+    })
+    public ResponseEntity<UserResponse> createAdmin(@Valid @RequestBody AdminCreationRequest request) {
+        logger.info("Request to create admin with email: {}", request.getEmail());
+        UserResponse createdAdmin = userService.createAdmin(request);
+        return new ResponseEntity<>(createdAdmin, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/super-admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a new super admin", description = "Creates a new super admin user (Admin only)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Super admin created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN role")
+    })
+    public ResponseEntity<UserResponse> createSuperAdmin(@Valid @RequestBody AdminCreationRequest request) {
+        logger.info("Request to create super admin with email: {}", request.getEmail());
+        request.setSuperUser(true); // Force super user flag to true
+        UserResponse createdSuperAdmin = userService.createAdmin(request);
+        return new ResponseEntity<>(createdSuperAdmin, HttpStatus.CREATED);
     }
 }

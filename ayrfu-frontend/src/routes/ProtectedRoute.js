@@ -39,7 +39,7 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Authentication error:', error);
-        localStorage.removeItem('token');
+        //localStorage.removeItem('token');
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);

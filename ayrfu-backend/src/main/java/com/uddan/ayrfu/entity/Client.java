@@ -1,19 +1,10 @@
 package com.uddan.ayrfu.entity;
 
 import jakarta.persistence.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "clients")
-@EntityListeners(AuditingEntityListener.class)
-public class Client {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Client extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -39,44 +30,6 @@ public class Client {
 
     @Column(length = 1000)
     private String requirements;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    // Default constructor
-    public Client() {
-    }
-
-    // All-args constructor
-    public Client(Long id, User user, String companyName, String contactPerson, String email,
-                  String phoneNumber, String industry, String companySize, String requirements,
-                  LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.user = user;
-        this.companyName = companyName;
-        this.contactPerson = contactPerson;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.industry = industry;
-        this.companySize = companySize;
-        this.requirements = requirements;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public User getUser() {
         return user;
@@ -145,101 +98,56 @@ public class Client {
         this.requirements = requirements;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    // Builder pattern implementation
+    // Builder pattern
     public static ClientBuilder builder() {
         return new ClientBuilder();
     }
 
     public static class ClientBuilder {
-        private Long id;
-        private User user;
-        private String companyName;
-        private String contactPerson;
-        private String email;
-        private String phoneNumber;
-        private String industry;
-        private String companySize;
-        private String requirements;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-
-        ClientBuilder() {
-        }
-
-        public ClientBuilder id(Long id) {
-            this.id = id;
-            return this;
-        }
+        private final Client client = new Client();
 
         public ClientBuilder user(User user) {
-            this.user = user;
+            client.setUser(user);
             return this;
         }
 
         public ClientBuilder companyName(String companyName) {
-            this.companyName = companyName;
+            client.setCompanyName(companyName);
             return this;
         }
 
         public ClientBuilder contactPerson(String contactPerson) {
-            this.contactPerson = contactPerson;
+            client.setContactPerson(contactPerson);
             return this;
         }
 
         public ClientBuilder email(String email) {
-            this.email = email;
+            client.setEmail(email);
             return this;
         }
 
         public ClientBuilder phoneNumber(String phoneNumber) {
-            this.phoneNumber = phoneNumber;
+            client.setPhoneNumber(phoneNumber);
             return this;
         }
 
         public ClientBuilder industry(String industry) {
-            this.industry = industry;
+            client.setIndustry(industry);
             return this;
         }
 
         public ClientBuilder companySize(String companySize) {
-            this.companySize = companySize;
+            client.setCompanySize(companySize);
             return this;
         }
 
         public ClientBuilder requirements(String requirements) {
-            this.requirements = requirements;
-            return this;
-        }
-
-        public ClientBuilder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public ClientBuilder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
+            client.setRequirements(requirements);
             return this;
         }
 
         public Client build() {
-            return new Client(id, user, companyName, contactPerson, email, phoneNumber,
-                    industry, companySize, requirements, createdAt, updatedAt);
+            return client;
         }
     }
 }

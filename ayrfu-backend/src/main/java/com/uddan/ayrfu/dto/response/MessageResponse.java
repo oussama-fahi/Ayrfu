@@ -6,10 +6,13 @@ import java.time.LocalDateTime;
 public record MessageResponse(
         Long id,
         MessageType type,
+        Long senderId,
         String senderName,
         String senderEmail,
         String senderPhone,
+        Long conversationId,
         String content,
+        DocumentResponse attachment,
         LocalDateTime sentAt,
         boolean read,
         LocalDateTime readAt
@@ -21,10 +24,13 @@ public record MessageResponse(
     public static class Builder {
         private Long id;
         private MessageType type;
+        private Long senderId;
         private String senderName;
         private String senderEmail;
         private String senderPhone;
+        private Long conversationId;
         private String content;
+        private DocumentResponse attachment;
         private LocalDateTime sentAt;
         private boolean read;
         private LocalDateTime readAt;
@@ -36,6 +42,11 @@ public record MessageResponse(
 
         public Builder type(MessageType type) {
             this.type = type;
+            return this;
+        }
+
+        public Builder senderId(Long senderId) {
+            this.senderId = senderId;
             return this;
         }
 
@@ -54,8 +65,18 @@ public record MessageResponse(
             return this;
         }
 
+        public Builder conversationId(Long conversationId) {
+            this.conversationId = conversationId;
+            return this;
+        }
+
         public Builder content(String content) {
             this.content = content;
+            return this;
+        }
+
+        public Builder attachment(DocumentResponse attachment) {
+            this.attachment = attachment;
             return this;
         }
 
@@ -75,8 +96,8 @@ public record MessageResponse(
         }
 
         public MessageResponse build() {
-            return new MessageResponse(id, type, senderName, senderEmail, senderPhone,
-                    content, sentAt, read, readAt);
+            return new MessageResponse(id, type, senderId, senderName, senderEmail, senderPhone,
+                    conversationId, content, attachment, sentAt, read, readAt);
         }
     }
 }

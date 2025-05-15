@@ -2,21 +2,12 @@ package com.uddan.ayrfu.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "candidates")
-@EntityListeners(AuditingEntityListener.class)
-public class Candidate {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Candidate extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -62,54 +53,8 @@ public class Candidate {
     @Column(name = "cv_path")
     private String cvPath;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Application> applications = new HashSet<>();
-
-    // Default constructor
-    public Candidate() {
-    }
-
-    // All-args constructor
-    public Candidate(Long id, User user, String fullName, String email, String phoneNumber,
-                     String address, LocalDate dateOfBirth, String gender, Set<String> technologies,
-                     Set<String> languages, String experienceLevel, String preferredLocation,
-                     String preferredWorkModel, String cvPath, LocalDateTime createdAt,
-                     LocalDateTime updatedAt, Set<Application> applications) {
-        this.id = id;
-        this.user = user;
-        this.fullName = fullName;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
-        this.dateOfBirth = dateOfBirth;
-        this.gender = gender;
-        this.technologies = technologies != null ? technologies : new HashSet<>();
-        this.languages = languages != null ? languages : new HashSet<>();
-        this.experienceLevel = experienceLevel;
-        this.preferredLocation = preferredLocation;
-        this.preferredWorkModel = preferredWorkModel;
-        this.cvPath = cvPath;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.applications = applications != null ? applications : new HashSet<>();
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public User getUser() {
         return user;
@@ -218,22 +163,6 @@ public class Candidate {
         this.cvPath = cvPath;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     public Set<Application> getApplications() {
         return applications;
     }
@@ -242,122 +171,81 @@ public class Candidate {
         this.applications = applications != null ? applications : new HashSet<>();
     }
 
-    // Builder pattern implementation
+    // Builder pattern
     public static CandidateBuilder builder() {
         return new CandidateBuilder();
     }
 
     public static class CandidateBuilder {
-        private Long id;
-        private User user;
-        private String fullName;
-        private String email;
-        private String phoneNumber;
-        private String address;
-        private LocalDate dateOfBirth;
-        private String gender;
-        private Set<String> technologies = new HashSet<>();
-        private Set<String> languages = new HashSet<>();
-        private String experienceLevel;
-        private String preferredLocation;
-        private String preferredWorkModel;
-        private String cvPath;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-        private Set<Application> applications = new HashSet<>();
-
-        CandidateBuilder() {
-        }
-
-        public CandidateBuilder id(Long id) {
-            this.id = id;
-            return this;
-        }
+        private final Candidate candidate = new Candidate();
 
         public CandidateBuilder user(User user) {
-            this.user = user;
+            candidate.setUser(user);
             return this;
         }
 
         public CandidateBuilder fullName(String fullName) {
-            this.fullName = fullName;
+            candidate.setFullName(fullName);
             return this;
         }
 
         public CandidateBuilder email(String email) {
-            this.email = email;
+            candidate.setEmail(email);
             return this;
         }
 
         public CandidateBuilder phoneNumber(String phoneNumber) {
-            this.phoneNumber = phoneNumber;
+            candidate.setPhoneNumber(phoneNumber);
             return this;
         }
 
         public CandidateBuilder address(String address) {
-            this.address = address;
+            candidate.setAddress(address);
             return this;
         }
 
         public CandidateBuilder dateOfBirth(LocalDate dateOfBirth) {
-            this.dateOfBirth = dateOfBirth;
+            candidate.setDateOfBirth(dateOfBirth);
             return this;
         }
 
         public CandidateBuilder gender(String gender) {
-            this.gender = gender;
+            candidate.setGender(gender);
             return this;
         }
 
         public CandidateBuilder technologies(Set<String> technologies) {
-            this.technologies = technologies;
+            candidate.setTechnologies(technologies);
             return this;
         }
 
         public CandidateBuilder languages(Set<String> languages) {
-            this.languages = languages;
+            candidate.setLanguages(languages);
             return this;
         }
 
         public CandidateBuilder experienceLevel(String experienceLevel) {
-            this.experienceLevel = experienceLevel;
+            candidate.setExperienceLevel(experienceLevel);
             return this;
         }
 
         public CandidateBuilder preferredLocation(String preferredLocation) {
-            this.preferredLocation = preferredLocation;
+            candidate.setPreferredLocation(preferredLocation);
             return this;
         }
 
         public CandidateBuilder preferredWorkModel(String preferredWorkModel) {
-            this.preferredWorkModel = preferredWorkModel;
+            candidate.setPreferredWorkModel(preferredWorkModel);
             return this;
         }
 
         public CandidateBuilder cvPath(String cvPath) {
-            this.cvPath = cvPath;
-            return this;
-        }
-
-        public CandidateBuilder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public CandidateBuilder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
-            return this;
-        }
-
-        public CandidateBuilder applications(Set<Application> applications) {
-            this.applications = applications;
+            candidate.setCvPath(cvPath);
             return this;
         }
 
         public Candidate build() {
-            return new Candidate(id, user, fullName, email, phoneNumber, address, dateOfBirth,
-                    gender, technologies, languages, experienceLevel, preferredLocation,
-                    preferredWorkModel, cvPath, createdAt, updatedAt, applications);
+            return candidate;
         }
     }
 }

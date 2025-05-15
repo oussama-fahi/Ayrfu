@@ -36,7 +36,7 @@ public class CandidateController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get candidate by ID", description = "Retrieves a candidate by its ID")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or isAuthenticated()")
     public ResponseEntity<CandidateResponse> getCandidateById(@PathVariable Long id) {
         CandidateResponse candidate = candidateService.getCandidateById(id);
         return ResponseEntity.ok(candidate);
@@ -60,7 +60,7 @@ public class CandidateController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update a candidate", description = "Updates a candidate with the provided details")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or isAuthenticated()")
     public ResponseEntity<CandidateResponse> updateCandidate(
             @PathVariable Long id,
             @Valid @RequestBody CandidateRequest candidateRequest) {
@@ -78,7 +78,7 @@ public class CandidateController {
 
     @PostMapping(value = "/{id}/cv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload candidate CV", description = "Uploads a CV for a candidate")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or isAuthenticated()")
     public ResponseEntity<String> uploadCandidateCV(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
@@ -88,7 +88,7 @@ public class CandidateController {
 
     @PostMapping("/{id}/applications")
     @Operation(summary = "Apply for a position", description = "Submits an application for a position by a candidate")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or isAuthenticated()")
     public ResponseEntity<ApplicationResponse> applyForPosition(
             @PathVariable Long id,
             @Valid @RequestBody ApplicationRequest applicationRequest) {
@@ -98,7 +98,7 @@ public class CandidateController {
 
     @GetMapping("/{id}/applications")
     @Operation(summary = "Get candidate applications", description = "Retrieves all applications submitted by a candidate")
-    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or @candidateService.isOwnProfile(#id, authentication.principal.id)")
+    @PreAuthorize("hasRole('SUPER_USER') or hasRole('ADMIN') or isAuthenticated()")
     public ResponseEntity<List<ApplicationResponse>> getCandidateApplications(@PathVariable Long id) {
         List<ApplicationResponse> applications = candidateService.getCandidateApplications(id);
         return ResponseEntity.ok(applications);

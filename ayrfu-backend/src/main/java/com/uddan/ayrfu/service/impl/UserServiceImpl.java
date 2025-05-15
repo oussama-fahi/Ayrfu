@@ -1,5 +1,6 @@
 package com.uddan.ayrfu.service.impl;
 
+import com.uddan.ayrfu.dto.request.AdminCreationRequest;
 import com.uddan.ayrfu.dto.request.CandidateProfileRequest;
 import com.uddan.ayrfu.dto.request.ClientProfileRequest;
 import com.uddan.ayrfu.dto.response.CandidateResponse;
@@ -23,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
@@ -52,6 +55,60 @@ public class UserServiceImpl implements UserService {
         this.candidateRepository = candidateRepository;
         this.clientRepository = clientRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    @Transactional
+    public UserResponse createAdmin(AdminCreationRequest request) {
+        logger.info("Creating admin user with email: {}", request.getEmail());
+
+        // Check for required admin privileges
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl currentUser = (UserDetailsImpl) authentication.getPrincipal();
+            User adminUser = userRepository.findById(currentUser.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            if (!isAdmin(adminUser)) {
+                throw new BadRequestException("Only administrators can create admin users");
+            }
+        } else {
+            throw new BadRequestException("Authentication required");
+        }
+
+        // Check if email already exists
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email already in use");
+        }
+
+        // Set up roles
+        Set<Role> roles = new HashSet<>();
+
+        // Add ADMIN role
+        Role adminRole = roleRepository.findByName(RoleConstants.ROLE_ADMIN)
+                .orElseThrow(() -> new ResourceNotFoundException("ADMIN role not found"));
+        roles.add(adminRole);
+
+        // Add SUPER_USER role if specified
+        if (request.isSuperUser()) {
+            Role superUserRole = roleRepository.findByName(RoleConstants.ROLE_SUPER_USER)
+                    .orElseThrow(() -> new ResourceNotFoundException("SUPER_USER role not found"));
+            roles.add(superUserRole);
+        }
+
+        // Create user
+        User user = User.builder()
+                .userName(request.getFullName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .roles(roles)
+                .active(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        logger.info("Admin user created with ID: {}", savedUser.getId());
+
+        return mapToUserResponse(savedUser);
     }
 
     @Override

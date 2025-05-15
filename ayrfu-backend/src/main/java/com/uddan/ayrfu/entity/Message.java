@@ -2,22 +2,19 @@ package com.uddan.ayrfu.entity;
 
 import com.uddan.ayrfu.enumeration.MessageType;
 import jakarta.persistence.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "messages")
-@EntityListeners(AuditingEntityListener.class)
-public class Message {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Message extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private MessageType type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id")
+    private User sender;
 
     @Column(name = "sender_name", nullable = false)
     private String senderName;
@@ -28,12 +25,16 @@ public class Message {
     @Column(name = "sender_phone")
     private String senderPhone;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conversation_id")
+    private Conversation conversation;
+
     @Column(nullable = false, length = 2000)
     private String content;
 
-    @CreatedDate
-    @Column(name = "sent_at", nullable = false, updatable = false)
-    private LocalDateTime sentAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attachment_id")
+    private Document attachment;
 
     @Column
     private boolean read = false;
@@ -41,36 +42,41 @@ public class Message {
     @Column(name = "read_at")
     private LocalDateTime readAt;
 
+    // Default constructor
     public Message() {
     }
 
-    public Message(Long id, MessageType type, String senderName, String senderEmail, String senderPhone,
-                   String content, LocalDateTime sentAt, boolean read, LocalDateTime readAt) {
-        this.id = id;
+    // All-args constructor
+    public Message(MessageType type, User sender, String senderName, String senderEmail,
+                   String senderPhone, Conversation conversation, String content,
+                   Document attachment, boolean read, LocalDateTime readAt) {
         this.type = type;
+        this.sender = sender;
         this.senderName = senderName;
         this.senderEmail = senderEmail;
         this.senderPhone = senderPhone;
+        this.conversation = conversation;
         this.content = content;
-        this.sentAt = sentAt;
+        this.attachment = attachment;
         this.read = read;
         this.readAt = readAt;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    // Getters and Setters
     public MessageType getType() {
         return type;
     }
 
     public void setType(MessageType type) {
         this.type = type;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
     }
 
     public String getSenderName() {
@@ -97,6 +103,14 @@ public class Message {
         this.senderPhone = senderPhone;
     }
 
+    public Conversation getConversation() {
+        return conversation;
+    }
+
+    public void setConversation(Conversation conversation) {
+        this.conversation = conversation;
+    }
+
     public String getContent() {
         return content;
     }
@@ -105,12 +119,12 @@ public class Message {
         this.content = content;
     }
 
-    public LocalDateTime getSentAt() {
-        return sentAt;
+    public Document getAttachment() {
+        return attachment;
     }
 
-    public void setSentAt(LocalDateTime sentAt) {
-        this.sentAt = sentAt;
+    public void setAttachment(Document attachment) {
+        this.attachment = attachment;
     }
 
     public boolean isRead() {
@@ -134,28 +148,33 @@ public class Message {
         this.readAt = LocalDateTime.now();
     }
 
+    // Builder pattern implementation
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
-        private Long id;
         private MessageType type;
+        private User sender;
         private String senderName;
         private String senderEmail;
         private String senderPhone;
+        private Conversation conversation;
         private String content;
-        private LocalDateTime sentAt;
+        private Document attachment;
         private boolean read = false;
         private LocalDateTime readAt;
 
-        public Builder id(Long id) {
-            this.id = id;
-            return this;
+        Builder() {
         }
 
         public Builder type(MessageType type) {
             this.type = type;
+            return this;
+        }
+
+        public Builder sender(User sender) {
+            this.sender = sender;
             return this;
         }
 
@@ -174,13 +193,18 @@ public class Message {
             return this;
         }
 
+        public Builder conversation(Conversation conversation) {
+            this.conversation = conversation;
+            return this;
+        }
+
         public Builder content(String content) {
             this.content = content;
             return this;
         }
 
-        public Builder sentAt(LocalDateTime sentAt) {
-            this.sentAt = sentAt;
+        public Builder attachment(Document attachment) {
+            this.attachment = attachment;
             return this;
         }
 
@@ -195,8 +219,8 @@ public class Message {
         }
 
         public Message build() {
-            return new Message(id, type, senderName, senderEmail, senderPhone,
-                    content, sentAt, read, readAt);
+            return new Message(type, sender, senderName, senderEmail, senderPhone,
+                    conversation, content, attachment, read, readAt);
         }
     }
 }

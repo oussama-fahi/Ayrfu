@@ -1,22 +1,12 @@
 package com.uddan.ayrfu.entity;
 
 import jakarta.persistence.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@EntityListeners(AuditingEntityListener.class)
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class User extends BaseEntity {
 
     @Column(name = "user_name", nullable = false)
     private String userName;
@@ -35,7 +25,6 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    // Added relationships to Candidate and Client
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Candidate candidate;
 
@@ -44,56 +33,6 @@ public class User {
 
     @Column(nullable = false)
     private boolean active = true;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    // Default constructor
-    public User() {
-    }
-
-    // All-args constructor
-    public User(Long id, String userName, String email, String password, Set<Role> roles,
-                Candidate candidate, Client client, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.userName = userName;
-        this.email = email;
-        this.password = password;
-        this.roles = roles != null ? roles : new HashSet<>();
-        this.candidate = candidate;
-        this.client = client;
-        this.active = active;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // Helper methods for role management
-    public void addRole(Role role) {
-        this.roles.add(role);
-    }
-
-    public void removeRole(Role role) {
-        this.roles.remove(role);
-    }
-
-    public boolean hasRole(String roleName) {
-        return this.roles.stream()
-                .anyMatch(role -> role.getName().equals(roleName));
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getUserName() {
         return userName;
@@ -151,94 +90,65 @@ public class User {
         this.active = active;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    // Helper methods for role management
+    public void addRole(Role role) {
+        this.roles.add(role);
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void removeRole(Role role) {
+        this.roles.remove(role);
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public boolean hasRole(String roleName) {
+        return this.roles.stream()
+                .anyMatch(role -> role.getName().equals(roleName));
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    // Builder pattern implementation
+    // Builder pattern
     public static UserBuilder builder() {
         return new UserBuilder();
     }
 
     public static class UserBuilder {
-        private Long id;
-        private String userName;
-        private String email;
-        private String password;
-        private Set<Role> roles = new HashSet<>();
-        private Candidate candidate;
-        private Client client;
-        private boolean active = true;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
-
-        UserBuilder() {
-        }
-
-        public UserBuilder id(Long id) {
-            this.id = id;
-            return this;
-        }
+        private final User user = new User();
 
         public UserBuilder userName(String userName) {
-            this.userName = userName;
+            user.setUserName(userName);
             return this;
         }
 
         public UserBuilder email(String email) {
-            this.email = email;
+            user.setEmail(email);
             return this;
         }
 
         public UserBuilder password(String password) {
-            this.password = password;
+            user.setPassword(password);
             return this;
         }
 
         public UserBuilder roles(Set<Role> roles) {
-            this.roles = roles;
+            user.setRoles(roles);
             return this;
         }
 
         public UserBuilder candidate(Candidate candidate) {
-            this.candidate = candidate;
+            user.setCandidate(candidate);
             return this;
         }
 
         public UserBuilder client(Client client) {
-            this.client = client;
+            user.setClient(client);
             return this;
         }
 
         public UserBuilder active(boolean active) {
-            this.active = active;
-            return this;
-        }
-
-        public UserBuilder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public UserBuilder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
+            user.setActive(active);
             return this;
         }
 
         public User build() {
-            return new User(id, userName, email, password, roles, candidate, client, active, createdAt, updatedAt);
+            return user;
         }
     }
 }

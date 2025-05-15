@@ -1,56 +1,120 @@
+// src/redux/slices/messagesSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import messageService from '../../api/services/message.service';
 
-export const fetchAllMessages = createAsyncThunk(
-  'messages/fetchAll',
+// Fetch all conversations
+export const fetchConversations = createAsyncThunk(
+  'messages/fetchConversations',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await messageService.getAllMessages();
+      const response = await messageService.getAllConversations();
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch messages');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch conversations');
     }
   }
 );
 
-export const fetchMessagesByType = createAsyncThunk(
-  'messages/fetchByType',
-  async (type, { rejectWithValue }) => {
+// Fetch conversation details
+export const fetchConversationDetails = createAsyncThunk(
+  'messages/fetchConversationDetails',
+  async (conversationId, { rejectWithValue }) => {
     try {
-      const response = await messageService.getMessagesByType(type);
-      return { type, messages: response.data };
+      const response = await messageService.getConversationDetails(conversationId);
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch messages by type');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch conversation details');
     }
   }
 );
 
-export const fetchUnreadMessages = createAsyncThunk(
-  'messages/fetchUnread',
+// Start a new conversation
+export const startConversation = createAsyncThunk(
+  'messages/startConversation',
+  async (conversationData, { rejectWithValue }) => {
+    try {
+      const response = await messageService.startConversation(conversationData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to start conversation');
+    }
+  }
+);
+
+// Reply to a conversation
+export const replyToConversation = createAsyncThunk(
+  'messages/replyToConversation',
+  async (replyData, { rejectWithValue }) => {
+    try {
+      const response = await messageService.replyToConversation(replyData);
+      return {
+        conversationId: replyData.conversationId,
+        message: response.data
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send reply');
+    }
+  }
+);
+
+// Mark conversation as read
+export const markConversationAsRead = createAsyncThunk(
+  'messages/markAsRead',
+  async (conversationId, { rejectWithValue }) => {
+    try {
+      const response = await messageService.markConversationAsRead(conversationId);
+      return {
+        conversationId,
+        markedCount: response.data.markedAsRead
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to mark conversation as read');
+    }
+  }
+);
+
+// Close conversation
+export const closeConversation = createAsyncThunk(
+  'messages/closeConversation',
+  async (conversationId, { rejectWithValue }) => {
+    try {
+      const response = await messageService.closeConversation(conversationId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to close conversation');
+    }
+  }
+);
+
+// Reopen conversation
+export const reopenConversation = createAsyncThunk(
+  'messages/reopenConversation',
+  async (conversationId, { rejectWithValue }) => {
+    try {
+      const response = await messageService.reopenConversation(conversationId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to reopen conversation');
+    }
+  }
+);
+
+// Get unread message count
+export const fetchUnreadCount = createAsyncThunk(
+  'messages/fetchUnreadCount',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await messageService.getUnreadMessages();
-      return response.data;
+      const response = await messageService.getUnreadCount();
+      return response.data.unreadCount;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch unread messages');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch unread count');
     }
   }
 );
 
-export const fetchUnreadMessagesByType = createAsyncThunk(
-  'messages/fetchUnreadByType',
-  async (type, { rejectWithValue }) => {
-    try {
-      const response = await messageService.getUnreadMessagesByType(type);
-      return { type, messages: response.data };
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch unread messages by type');
-    }
-  }
-);
-
+// Create a new message (for contact form)
 export const createMessage = createAsyncThunk(
-  'messages/create',
+  'messages/createMessage',
   async (messageData, { rejectWithValue }) => {
     try {
       const response = await messageService.createMessage(messageData);
@@ -61,50 +125,29 @@ export const createMessage = createAsyncThunk(
   }
 );
 
-export const markMessageAsRead = createAsyncThunk(
-  'messages/markAsRead',
-  async (id, { rejectWithValue }) => {
-    try {
-      const response = await messageService.markMessageAsRead(id);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to mark message as read');
-    }
-  }
-);
-
-export const deleteMessage = createAsyncThunk(
-  'messages/delete',
-  async (id, { rejectWithValue }) => {
-    try {
-      await messageService.deleteMessage(id);
-      return id;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete message');
-    }
-  }
-);
-
 const messagesSlice = createSlice({
   name: 'messages',
   initialState: {
-    messages: [],
-    candidateMessages: [],
-    clientMessages: [],
-    unreadMessages: [],
+    conversations: [],
+    currentConversation: null,
+    unreadCount: 0,
     isLoading: false,
     error: null,
+    sendSuccess: false,
     messageSent: false,
   },
   reducers: {
-    clearMessages: (state) => {
-      state.messages = [];
-      state.candidateMessages = [];
-      state.clientMessages = [];
-      state.unreadMessages = [];
+    clearConversations: (state) => {
+      state.conversations = [];
+    },
+    clearCurrentConversation: (state) => {
+      state.currentConversation = null;
     },
     clearError: (state) => {
       state.error = null;
+    },
+    resetSendSuccess: (state) => {
+      state.sendSuccess = false;
     },
     resetMessageSent: (state) => {
       state.messageSent = false;
@@ -112,70 +155,193 @@ const messagesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch all messages
-      .addCase(fetchAllMessages.pending, (state) => {
+      // Fetch conversations
+      .addCase(fetchConversations.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchAllMessages.fulfilled, (state, action) => {
+      .addCase(fetchConversations.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.messages = action.payload;
+        state.conversations = action.payload;
       })
-      .addCase(fetchAllMessages.rejected, (state, action) => {
+      .addCase(fetchConversations.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
       
-      // Fetch messages by type
-      .addCase(fetchMessagesByType.pending, (state) => {
+      // Fetch conversation details
+      .addCase(fetchConversationDetails.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchMessagesByType.fulfilled, (state, action) => {
+      .addCase(fetchConversationDetails.fulfilled, (state, action) => {
         state.isLoading = false;
-        if (action.payload.type === 'CANDIDATE') {
-          state.candidateMessages = action.payload.messages;
-        } else if (action.payload.type === 'CLIENT') {
-          state.clientMessages = action.payload.messages;
+        state.currentConversation = action.payload;
+      })
+      .addCase(fetchConversationDetails.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Start conversation
+      .addCase(startConversation.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.sendSuccess = false;
+      })
+      .addCase(startConversation.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.conversations.unshift(action.payload);
+        state.currentConversation = action.payload;
+        state.sendSuccess = true;
+      })
+      .addCase(startConversation.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+        state.sendSuccess = false;
+      })
+      
+      // Reply to conversation
+      .addCase(replyToConversation.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.sendSuccess = false;
+      })
+      .addCase(replyToConversation.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.sendSuccess = true;
+        
+        // Add message to current conversation if it matches
+        if (state.currentConversation && state.currentConversation.id === action.payload.conversationId) {
+          state.currentConversation.messages.push(action.payload.message);
+        }
+        
+        // Update conversation in list if it exists
+        const conversationIndex = state.conversations.findIndex(
+          conv => conv.id === action.payload.conversationId
+        );
+        
+        if (conversationIndex !== -1) {
+          state.conversations[conversationIndex].lastMessage = action.payload.message.content;
+          state.conversations[conversationIndex].updatedAt = action.payload.message.createdAt;
+          
+          // Move conversation to the top of the list
+          const [updatedConversation] = state.conversations.splice(conversationIndex, 1);
+          state.conversations.unshift(updatedConversation);
         }
       })
-      .addCase(fetchMessagesByType.rejected, (state, action) => {
+      .addCase(replyToConversation.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.sendSuccess = false;
       })
       
-      // Fetch unread messages
-      .addCase(fetchUnreadMessages.pending, (state) => {
+      // Mark conversation as read
+      .addCase(markConversationAsRead.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchUnreadMessages.fulfilled, (state, action) => {
+      .addCase(markConversationAsRead.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.unreadMessages = action.payload;
-      })
-      .addCase(fetchUnreadMessages.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
-      
-      // Fetch unread messages by type
-      .addCase(fetchUnreadMessagesByType.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchUnreadMessagesByType.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const currentUnread = state.unreadMessages.filter(
-          msg => msg.type !== action.payload.type
+        
+        // Update unread count
+        const oldUnreadCount = state.unreadCount;
+        state.unreadCount = Math.max(0, oldUnreadCount - action.payload.markedCount);
+        
+        // Update conversation in list
+        const conversationIndex = state.conversations.findIndex(
+          conv => conv.id === action.payload.conversationId
         );
-        state.unreadMessages = [...currentUnread, ...action.payload.messages];
+        
+        if (conversationIndex !== -1) {
+          state.conversations[conversationIndex].unreadMessageCount = 0;
+        }
+        
+        // Update messages in current conversation if it matches
+        if (state.currentConversation && state.currentConversation.id === action.payload.conversationId) {
+          state.currentConversation.messages.forEach(message => {
+            if (!message.read && message.senderId !== state.currentConversation.userId) {
+              message.read = true;
+            }
+          });
+          
+          state.currentConversation.unreadMessageCount = 0;
+        }
       })
-      .addCase(fetchUnreadMessagesByType.rejected, (state, action) => {
+      .addCase(markConversationAsRead.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
       
-      // Create message
+      // Close conversation
+      .addCase(closeConversation.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(closeConversation.fulfilled, (state, action) => {
+        state.isLoading = false;
+        
+        // Update conversation in list
+        const conversationIndex = state.conversations.findIndex(
+          conv => conv.id === action.payload.id
+        );
+        
+        if (conversationIndex !== -1) {
+          state.conversations[conversationIndex].closed = true;
+        }
+        
+        // Update current conversation if it matches
+        if (state.currentConversation && state.currentConversation.id === action.payload.id) {
+          state.currentConversation.closed = true;
+        }
+      })
+      .addCase(closeConversation.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Reopen conversation
+      .addCase(reopenConversation.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(reopenConversation.fulfilled, (state, action) => {
+        state.isLoading = false;
+        
+        // Update conversation in list
+        const conversationIndex = state.conversations.findIndex(
+          conv => conv.id === action.payload.id
+        );
+        
+        if (conversationIndex !== -1) {
+          state.conversations[conversationIndex].closed = false;
+        }
+        
+        // Update current conversation if it matches
+        if (state.currentConversation && state.currentConversation.id === action.payload.id) {
+          state.currentConversation.closed = false;
+        }
+      })
+      .addCase(reopenConversation.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Fetch unread count
+      .addCase(fetchUnreadCount.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUnreadCount.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.unreadCount = action.payload;
+      })
+      .addCase(fetchUnreadCount.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      
+      // Create message (for contact form)
       .addCase(createMessage.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -184,69 +350,20 @@ const messagesSlice = createSlice({
       .addCase(createMessage.fulfilled, (state, action) => {
         state.isLoading = false;
         state.messageSent = true;
-        if (action.payload.type === 'CANDIDATE') {
-          state.candidateMessages.push(action.payload);
-        } else if (action.payload.type === 'CLIENT') {
-          state.clientMessages.push(action.payload);
-        }
-        state.messages.push(action.payload);
       })
       .addCase(createMessage.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
         state.messageSent = false;
-      })
-      
-      // Mark message as read
-      .addCase(markMessageAsRead.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(markMessageAsRead.fulfilled, (state, action) => {
-        state.isLoading = false;
-        
-        // Update in all message lists
-        const updateMessageInList = (list) => {
-          const index = list.findIndex(m => m.id === action.payload.id);
-          if (index !== -1) {
-            list[index] = action.payload;
-          }
-        };
-        
-        updateMessageInList(state.messages);
-        updateMessageInList(state.candidateMessages);
-        updateMessageInList(state.clientMessages);
-        
-        // Remove from unread messages
-        state.unreadMessages = state.unreadMessages.filter(m => m.id !== action.payload.id);
-      })
-      .addCase(markMessageAsRead.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
-      
-      // Delete message
-      .addCase(deleteMessage.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteMessage.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.messages = state.messages.filter(m => m.id !== action.payload);
-        state.candidateMessages = state.candidateMessages.filter(m => m.id !== action.payload);
-        state.clientMessages = state.clientMessages.filter(m => m.id !== action.payload);
-        state.unreadMessages = state.unreadMessages.filter(m => m.id !== action.payload);
-      })
-      .addCase(deleteMessage.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
       });
   },
 });
 
 export const { 
-  clearMessages, 
-  clearError,
+  clearConversations, 
+  clearCurrentConversation, 
+  clearError, 
+  resetSendSuccess,
   resetMessageSent
 } = messagesSlice.actions;
 
