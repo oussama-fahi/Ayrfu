@@ -1,11 +1,9 @@
 // src/utils/axiosConfig.js
 import axios from 'axios';
 
-const API_URL = '/api';
-
-// Create an axios instance with base URL
+// Create axios instance with default configuration
 const instance = axios.create({
-  baseURL: API_URL,
+  baseURL: process.env.REACT_APP_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,8 +31,9 @@ instance.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Clear token on auth error
-      localStorage.removeItem('token');
-      // Could redirect to login page here
+      //localStorage.removeItem('token');
+      
+      // Redirect to login page if needed
       // window.location.href = '/login';
     }
     return Promise.reject(error);

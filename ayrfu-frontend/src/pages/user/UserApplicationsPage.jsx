@@ -56,8 +56,8 @@ const UserApplicationsPage = () => {
         
         // If 401 unauthorized, redirect to login
         if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
+          // localStorage.removeItem('token');
+          // navigate('/login');
         }
       } finally {
         setLoading(false);

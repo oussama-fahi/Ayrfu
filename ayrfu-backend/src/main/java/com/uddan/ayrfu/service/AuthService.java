@@ -1,18 +1,21 @@
 package com.uddan.ayrfu.service;
 
-
-import com.uddan.ayrfu.dto.request.LoginRequest;
-import com.uddan.ayrfu.dto.request.RegisterRequest;
-import com.uddan.ayrfu.dto.response.JwtResponse;
-import com.uddan.ayrfu.dto.response.UserResponse;
+import com.uddan.ayrfu.dto.request.*;
+import com.uddan.ayrfu.dto.response.*;
 import com.uddan.ayrfu.entity.User;
 
-
 public interface AuthService {
-
     JwtResponse login(LoginRequest loginRequest);
-    UserResponse register(RegisterRequest registerRequest);
+
+    CandidateResponse registerCandidate(CandidateRegistrationRequest request);
+
+    ClientResponse registerClient(ClientRegistrationRequest request);
+
+    UserResponse createAdmin(AdminCreationRequest request);
+
     UserResponse getCurrentUser();
-    UserResponse updateCurrentUserProfile(User updateRequest);
+
+    UserResponse updateCurrentUserProfile(User userUpdateRequest);
+
     boolean userHasRole(User user, String roleName);
 }

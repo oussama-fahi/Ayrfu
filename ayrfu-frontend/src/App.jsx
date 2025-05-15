@@ -1,10 +1,11 @@
+// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box, CircularProgress } from '@mui/material';
 
-// Import Auth Provider
+// Auth Provider
 import { AuthProvider } from './hooks/useAuth';
 import { useAuth } from './hooks/useAuth';
 
@@ -35,6 +36,7 @@ import CandidateDashboardPage from './pages/candidate/CandidateDashboardPage';
 import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
 import CandidateApplicationDetailPage from './pages/candidate/CandidateApplicationDetailPage';
 import CandidateMessagesPage from './pages/candidate/CandidateMessagesPage';
+import MultiStepApplicationForm from './components/candidate/MultiStepApplicationForm';
 
 // Client Pages
 import ClientDashboardPage from './pages/client/ClientDashboardPage';
@@ -61,12 +63,7 @@ const AuthRoute = ({ children }) => {
   
   if (isLoading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh' 
-      }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <CircularProgress />
       </Box>
     );
@@ -84,12 +81,7 @@ const RoleRoute = ({ children, roles = [] }) => {
   
   if (isLoading) {
     return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh' 
-      }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <CircularProgress />
       </Box>
     );
@@ -119,7 +111,7 @@ const RoleRoute = ({ children, roles = [] }) => {
 
 // Theme configuration
 const theme = createTheme({
-   gradientTextStyle : {
+  gradientTextStyle: {
     fontWeight: 'bold',
     position: 'relative',
     display: 'inline-block',
@@ -127,8 +119,8 @@ const theme = createTheme({
     backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
     backgroundClip: 'text',
     WebkitBackgroundClip: 'text',
-    color: 'transparent',  // Ensures the gradient is visible
-    fontSize: { xs: '2rem', md: '3rem' },  // Responsive font size
+    color: 'transparent', // Ensures the gradient is visible
+    fontSize: { xs: '2rem', md: '3rem' }, // Responsive font size
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -137,16 +129,16 @@ const theme = createTheme({
       left: '50%',
       transform: 'translateX(-50%)',
       bottom: 0,
-      bgcolor: 'primary.main',  // Keep your primary color for the underline
+      bgcolor: 'primary.main', // Keep your primary color for the underline
       borderRadius: 2,
     },
   },
   palette: {
     primary: {
-      main: '#007aff', // Main Purple
+      main: '#007aff', // Main color
     },
     secondary: {
-      main: '#01e8c8', // Green for client sections
+      main: '#01e8c8', // Secondary color for accent elements
     },
     background: {
       default: '#f5f5f5',
@@ -201,29 +193,19 @@ const App = () => {
               <Route path="positions" element={<PositionsPage />} />
               <Route path="positions/:id" element={<PositionDetailPage />} />
               <Route path="services/:id" element={<ServiceDetailPage />} />
-              <Route path="apply/:positionId?" element={<ApplicantsPage />} />
+              <Route path="apply/:positionId" element={
+                <AuthRoute>
+                  <MultiStepApplicationForm />
+                </AuthRoute>
+              } />
               <Route path="contact" element={<ContactPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />
-              
+
               {/* Protected User Routes */}
               <Route path="user">
-                <Route 
-                  path="profile" 
-                  element={
-                    <AuthRoute>
-                      <UserProfilePage />
-                    </AuthRoute>
-                  } 
-                />
-                <Route 
-                  path="applications" 
-                  element={
-                    <AuthRoute>
-                      <UserApplicationsPage />
-                    </AuthRoute>
-                  } 
-                />
+                <Route path="profile" element={<AuthRoute><UserProfilePage /></AuthRoute>} />
+                <Route path="applications" element={<AuthRoute><UserApplicationsPage /></AuthRoute>} />
               </Route>
               
               <Route path="*" element={<NotFoundPage />} />
@@ -233,14 +215,11 @@ const App = () => {
             <Route path="/admin/login" element={<LoginPage />} />
 
             {/* Candidate Routes */}
-            <Route 
-              path="/candidate" 
-              element={
-                <RoleRoute roles={['ROLE_CANDIDATE']}>
-                  <CandidateLayout />
-                </RoleRoute>
-              }
-            >
+            <Route path="/candidate" element={
+              <RoleRoute roles={['ROLE_CANDIDATE']}>
+                <CandidateLayout />
+              </RoleRoute>
+            }>
               <Route index element={<Navigate to="/candidate/dashboard" replace />} />
               <Route path="dashboard" element={<CandidateDashboardPage />} />
               <Route path="applications" element={<CandidateApplicationsPage />} />
@@ -250,14 +229,7 @@ const App = () => {
             </Route>
 
             {/* Client Routes */}
-            <Route 
-              path="/client" 
-              element={
-                <RoleRoute roles={['ROLE_CLIENT']}>
-                  <ClientLayout />
-                </RoleRoute>
-              }
-            >
+            <Route path="/client" element={<RoleRoute roles={['ROLE_CLIENT']}><ClientLayout /></RoleRoute>}>
               <Route index element={<Navigate to="/client/dashboard" replace />} />
               <Route path="dashboard" element={<ClientDashboardPage />} />
               <Route path="services" element={<ClientServicesPage />} />
@@ -269,14 +241,11 @@ const App = () => {
             </Route>
 
             {/* Admin Routes (all protected) */}
-            <Route 
-              path="/admin" 
-              element={
-                <RoleRoute roles={['ROLE_ADMIN', 'ROLE_SUPER_USER']}>
-                  <AdminLayout />
-                </RoleRoute>
-              }
-            >
+            <Route path="/admin" element={
+              <RoleRoute roles={['ROLE_ADMIN', 'ROLE_SUPER_USER']}>
+                <AdminLayout />
+              </RoleRoute>
+            }>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="positions" element={<PositionManagement />} />
@@ -288,14 +257,11 @@ const App = () => {
               <Route path="messages/candidates" element={<AdminCandidateMessagesPage />} />
               <Route path="messages/clients" element={<AdminClientMessagesPage />} />
               <Route path="users" element={<UserManagementPage />} />
-              <Route 
-                path="admins" 
-                element={
-                  <RoleRoute roles={['ROLE_SUPER_USER']}>
-                    <SuperAdminUserManagementPage />
-                  </RoleRoute>
-                } 
-              />
+              <Route path="admins" element={
+                <RoleRoute roles={['ROLE_SUPER_USER']}>
+                  <SuperAdminUserManagementPage />
+                </RoleRoute>
+              } />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

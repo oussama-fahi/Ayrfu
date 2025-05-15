@@ -1,3 +1,4 @@
+// src/pages/admin/PositionManagement.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -41,25 +42,19 @@ import {
   Search as SearchIcon,
   FilterList as FilterListIcon
 } from '@mui/icons-material';
-import { 
-  fetchAllPositions, 
-  deletePosition, 
-  togglePositionStatus 
-} from '../../redux/slices/positionsSlice';
+import { fetchAllPositions, deletePosition, togglePositionStatus } from '../../redux/slices/positionsSlice';
 import AlertMessage from '../../components/common/AlertMessage';
 
 const PositionManagement = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { positions, isLoading, error } = useSelector((state) => state.positions);
-  
   const [filteredPositions, setFilteredPositions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOptions, setFilterOptions] = useState({
     status: 'all', // 'all', 'active', 'inactive'
-    experienceLevel: 'all'
+    experienceLevel: '',
   });
-  
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -67,128 +62,123 @@ const PositionManagement = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   // Get unique experience levels for filter
-  const experienceLevels = ['all', ...new Set(positions.map(p => p.experienceLevel))];
-  
+  const experienceLevels = ['', ...new Set(positions.map(p => p.experienceLevel))];
+
   useEffect(() => {
     dispatch(fetchAllPositions());
   }, [dispatch]);
-  
+
   useEffect(() => {
     applyFilters();
   }, [positions, searchTerm, filterOptions]);
-  
+
   const applyFilters = () => {
     let filtered = [...positions];
-    
+
     // Apply status filter
     if (filterOptions.status === 'active') {
       filtered = filtered.filter(position => position.active);
     } else if (filterOptions.status === 'inactive') {
       filtered = filtered.filter(position => !position.active);
     }
-    
+
     // Apply experience level filter
-    if (filterOptions.experienceLevel !== 'all') {
+    if (filterOptions.experienceLevel) {
       filtered = filtered.filter(position => position.experienceLevel === filterOptions.experienceLevel);
     }
-    
+
     // Apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(position => 
-        position.title.toLowerCase().includes(term) ||
-        position.technology.toLowerCase().includes(term) ||
+        position.title.toLowerCase().includes(term) || 
+        position.technology.toLowerCase().includes(term) || 
         position.location.toLowerCase().includes(term)
       );
     }
     
     setFilteredPositions(filtered);
   };
-  
+
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-  
+
   const handleFilterChange = (event) => {
     setFilterOptions({
       ...filterOptions,
-      [event.target.name]: event.target.value
+      [event.target.name]: event.target.value,
     });
   };
-  
+
   const handleMenuOpen = (event, position) => {
     setAnchorEl(event.currentTarget);
     setSelectedPosition(position);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
+
   const handleEdit = () => {
     handleMenuClose();
     if (selectedPosition) {
       navigate(`/admin/positions/edit/${selectedPosition.id}`);
     }
   };
-  
+
   const handleToggleStatus = () => {
     handleMenuClose();
     if (selectedPosition) {
       dispatch(togglePositionStatus({
         id: selectedPosition.id,
         active: selectedPosition.active
-      }))
-        .then(() => {
-          setSuccessMessage(`Position ${selectedPosition.active ? 'deactivated' : 'activated'} successfully!`);
-          setShowSuccessAlert(true);
-        });
+      })).then(() => {
+        setSuccessMessage(`Position ${selectedPosition.active ? 'deactivated' : 'activated'} successfully!`);
+        setShowSuccessAlert(true);
+      });
     }
   };
-  
+
   const handleDeleteDialogOpen = () => {
     handleMenuClose();
     setDeleteDialogOpen(true);
   };
-  
+
   const handleDeleteDialogClose = () => {
     setDeleteDialogOpen(false);
   };
-  
+
   const handleDeleteConfirm = () => {
     if (selectedPosition) {
-      dispatch(deletePosition(selectedPosition.id))
-        .then(() => {
-          setSuccessMessage('Position deleted successfully!');
-          setShowSuccessAlert(true);
-          handleDeleteDialogClose();
-        });
+      dispatch(deletePosition(selectedPosition.id)).then(() => {
+        setSuccessMessage('Position deleted successfully!');
+        setShowSuccessAlert(true);
+        handleDeleteDialogClose();
+      });
     }
   };
-  
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Position Management
-        </Typography>
-        
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
+        <Typography variant="h4" component="h1">Position Management</Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          startIcon={<AddIcon />} 
           onClick={() => navigate('/admin/positions/create')}
         >
           Add New Position
         </Button>
       </Box>
-      
+
       {error && (
         <Box sx={{ mb: 3 }}>
           <Typography color="error">{error}</Typography>
         </Box>
       )}
-      
+
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
           <TextField
@@ -231,15 +221,14 @@ const PositionManagement = () => {
               label="Experience"
               onChange={handleFilterChange}
             >
-              {experienceLevels.map((level) => (
-                <MenuItem key={level} value={level}>
-                  {level === 'all' ? 'All' : level}
-                </MenuItem>
+              <MenuItem value="">All</MenuItem>
+              {experienceLevels.filter(level => level).map((level) => (
+                <MenuItem key={level} value={level}>{level}</MenuItem>
               ))}
             </Select>
           </FormControl>
         </Box>
-        
+
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
@@ -270,7 +259,7 @@ const PositionManagement = () => {
                       <TableCell>
                         <Chip 
                           label={position.active ? "Active" : "Inactive"} 
-                          color={position.active ? "success" : "default"}
+                          color={position.active ? "success" : "default"} 
                           size="small"
                         />
                       </TableCell>
@@ -286,9 +275,7 @@ const PositionManagement = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      No positions found
-                    </TableCell>
+                    <TableCell colSpan={7} align="center">No positions found</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -296,7 +283,7 @@ const PositionManagement = () => {
           </TableContainer>
         )}
       </Paper>
-      
+
       {/* Position actions menu */}
       <Menu
         anchorEl={anchorEl}
@@ -309,7 +296,6 @@ const PositionManagement = () => {
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
         </MenuItem>
-        
         <MenuItem onClick={handleToggleStatus}>
           <ListItemIcon>
             {selectedPosition?.active ? (
@@ -318,11 +304,8 @@ const PositionManagement = () => {
               <VisibilityIcon fontSize="small" />
             )}
           </ListItemIcon>
-          <ListItemText>
-            {selectedPosition?.active ? 'Deactivate' : 'Activate'}
-          </ListItemText>
+          <ListItemText>{selectedPosition?.active ? 'Deactivate' : 'Activate'}</ListItemText>
         </MenuItem>
-        
         <MenuItem onClick={handleDeleteDialogOpen}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
@@ -330,7 +313,7 @@ const PositionManagement = () => {
           <ListItemText sx={{ color: 'error.main' }}>Delete</ListItemText>
         </MenuItem>
       </Menu>
-      
+
       {/* Delete confirmation dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -344,16 +327,10 @@ const PositionManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteDialogClose}>Cancel</Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error"
-            variant="contained"
-          >
-            Delete
-          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
         </DialogActions>
       </Dialog>
-      
+
       <AlertMessage
         open={showSuccessAlert}
         message={successMessage}

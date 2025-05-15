@@ -46,9 +46,9 @@ function useProvideAuth() {
       
       // Remove token if unauthorized
       if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-        setUser(null);
+        // localStorage.removeItem('token');
+        // setIsAuthenticated(false);
+        // setUser(null);
       }
     } finally {
       setIsLoading(false);
@@ -171,7 +171,7 @@ function useProvideAuth() {
       error => {
         if (error.response?.status === 401 && isAuthenticated) {
           // Token expired or invalid
-          logout();
+          
         }
         return Promise.reject(error);
       }

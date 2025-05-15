@@ -1,7 +1,11 @@
 package com.uddan.ayrfu.controller;
 
+import com.uddan.ayrfu.dto.request.AdminCreationRequest;
+import com.uddan.ayrfu.dto.request.CandidateRegistrationRequest;
+import com.uddan.ayrfu.dto.request.ClientRegistrationRequest;
 import com.uddan.ayrfu.dto.request.LoginRequest;
-import com.uddan.ayrfu.dto.request.RegisterRequest;
+import com.uddan.ayrfu.dto.response.CandidateResponse;
+import com.uddan.ayrfu.dto.response.ClientResponse;
 import com.uddan.ayrfu.dto.response.JwtResponse;
 import com.uddan.ayrfu.dto.response.UserResponse;
 import com.uddan.ayrfu.entity.User;
@@ -48,16 +52,42 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/register")
-    @Operation(summary = "Register", description = "Registers a new user with the provided details")
+    @PostMapping("/register/candidate")
+    @Operation(summary = "Register Candidate", description = "Registers a new candidate user with the provided details")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User registered successfully"),
+            @ApiResponse(responseCode = "201", description = "Candidate registered successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input or email already in use")
     })
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        logger.info("Registration request for user: {}", registerRequest.getEmail());
-        UserResponse userResponse = authService.register(registerRequest);
-        return new ResponseEntity<>(userResponse, HttpStatus.CREATED);
+    public ResponseEntity<CandidateResponse> registerCandidate(@Valid @RequestBody CandidateRegistrationRequest request) {
+        logger.info("Registration request for candidate: {}", request.getEmail());
+        CandidateResponse response = authService.registerCandidate(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/register/client")
+    @Operation(summary = "Register Client", description = "Registers a new client user with the provided details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Client registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input or email already in use")
+    })
+    public ResponseEntity<ClientResponse> registerClient(@Valid @RequestBody ClientRegistrationRequest request) {
+        logger.info("Registration request for client: {}", request.getEmail());
+        ClientResponse response = authService.registerClient(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/admin/create")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create Admin", description = "Creates a new admin user (Admin only)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Admin created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input or email already in use"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN role")
+    })
+    public ResponseEntity<UserResponse> createAdmin(@Valid @RequestBody AdminCreationRequest request) {
+        logger.info("Admin creation request for: {}", request.getEmail());
+        UserResponse response = authService.createAdmin(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/profile")

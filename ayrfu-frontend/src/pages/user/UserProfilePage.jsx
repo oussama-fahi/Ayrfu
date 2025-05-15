@@ -178,8 +178,8 @@ const UserProfilePage = () => {
       } catch (err) {
         console.error('Error fetching user profile:', err);
         if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
+          // localStorage.removeItem('token');
+          // navigate('/login');
         }
       } finally {
         setLoading(false);
