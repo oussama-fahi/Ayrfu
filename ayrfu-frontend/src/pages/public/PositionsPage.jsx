@@ -1,36 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Container, 
-  Typography, 
-  Box, 
-  Card, 
-  CardContent, 
-  Grid, 
-  Button,
-  TextField,
-  InputAdornment,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress,
-  Divider,
-  Alert,
-  Paper,
-  Tooltip
-} from '@mui/material';
-import {
-  Search as SearchIcon,
+  ArrowForward as ArrowForwardIcon,
+  Code as CodeIcon,
   FilterList as FilterListIcon,
   LocationOn as LocationIcon,
-  Code as CodeIcon,
-  Work as WorkIcon,
+  Search as SearchIcon,
   Translate as TranslateIcon,
-  ArrowForward as ArrowForwardIcon
+  Work as WorkIcon
 } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Container,
+  FormControl,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography
+} from '@mui/material';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * PositionsPage component - Displays all job openings

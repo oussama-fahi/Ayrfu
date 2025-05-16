@@ -1,8 +1,8 @@
 // src/pages/admin/Dashboard.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaBriefcase, FaUsers, FaBuilding, FaEnvelope, FaSignOutAlt } from 'react-icons/fa';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { FaBriefcase, FaBuilding, FaEnvelope, FaSignOutAlt, FaUsers } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const Dashboard = () => {

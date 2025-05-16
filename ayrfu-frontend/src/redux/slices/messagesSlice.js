@@ -1,5 +1,5 @@
 // src/redux/slices/messagesSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import messageService from '../../api/services/message.service';
 
 // Fetch all conversations

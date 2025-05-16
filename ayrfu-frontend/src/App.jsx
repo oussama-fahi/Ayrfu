@@ -1,61 +1,59 @@
 // src/App.js
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 import { Box, CircularProgress } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 // Auth Provider
-import { AuthProvider } from './hooks/useAuth';
-import { useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 
 // Layouts
-import MainLayout from './layouts/MainLayout';
 import AdminLayout from './layouts/AdminLayout';
 import CandidateLayout from './layouts/CandidateLayout';
 import ClientLayout from './layouts/ClientLayout';
+import MainLayout from './layouts/MainLayout';
 
 // Public Pages
-import MainPage from './pages/public/MainPage';
 import ApplicantsPage from './pages/public/ApplicantsPage';
 import ClientsPage from './pages/public/ClientsPage';
-import PositionDetailPage from './pages/public/PositionDetailPage';
-import ServiceDetailPage from './pages/public/ServiceDetailPage';
 import ContactPage from './pages/public/ContactPage';
-import NotFoundPage from './pages/public/NotFoundPage';
 import LoginPage from './pages/public/LoginPage';
-import RegisterPage from './pages/public/RegisterPage';
+import MainPage from './pages/public/MainPage';
+import NotFoundPage from './pages/public/NotFoundPage';
+import PositionDetailPage from './pages/public/PositionDetailPage';
 import PositionsPage from './pages/public/PositionsPage';
+import RegisterPage from './pages/public/RegisterPage';
+import ServiceDetailPage from './pages/public/ServiceDetailPage';
 
 // User Pages
-import UserProfilePage from './pages/user/UserProfilePage';
 import UserApplicationsPage from './pages/user/UserApplicationsPage';
+import UserProfilePage from './pages/user/UserProfilePage';
 
 // Candidate Pages
-import CandidateDashboardPage from './pages/candidate/CandidateDashboardPage';
-import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
-import CandidateApplicationDetailPage from './pages/candidate/CandidateApplicationDetailPage';
-import CandidateMessagesPage from './pages/candidate/CandidateMessagesPage';
 import MultiStepApplicationForm from './components/candidate/MultiStepApplicationForm';
+import CandidateApplicationDetailPage from './pages/candidate/CandidateApplicationDetailPage';
+import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
+import CandidateDashboardPage from './pages/candidate/CandidateDashboardPage';
+import CandidateMessagesPage from './pages/candidate/CandidateMessagesPage';
 
 // Client Pages
 import ClientDashboardPage from './pages/client/ClientDashboardPage';
-import ClientServicesPage from './pages/client/ClientServicesPage';
-import ClientServiceRequestPage from './pages/client/ClientServiceRequestPage';
-import ClientRequestDetailPage from './pages/client/ClientRequestDetailPage';
-import ClientMessagesPage from './pages/client/ClientMessagesPage';
 import ClientDocumentsPage from './pages/client/ClientDocumentsPage';
+import ClientMessagesPage from './pages/client/ClientMessagesPage';
+import ClientRequestDetailPage from './pages/client/ClientRequestDetailPage';
+import ClientServiceRequestPage from './pages/client/ClientServiceRequestPage';
+import ClientServicesPage from './pages/client/ClientServicesPage';
 
 // Admin Pages
-import Dashboard from './pages/admin/Dashboard';
-import PositionManagement from './pages/admin/PositionManagement';
-import PositionForm from './pages/admin/PositionForm';
-import ServiceManagement from './pages/admin/ServiceManagement';
-import ServiceForm from './pages/admin/ServiceForm';
 import AdminCandidateMessagesPage from './pages/admin/AdminCandidateMessagesPage';
 import AdminClientMessagesPage from './pages/admin/AdminClientMessagesPage';
-import UserManagementPage from './pages/admin/UserManagementPage';
+import Dashboard from './pages/admin/Dashboard';
+import PositionForm from './pages/admin/PositionForm';
+import PositionManagement from './pages/admin/PositionManagement';
+import ServiceForm from './pages/admin/ServiceForm';
+import ServiceManagement from './pages/admin/ServiceManagement';
 import SuperAdminUserManagementPage from './pages/admin/SuperAdminUserManagementPage';
+import UserManagementPage from './pages/admin/UserManagementPage';
 
 // Protected Route Components
 const AuthRoute = ({ children }) => {

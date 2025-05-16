@@ -1,39 +1,34 @@
 // src/pages/client/ClientDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
+  Alert,
   Box,
-  CircularProgress,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
   Chip,
+  CircularProgress,
+  Container,
+  Divider,
+  Grid,
   List,
   ListItem,
   ListItemText,
-  Alert,
-  Divider,
-  Paper
+  Paper,
+  Typography
 } from '@mui/material';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
-  Legend
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip
 } from 'recharts';
 import { useAuth } from '../../hooks/useAuth';
-import axios from 'axios';
 
 const ClientDashboardPage = () => {
   const navigate = useNavigate();

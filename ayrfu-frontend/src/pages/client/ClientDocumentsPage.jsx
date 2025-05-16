@@ -1,48 +1,47 @@
 // src/pages/client/ClientDocumentsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Paper,
-  Button,
+  Clear as ClearIcon,
+  CloudUpload as CloudUploadIcon,
+  Delete as DeleteIcon,
+  Description as DescriptionIcon,
+  GetApp as DownloadIcon,
+  FilterList as FilterListIcon,
+  Search as SearchIcon,
+  Visibility as VisibilityIcon
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  IconButton,
+  Button,
+  CircularProgress,
+  Container,
   Dialog,
-  DialogTitle,
+  DialogActions,
   DialogContent,
   DialogContentText,
-  DialogActions,
-  TextField,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  Grid,
-  Chip,
+  DialogTitle,
   Divider,
-  Alert,
-  CircularProgress,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemSecondaryAction,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select,
+  Snackbar,
+  TextField,
   Tooltip,
-  Snackbar
+  Typography
 } from '@mui/material';
-import {
-  Description as DescriptionIcon,
-  Delete as DeleteIcon,
-  CloudUpload as CloudUploadIcon,
-  Visibility as VisibilityIcon,
-  GetApp as DownloadIcon,
-  Search as SearchIcon,
-  FilterList as FilterListIcon,
-  Clear as ClearIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const ClientDocumentsPage = () => {
   const navigate = useNavigate();

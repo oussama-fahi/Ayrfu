@@ -1,21 +1,17 @@
 // src/components/common/ContactForm.jsx
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Paper, 
-  Typography, 
-  TextField, 
-  Button, 
-  Grid, 
-  Alert, 
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress,
-  Box
-} from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  TextField,
+  Typography
+} from '@mui/material';
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { createMessage, resetMessageSent } from '../../redux/slices/messagesSlice';
 
 const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {

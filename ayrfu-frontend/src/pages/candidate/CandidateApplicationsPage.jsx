@@ -1,35 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Container,
-  Typography,
+  Clear as ClearIcon,
+  FilterList as FilterListIcon,
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  Paper,
-  Grid,
   Button,
   Chip,
+  CircularProgress,
+  Container,
   Divider,
+  FormControl,
+  Grid,
+  IconButton,
+  InputAdornment,
+  InputLabel,
   List,
   ListItem,
   ListItemText,
-  TextField,
   MenuItem,
-  FormControl,
-  InputLabel,
+  Paper,
   Select,
-  InputAdornment,
-  CircularProgress,
-  Alert,
   Snackbar,
-  IconButton
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  Clear as ClearIcon,
-  FilterList as FilterListIcon,
-  Visibility as VisibilityIcon,
-} from '@mui/icons-material';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getCandidateApplications } from '../../redux/slices/candidatesSlice';
 
 const CandidateApplicationsPage = () => {

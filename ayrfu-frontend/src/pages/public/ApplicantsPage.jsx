@@ -1,30 +1,30 @@
 // src/pages/public/ApplicantsPage.js
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  Button,
-  Paper,
-  useTheme,
-  CircularProgress,
-} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Paper,
+  Step,
+  StepLabel,
+  Stepper,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Step Components
-import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
+import ExperienceStep from '../../components/public/applicants/ExperienceStep';
 import LanguagesStep from '../../components/public/applicants/LanguagesStep';
 import LocationStep from '../../components/public/applicants/LocationStep';
-import ExperienceStep from '../../components/public/applicants/ExperienceStep';
-import WorkModelStep from '../../components/public/applicants/WorkModelStep';
-import PersonalInfoStep from '../../components/public/applicants/PersonalInfoStep';
-import UploadCVStep from '../../components/public/applicants/UploadCVStep';
 import MotivationLetterStep from '../../components/public/applicants/MotivationLetterStep';
+import PersonalInfoStep from '../../components/public/applicants/PersonalInfoStep';
+import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
+import UploadCVStep from '../../components/public/applicants/UploadCVStep';
+import WorkModelStep from '../../components/public/applicants/WorkModelStep';
 
 const steps = [
   'Technologies',

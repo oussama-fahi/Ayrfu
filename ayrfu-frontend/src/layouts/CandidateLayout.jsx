@@ -1,39 +1,38 @@
 // src/layouts/CandidateLayout.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import EmailIcon from '@mui/icons-material/Email';
+import HomeIcon from '@mui/icons-material/Home';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import WorkIcon from '@mui/icons-material/Work';
 import {
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
+  Badge,
+  Box,
   Button,
-  IconButton,
+  Container,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Box,
-  Avatar,
   Menu,
   MenuItem,
+  Toolbar,
+  Typography,
   useMediaQuery,
-  useTheme,
-  Badge,
-  Container
+  useTheme
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import PersonIcon from '@mui/icons-material/Person';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import EmailIcon from '@mui/icons-material/Email';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import HomeIcon from '@mui/icons-material/Home';
-import WorkIcon from '@mui/icons-material/Work';
+import { useEffect, useState } from 'react';
+import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
 
-import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 // Import UDDAN logo
 import UddanLogo from '../assets/images/uddan-logo.svg';

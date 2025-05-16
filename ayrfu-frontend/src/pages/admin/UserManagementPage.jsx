@@ -1,47 +1,47 @@
 // src/pages/admin/UserManagementPage.jsx
-import React, { useState, useEffect } from 'react';
 import {
-  Container,
-  Typography,
-  Paper,
-  Grid,
-  Button,
+  Add as AddIcon,
+  Business as BusinessIcon,
+  Clear as ClearIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Person as PersonIcon,
+  Search as SearchIcon
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  TextField,
+  Button,
+  Chip,
+  CircularProgress,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
+  Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Snackbar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TextField,
   Tooltip,
-  Alert,
-  CircularProgress,
-  Snackbar
+  Typography
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Person as PersonIcon,
-  Business as BusinessIcon,
-  Search as SearchIcon,
-  Clear as ClearIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
 const UserManagementPage = () => {
   const { user } = useAuth();

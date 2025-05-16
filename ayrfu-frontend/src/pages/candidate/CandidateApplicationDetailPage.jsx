@@ -1,45 +1,44 @@
 // src/pages/candidate/CandidateApplicationDetailPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Paper,
-  Grid,
+  Business as BusinessIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  Event as EventIcon,
+  LocationOn as LocationIcon,
+  Schedule as ScheduleIcon,
+  Send as SendIcon,
+  Work as WorkIcon
+} from '@mui/icons-material';
+import {
+  Alert,
+  Avatar,
   Box,
   Button,
   Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
-  TextField,
   CircularProgress,
-  Alert,
-  Stepper,
-  Step,
-  StepLabel,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Divider,
+  Grid,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Paper,
+  Step,
+  StepLabel,
+  Stepper,
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  Business as BusinessIcon,
-  LocationOn as LocationIcon,
-  Work as WorkIcon,
-  Description as DescriptionIcon,
-  Send as SendIcon,
-  Schedule as ScheduleIcon,
-  Event as EventIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const CandidateApplicationDetailPage = () => {
   const { id } = useParams();

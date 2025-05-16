@@ -1,25 +1,25 @@
 // src/components/public/applicants/TechnologiesStep.jsx
-import React, { useState, useEffect } from 'react';
-import { 
-  Typography, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Checkbox, 
-  FormControlLabel, 
-  FormControl, 
-  InputLabel, 
-  OutlinedInput, 
-  InputAdornment, 
-  IconButton, 
-  Chip, 
-  Box, 
-  Alert,
-  CircularProgress
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CodeIcon from '@mui/icons-material/Code';
+import SearchIcon from '@mui/icons-material/Search';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
+  Typography
+} from '@mui/material';
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 // This is a fallback list, but ideally should come from API

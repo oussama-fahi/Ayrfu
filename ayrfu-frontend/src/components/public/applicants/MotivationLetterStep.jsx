@@ -1,19 +1,19 @@
 // src/components/public/applicants/MotivationLetterStep.jsx
-import React, { useState } from 'react';
-import { 
-  Typography, 
-  TextField, 
-  Box, 
-  Paper,
-  Button,
-  Stack,
-  Chip,
-  Divider,
-  Alert
-} from '@mui/material';
-import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import ContentPasteIcon from '@mui/icons-material/ContentPaste';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Divider,
+  Paper,
+  Stack,
+  TextField,
+  Typography
+} from '@mui/material';
+import { useState } from 'react';
 
 const MotivationLetterStep = ({ letter, onChange }) => {
   const [wordCount, setWordCount] = useState(letter ? countWords(letter) : 0);

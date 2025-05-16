@@ -1,5 +1,5 @@
 // src/redux/slices/positionsSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import positionService from '../../api/services/position.service';
 
 // Fetch all positions

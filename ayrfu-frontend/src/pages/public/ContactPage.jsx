@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Grid, 
-  Paper, 
-  Tabs, 
-  Tab,
+import BusinessIcon from '@mui/icons-material/Business';
+import EmailIcon from '@mui/icons-material/Email';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PersonIcon from '@mui/icons-material/Person';
+import PhoneIcon from '@mui/icons-material/Phone';
+import {
+  Box,
   Card,
   CardContent,
-  Divider
+  Container,
+  Divider,
+  Grid,
+  Paper,
+  Tab,
+  Tabs,
+  Typography
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
-import BusinessIcon from '@mui/icons-material/Business';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import PhoneIcon from '@mui/icons-material/Phone';
-import EmailIcon from '@mui/icons-material/Email';
+import { useState } from 'react';
 import ContactForm from '../../components/common/ContactForm';
 
 const ContactPage = () => {

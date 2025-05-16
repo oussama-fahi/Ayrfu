@@ -1,37 +1,37 @@
 // src/pages/candidate/CandidateMessagesPage.jsx
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
 import {
+  AttachFile as AttachFileIcon,
+  Clear as ClearIcon,
+  InsertDriveFile as FileIcon,
+  Search as SearchIcon,
+  Send as SendIcon
+} from '@mui/icons-material';
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
   Container,
-  Typography,
-  Paper,
+  Divider,
   Grid,
+  IconButton,
+  InputAdornment,
   List,
   ListItem,
-  ListItemText,
   ListItemAvatar,
-  Avatar,
-  Divider,
+  ListItemText,
+  Paper,
   TextField,
-  Button,
-  Box,
-  CircularProgress,
-  IconButton,
-  Chip,
-  Alert,
-  InputAdornment,
-  Badge,
+  Typography,
   useTheme
 } from '@mui/material';
-import {
-  Send as SendIcon,
-  Search as SearchIcon,
-  Clear as ClearIcon,
-  AttachFile as AttachFileIcon,
-  InsertDriveFile as FileIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const CandidateMessagesPage = () => {
   const location = useLocation();

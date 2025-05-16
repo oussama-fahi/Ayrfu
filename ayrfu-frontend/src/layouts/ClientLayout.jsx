@@ -1,40 +1,38 @@
 // src/layouts/ClientLayout.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import EmailIcon from '@mui/icons-material/Email';
+import FolderIcon from '@mui/icons-material/Folder';
+import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
 import {
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
+  Badge,
+  Box,
   Button,
-  IconButton,
+  Container,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Box,
-  Avatar,
   Menu,
   MenuItem,
+  Toolbar,
+  Typography,
   useMediaQuery,
-  useTheme,
-  Badge,
-  Container
+  useTheme
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import BusinessIcon from '@mui/icons-material/Business';
-import EmailIcon from '@mui/icons-material/Email';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import HomeIcon from '@mui/icons-material/Home';
-import DescriptionIcon from '@mui/icons-material/Description';
-import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
-import FolderIcon from '@mui/icons-material/Folder';
+import { useEffect, useState } from 'react';
+import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
 
-import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 // Import UDDAN logo
 import UddanLogo from '../assets/images/uddan-logo.svg';

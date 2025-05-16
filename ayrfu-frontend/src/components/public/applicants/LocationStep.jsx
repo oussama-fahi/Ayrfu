@@ -11,7 +11,6 @@ import {
   RadioGroup,
   Typography,
 } from '@mui/material';
-import React from 'react';
 
 
 const locations = [

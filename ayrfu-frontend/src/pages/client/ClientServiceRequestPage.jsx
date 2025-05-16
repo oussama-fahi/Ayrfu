@@ -1,41 +1,40 @@
 // src/pages/client/ClientServiceRequestPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Paper,
-  Grid,
-  TextField,
-  Button,
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Divider,
-  CircularProgress,
+  NavigateBefore as BackIcon,
+  Check as CheckIcon,
+  CloudUpload as CloudUploadIcon,
+  NavigateNext as NextIcon
+} from '@mui/icons-material';
+import {
   Alert,
+  Box,
+  Button,
   Card,
   CardContent,
   CardMedia,
-  Chip
+  Checkbox,
+  Chip,
+  CircularProgress,
+  Container,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Step,
+  StepLabel,
+  Stepper,
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  CloudUpload as CloudUploadIcon,
-  NavigateNext as NextIcon,
-  NavigateBefore as BackIcon,
-  Check as CheckIcon,
-  Info as InfoIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const ClientServiceRequestPage = () => {
   const navigate = useNavigate();
