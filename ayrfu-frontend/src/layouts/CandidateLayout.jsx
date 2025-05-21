@@ -1,72 +1,81 @@
-// src/layouts/CandidateLayout.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
-import {
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { fetchUnreadCount } from '../redux/slices/conversationsSlice';
+import UddanLogo from '../assets/images/uddan-logo.svg';
+
+// Material UI imports
+import { 
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
+  Badge,
+  Box,
   Button,
-  IconButton,
+  Container,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Box,
-  Avatar,
   Menu,
   MenuItem,
+  Toolbar,
+  Typography,
   useMediaQuery,
-  useTheme,
-  Badge,
-  Container
+  useTheme
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import PersonIcon from '@mui/icons-material/Person';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import EmailIcon from '@mui/icons-material/Email';
-import LogoutIcon from '@mui/icons-material/Logout';
+
+// Icons
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import EmailIcon from '@mui/icons-material/Email';
 import HomeIcon from '@mui/icons-material/Home';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
 import WorkIcon from '@mui/icons-material/Work';
-
-import { useAuth } from '../hooks/useAuth';
-import axios from 'axios';
-
-// Import UDDAN logo
-import UddanLogo from '../assets/images/uddan-logo.svg';
 
 const CandidateLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user, logout } = useAuth();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  
+  const { conversations } = useSelector((state) => state.conversations);
 
-  // Check for unread messages
+  // Fetch unread message count and set up polling
   useEffect(() => {
-    const fetchUnreadMessages = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/messages/unread/candidate', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUnreadMessages(response.data.length);
-      } catch (err) {
-        console.error('Error fetching unread messages:', err);
-      }
+    const fetchUnreadMessageCount = async () => {
+      dispatch(fetchUnreadCount());
     };
-
-    fetchUnreadMessages();
+    
+    fetchUnreadMessageCount();
+    
     // Set up a periodic fetch every 2 minutes
-    const interval = setInterval(fetchUnreadMessages, 120000);
+    const interval = setInterval(fetchUnreadMessageCount, 120000);
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
+
+  // Calculate unread message count from conversations
+  useEffect(() => {
+    if (conversations && conversations.length > 0) {
+      const unreadCount = conversations.reduce(
+        (total, conv) => total + (conv.unreadCount || 0), 
+        0
+      );
+      setUnreadMessages(unreadCount);
+    }
+  }, [conversations]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -120,18 +129,18 @@ const CandidateLayout = () => {
               }}
             >
               <img src={UddanLogo} alt="UDDAN Logo" height="30" />
-              <Typography
-                variant="h6"
-                sx={{
-                  ml: 1,
-                  fontWeight: 'bold',
-                  display: { xs: 'none', sm: 'block' }
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  ml: 1, 
+                  fontWeight: 'bold', 
+                  display: { xs: 'none', sm: 'block' } 
                 }}
               >
                 Candidate Portal
               </Typography>
             </Box>
-
+            
             {!isMobile && (
               <Box sx={{ display: 'flex' }}>
                 <Button
@@ -142,7 +151,6 @@ const CandidateLayout = () => {
                 >
                   Dashboard
                 </Button>
-                
                 <Button
                   color="inherit"
                   component={RouterLink}
@@ -151,7 +159,6 @@ const CandidateLayout = () => {
                 >
                   My Applications
                 </Button>
-                
                 <Button
                   color="inherit"
                   component={RouterLink}
@@ -160,7 +167,6 @@ const CandidateLayout = () => {
                 >
                   Browse Jobs
                 </Button>
-                
                 <Button
                   color="inherit"
                   component={RouterLink}
@@ -173,7 +179,6 @@ const CandidateLayout = () => {
                 >
                   Messages
                 </Button>
-                
                 <Button
                   color="inherit"
                   onClick={handleAccountMenuOpen}
@@ -282,7 +287,7 @@ const CandidateLayout = () => {
               p: 2,
               display: 'flex',
               alignItems: 'center',
-              borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
+              borderBottom: '1px solid rgba(0,0,0,0.08)'
             }}
           >
             <img src={UddanLogo} alt="UDDAN Logo" height="30" />
@@ -292,40 +297,28 @@ const CandidateLayout = () => {
           </Box>
           
           <List>
-            <ListItem
-              button
-              onClick={() => handleNavigation('/candidate/dashboard')}
-            >
+            <ListItem button onClick={() => handleNavigation('/candidate/dashboard')} sx={{ py: 1.5 }}>
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/candidate/applications')}
-            >
+            <ListItem button onClick={() => handleNavigation('/candidate/applications')} sx={{ py: 1.5 }}>
               <ListItemIcon>
                 <ListAltIcon />
               </ListItemIcon>
               <ListItemText primary="My Applications" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/positions')}
-            >
+            <ListItem button onClick={() => handleNavigation('/positions')} sx={{ py: 1.5 }}>
               <ListItemIcon>
                 <WorkIcon />
               </ListItemIcon>
               <ListItemText primary="Browse Jobs" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/candidate/messages')}
-            >
+            <ListItem button onClick={() => handleNavigation('/candidate/messages')} sx={{ py: 1.5 }}>
               <ListItemIcon>
                 <Badge badgeContent={unreadMessages} color="error">
                   <EmailIcon />
@@ -336,30 +329,21 @@ const CandidateLayout = () => {
             
             <Divider />
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/user/profile')}
-            >
+            <ListItem button onClick={() => handleNavigation('/user/profile')} sx={{ py: 1.5 }}>
               <ListItemIcon>
                 <AccountCircleIcon />
               </ListItemIcon>
               <ListItemText primary="My Profile" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/')}
-            >
+            <ListItem button onClick={() => handleNavigation('/')} sx={{ py: 1.5 }}>
               <ListItemIcon>
                 <HomeIcon />
               </ListItemIcon>
               <ListItemText primary="Main Website" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={handleLogout}
-            >
+            <ListItem button onClick={handleLogout} sx={{ py: 1.5 }}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
@@ -369,7 +353,14 @@ const CandidateLayout = () => {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, pt: { xs: 8, sm: 10 }, pb: 4 }}>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          pt: { xs: 8, sm: 10 },
+          pb: 4
+        }}
+      >
         <Container maxWidth="lg">
           <Outlet />
         </Container>

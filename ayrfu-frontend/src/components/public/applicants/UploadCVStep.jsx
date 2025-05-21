@@ -1,20 +1,19 @@
 // src/components/public/applicants/UploadCVStep.jsx
-import React, { useState } from 'react';
-import { 
-  Typography, 
-  Button, 
-  Box,
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DescriptionIcon from '@mui/icons-material/Description';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import {
   Alert,
-  CircularProgress,
+  Box,
+  Button,
   Card,
   CardContent,
+  CircularProgress,
   Grid,
-  Link
+  Typography
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import DescriptionIcon from '@mui/icons-material/Description';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { useState } from 'react';
 
 const UploadCVStep = ({ file, onChange, existingCV }) => {
   const [isUploading, setIsUploading] = useState(false);

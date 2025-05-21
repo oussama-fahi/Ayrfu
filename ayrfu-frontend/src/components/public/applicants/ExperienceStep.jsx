@@ -1,19 +1,18 @@
-import React from 'react';
-import {
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-} from '@mui/material';
-import SchoolIcon from '@mui/icons-material/School';
-import WorkIcon from '@mui/icons-material/Work';
-import EngineeringIcon from '@mui/icons-material/Engineering';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import ArchitectureIcon from '@mui/icons-material/Architecture';
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import SchoolIcon from '@mui/icons-material/School';
+import WorkIcon from '@mui/icons-material/Work';
+import {
+  Card,
+  CardContent,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  Radio,
+  RadioGroup,
+  Typography,
+} from '@mui/material';
 
 const experienceLevels = [
   { id: 'entry', label: 'Entry Level (0-2 years)', icon: <SchoolIcon fontSize="large" color="primary" /> },

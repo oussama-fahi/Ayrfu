@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
+  ArrowBack as ArrowBackIcon,
+  BusinessCenter as BusinessCenterIcon,
+  CalendarToday as CalendarTodayIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
+  Code as CodeIcon,
+  LocationOn as LocationOnIcon,
+  Translate as TranslateIcon,
+  Work as WorkIcon
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  Paper,
-  Chip,
+  Breadcrumbs,
   Button,
+  Chip,
+  CircularProgress,
+  Container,
   Divider,
+  Grid,
+  Link,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Grid,
-  CircularProgress,
-  Alert,
-  Breadcrumbs,
-  Link
+  Paper,
+  Typography
 } from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  Code as CodeIcon,
-  LocationOn as LocationOnIcon,
-  Work as WorkIcon,
-  Translate as TranslateIcon,
-  CheckCircleOutline as CheckCircleOutlineIcon,
-  BusinessCenter as BusinessCenterIcon,
-  CalendarToday as CalendarTodayIcon
-} from '@mui/icons-material';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 /**
  * PositionDetailPage component - Displays details of a specific job position

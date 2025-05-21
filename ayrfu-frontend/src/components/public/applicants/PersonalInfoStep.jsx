@@ -1,15 +1,14 @@
 // src/components/public/applicants/PersonalInfoStep.jsx
-import React from 'react';
-import { 
-  TextField, 
-  Grid, 
+import {
   Box,
+  Divider,
   FormControl,
+  Grid,
   InputLabel,
-  Select,
   MenuItem,
-  Typography,
-  Divider
+  Select,
+  TextField,
+  Typography
 } from '@mui/material';
 
 /**

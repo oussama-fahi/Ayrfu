@@ -1,36 +1,34 @@
 // src/pages/client/ClientRequestDetailPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Paper,
-  Grid,
+  Assignment as AssignmentIcon,
+  AttachFile as AttachFileIcon,
+  CloudUpload as CloudUploadIcon,
+  Schedule as ScheduleIcon,
+  Send as SendIcon
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
+  Container,
   Divider,
+  Grid,
   List,
   ListItem,
   ListItemText,
-  ListItemIcon,
-  TextField,
-  CircularProgress,
-  Alert,
-  Stepper,
+  Paper,
   Step,
-  StepLabel
+  StepLabel,
+  Stepper,
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  Description as DescriptionIcon,
-  Schedule as ScheduleIcon,
-  Assignment as AssignmentIcon,
-  AttachFile as AttachFileIcon,
-  Send as SendIcon,
-  CloudUpload as CloudUploadIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const ClientRequestDetailPage = () => {
   const { id } = useParams();

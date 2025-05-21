@@ -1,27 +1,27 @@
 // src/pages/client/ClientServicesPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import SearchIcon from '@mui/icons-material/Search';
 import {
-  Container,
-  Typography,
-  Grid,
+  Alert,
+  Box,
+  Button,
   Card,
+  CardActions,
   CardContent,
   CardMedia,
-  CardActions,
-  Button,
-  Box,
-  TextField,
-  InputAdornment,
-  CircularProgress,
   Chip,
+  CircularProgress,
+  Container,
   Divider,
-  Alert,
-  Paper
+  Grid,
+  InputAdornment,
+  Paper,
+  TextField,
+  Typography
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const ClientServicesPage = () => {
   const navigate = useNavigate();

@@ -1,19 +1,18 @@
-import React from 'react';
-import {
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-} from '@mui/material';
-import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
+import {
+  Card,
+  CardContent,
+  FormControl,
+  FormControlLabel,
+  Grid,
+  Radio,
+  RadioGroup,
+  Typography,
+} from '@mui/material';
 
 const workModels = [
   { id: 'fullTime', label: 'Full-Time', icon: <AccessTimeFilledIcon fontSize="large" color="primary" /> },

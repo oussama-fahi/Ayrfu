@@ -1,43 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import {
-  TextField,
-  Button,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  CheckCircleOutlined as ActiveIcon,
+  Add as AddIcon,
+  CancelOutlined as CancelIcon,
+  Code as CodeIcon,
+  Grade as GradeIcon,
+  Cancel as InactiveIcon,
+  Language as LanguageIcon,
+  LocationOn as LocationIcon,
+  SaveAlt as SaveIcon,
+  Translate as TranslateIcon,
+  Work as WorkIcon
+} from '@mui/icons-material';
+import {
+  alpha,
   Box,
-  Chip,
-  OutlinedInput,
-  FormHelperText,
-  Switch,
-  FormControlLabel,
-  Typography,
-  Paper,
-  CircularProgress,
-  Divider,
+  Button,
   Card,
   CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  FormHelperText,
+  Grid,
+  InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Paper,
+  Select,
   Stack,
-  useTheme,
-  alpha
+  Switch,
+  TextField,
+  Typography,
+  useTheme
 } from '@mui/material';
-import { 
-  Add as AddIcon,
-  Work as WorkIcon,
-  LocationOn as LocationIcon,
-  Code as CodeIcon,
-  Translate as TranslateIcon,
-  Grade as GradeIcon,
-  SaveAlt as SaveIcon,
-  CancelOutlined as CancelIcon,
-  CheckCircleOutlined as ActiveIcon,
-  Cancel as InactiveIcon,
-  Language as LanguageIcon
-} from '@mui/icons-material';
-import { createPosition, updatePosition, clearError } from '../../redux/slices/positionsSlice';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearError, createPosition, updatePosition } from '../../redux/slices/positionsSlice';
 import AlertMessage from '../common/AlertMessage';
 
 const ITEM_HEIGHT = 48;

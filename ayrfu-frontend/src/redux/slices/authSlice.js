@@ -1,5 +1,5 @@
 // src/redux/slices/authSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 // Async thunk for candidate registration

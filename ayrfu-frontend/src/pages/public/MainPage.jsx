@@ -1,38 +1,38 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  Box,
-  Paper,
-  Stack,
-  Divider,
-  IconButton,
-  Link as MuiLink,
-  useMediaQuery,
-  useTheme
-} from '@mui/material';
-import {
-  Person as PersonIcon,
   Business as BusinessIcon,
-  Speed as SpeedIcon,
-  People as PeopleIcon,
-  VerifiedUser as VerifiedIcon,
+  People as CompanySizeIcon,
+  DateRange as FoundedIcon,
+  Business as IndustryIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   KeyboardArrowLeft as KeyboardArrowLeftIcon,
   KeyboardArrowRight as KeyboardArrowRightIcon,
   Language as LanguageIcon,
-  Business as IndustryIcon,
-  People as CompanySizeIcon,
   Group as MembersIcon,
-  DateRange as FoundedIcon,
-  Star as SpecializationsIcon,
   Article as NewsIcon,
+  People as PeopleIcon,
+  Person as PersonIcon,
+  Star as SpecializationsIcon,
+  Speed as SpeedIcon,
+  VerifiedUser as VerifiedIcon,
 } from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Divider,
+  Grid,
+  IconButton,
+  Link as MuiLink,
+  Paper,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme
+} from '@mui/material';
+import { useRef, useState } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 /**

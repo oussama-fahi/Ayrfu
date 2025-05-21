@@ -1,34 +1,34 @@
 // src/pages/candidate/CandidateDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
+  Alert,
   Box,
-  CircularProgress,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
   Chip,
+  CircularProgress,
+  Container,
+  Divider,
+  Grid,
   List,
   ListItem,
   ListItemText,
-  Alert,
-  Divider,
-  Paper
+  Paper,
+  Typography
 } from '@mui/material';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  PieChart,
-  Pie,
   Cell,
-  Tooltip,
+  Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
-  Legend
+  Tooltip
 } from 'recharts';
 import { useAuth } from '../../hooks/useAuth';
-import axios from 'axios';
 
 const CandidateDashboardPage = () => {
   const navigate = useNavigate();

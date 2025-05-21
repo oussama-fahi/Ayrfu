@@ -1,45 +1,42 @@
 // src/pages/public/RegisterPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import {
-  Container,
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Link,
-  Divider,
-  Alert,
-  CircularProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  Grid,
-  Card,
-  CardContent,
-  Radio,
-  RadioGroup,
-  FormControlLabel
-} from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
 import BusinessIcon from '@mui/icons-material/Business';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
+import PersonIcon from '@mui/icons-material/Person';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Divider,
+  FormControlLabel,
+  Grid,
+  Link,
+  Paper,
+  Radio,
+  RadioGroup,
+  Step,
+  StepLabel,
+  Stepper,
+  TextField,
+  Typography
+} from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 // Steps for Candidate Registration
-import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
+import ExperienceStep from '../../components/public/applicants/ExperienceStep';
 import LanguagesStep from '../../components/public/applicants/LanguagesStep';
 import LocationStep from '../../components/public/applicants/LocationStep';
-import ExperienceStep from '../../components/public/applicants/ExperienceStep';
+import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
 import WorkModelStep from '../../components/public/applicants/WorkModelStep';
-import PersonalInfoStep from '../../components/public/applicants/PersonalInfoStep';
 
 // Redux action
-import { 
-  registerCandidate, 
-  registerClient, 
-  clearRegistrationState 
+import {
+  clearRegistrationState,
+  registerCandidate,
+  registerClient
 } from '../../redux/slices/authSlice';
 
 const RegisterPage = () => {

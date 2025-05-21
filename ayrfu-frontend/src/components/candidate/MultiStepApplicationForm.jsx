@@ -1,36 +1,36 @@
 // src/components/candidate/MultiStepApplicationForm.jsx
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  Button,
-  Paper,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SendIcon from '@mui/icons-material/Send';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Paper,
+  Step,
+  StepLabel,
+  Stepper,
+  Typography,
+} from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Import the step components
-import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
+import ExperienceStep from '../../components/public/applicants/ExperienceStep';
 import LanguagesStep from '../../components/public/applicants/LanguagesStep';
 import LocationStep from '../../components/public/applicants/LocationStep';
-import ExperienceStep from '../../components/public/applicants/ExperienceStep';
-import WorkModelStep from '../../components/public/applicants/WorkModelStep';
-import PersonalInfoStep from '../../components/public/applicants/PersonalInfoStep';
-import UploadCVStep from '../../components/public/applicants/UploadCVStep';
 import MotivationLetterStep from '../../components/public/applicants/MotivationLetterStep';
+import PersonalInfoStep from '../../components/public/applicants/PersonalInfoStep';
+import TechnologiesStep from '../../components/public/applicants/TechnologiesStep';
+import UploadCVStep from '../../components/public/applicants/UploadCVStep';
+import WorkModelStep from '../../components/public/applicants/WorkModelStep';
 
 // Import the required Redux actions
-import { fetchPositionById } from '../../redux/slices/positionsSlice';
 import { applyForPosition } from '../../redux/slices/candidatesSlice';
+import { fetchPositionById } from '../../redux/slices/positionsSlice';
 
 const steps = [
   'Technologies',
