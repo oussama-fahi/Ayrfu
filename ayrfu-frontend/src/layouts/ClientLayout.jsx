@@ -1,12 +1,12 @@
-// src/layouts/ClientLayout.jsx
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import EmailIcon from '@mui/icons-material/Email';
-import FolderIcon from '@mui/icons-material/Folder';
-import HomeIcon from '@mui/icons-material/Home';
-import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu';
-import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { fetchUnreadCount } from '../redux/slices/conversationsSlice';
+import UddanLogo from '../assets/images/uddan-logo.svg';
+
+// Material UI imports
 import {
   AppBar,
   Avatar,
@@ -28,44 +28,55 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
 
-import axios from 'axios';
-import { useAuth } from '../hooks/useAuth';
-
-// Import UDDAN logo
-import UddanLogo from '../assets/images/uddan-logo.svg';
+// Icons
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import BusinessIcon from '@mui/icons-material/Business';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import EmailIcon from '@mui/icons-material/Email';
+import FolderIcon from '@mui/icons-material/Folder';
+import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
 
 const ClientLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user, logout } = useAuth();
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  
+  const { conversations } = useSelector((state) => state.conversations);
 
-  // Check for unread messages
+  // Fetch unread message count and set up polling
   useEffect(() => {
-    const fetchUnreadMessages = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/messages/unread/client', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUnreadMessages(response.data.length);
-      } catch (err) {
-        console.error('Error fetching unread messages:', err);
-      }
+    const fetchUnreadMessageCount = async () => {
+      dispatch(fetchUnreadCount());
     };
-
-    fetchUnreadMessages();
+    
+    fetchUnreadMessageCount();
+    
     // Set up a periodic fetch every 2 minutes
-    const interval = setInterval(fetchUnreadMessages, 120000);
+    const interval = setInterval(fetchUnreadMessageCount, 120000);
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
+
+  // Calculate unread message count from conversations
+  useEffect(() => {
+    if (conversations && conversations.length > 0) {
+      const unreadCount = conversations.reduce(
+        (total, conv) => total + (conv.unreadCount || 0), 
+        0
+      );
+      setUnreadMessages(unreadCount);
+    }
+  }, [conversations]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -119,18 +130,18 @@ const ClientLayout = () => {
               }}
             >
               <img src={UddanLogo} alt="UDDAN Logo" height="30" />
-              <Typography
-                variant="h6"
-                sx={{
-                  ml: 1,
-                  fontWeight: 'bold',
-                  display: { xs: 'none', sm: 'block' }
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  ml: 1, 
+                  fontWeight: 'bold', 
+                  display: { xs: 'none', sm: 'block' } 
                 }}
               >
                 Client Portal
               </Typography>
             </Box>
-
+            
             {!isMobile && (
               <Box sx={{ display: 'flex' }}>
                 <Button
@@ -141,7 +152,6 @@ const ClientLayout = () => {
                 >
                   Dashboard
                 </Button>
-                
                 <Button
                   color="inherit"
                   component={RouterLink}
@@ -150,7 +160,6 @@ const ClientLayout = () => {
                 >
                   Services
                 </Button>
-                
                 <Button
                   color="inherit"
                   component={RouterLink}
@@ -159,7 +168,6 @@ const ClientLayout = () => {
                 >
                   Documents
                 </Button>
-                
                 <Button
                   color="inherit"
                   component={RouterLink}
@@ -172,7 +180,6 @@ const ClientLayout = () => {
                 >
                   Messages
                 </Button>
-                
                 <Button
                   color="inherit"
                   onClick={handleAccountMenuOpen}
@@ -281,7 +288,7 @@ const ClientLayout = () => {
               p: 2,
               display: 'flex',
               alignItems: 'center',
-              borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
+              borderBottom: '1px solid rgba(0,0,0,0.08)'
             }}
           >
             <img src={UddanLogo} alt="UDDAN Logo" height="30" />
@@ -291,40 +298,28 @@ const ClientLayout = () => {
           </Box>
           
           <List>
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/dashboard')}
-            >
+            <ListItem button onClick={() => handleNavigation('/client/dashboard')}>
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/services')}
-            >
+            <ListItem button onClick={() => handleNavigation('/client/services')}>
               <ListItemIcon>
                 <MiscellaneousServicesIcon />
               </ListItemIcon>
               <ListItemText primary="Services" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/documents')}
-            >
+            <ListItem button onClick={() => handleNavigation('/client/documents')}>
               <ListItemIcon>
                 <FolderIcon />
               </ListItemIcon>
               <ListItemText primary="Documents" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/messages')}
-            >
+            <ListItem button onClick={() => handleNavigation('/client/messages')}>
               <ListItemIcon>
                 <Badge badgeContent={unreadMessages} color="error">
                   <EmailIcon />
@@ -335,30 +330,21 @@ const ClientLayout = () => {
             
             <Divider />
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/user/profile')}
-            >
+            <ListItem button onClick={() => handleNavigation('/user/profile')}>
               <ListItemIcon>
                 <AccountCircleIcon />
               </ListItemIcon>
               <ListItemText primary="My Profile" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/')}
-            >
+            <ListItem button onClick={() => handleNavigation('/')}>
               <ListItemIcon>
                 <HomeIcon />
               </ListItemIcon>
               <ListItemText primary="Main Website" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={handleLogout}
-            >
+            <ListItem button onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
@@ -368,7 +354,14 @@ const ClientLayout = () => {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, pt: { xs: 8, sm: 10 }, pb: 4 }}>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          pt: { xs: 8, sm: 10 },
+          pb: 4
+        }}
+      >
         <Container maxWidth="lg">
           <Outlet />
         </Container>
