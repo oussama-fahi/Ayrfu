@@ -1,61 +1,33 @@
 // src/api/services/candidate.service.js
 import axios from '../axios';
 
-/**
- * Service for managing candidate data and operations
- */
+
 const candidateService = {
-  /**
-   * Get all candidates (admin only)
-   * @returns {Promise} Promise containing the response data
-   */
+
   getAllCandidates: async () => {
     return axios.get('/candidates');
   },
 
-  /**
-   * Get a candidate by ID
-   * @param {string} id - The candidate ID
-   * @returns {Promise} Promise containing the response data
-   */
+
   getCandidateById: async (id) => {
     return axios.get(`/candidates/${id}`);
   },
 
-  /**
-   * Get a candidate by email
-   * @param {string} email - The candidate email
-   * @returns {Promise} Promise containing the response data
-   */
+
   getCandidateByEmail: async (email) => {
     return axios.get(`/candidates/email/${email}`);
   },
 
-  /**
-   * Create a new candidate
-   * @param {Object} candidateData - The candidate data
-   * @returns {Promise} Promise containing the response data
-   */
   createCandidate: async (candidateData) => {
     return axios.post('/candidates', candidateData);
   },
 
-  /**
-   * Update an existing candidate
-   * @param {string} id - The candidate ID
-   * @param {Object} candidateData - The updated candidate data
-   * @returns {Promise} Promise containing the response data
-   */
+
   updateCandidate: async (id, candidateData) => {
     return axios.put(`/candidates/${id}`, candidateData);
   },
 
-  /**
-   * Upload a CV for a candidate
-   * @param {string} id - The candidate ID
-   * @param {File} file - The CV file
-   * @returns {Promise} Promise containing the response data
-   */
+ 
   uploadCV: async (id, file) => {
     const formData = new FormData();
     formData.append('file', file);

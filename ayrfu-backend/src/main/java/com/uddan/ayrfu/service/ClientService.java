@@ -17,6 +17,6 @@ public interface ClientService {
     List<ClientResponse> getAllClients();
 
     ClientResponse updateClient(Long id, ClientRequest clientRequest);
-
+    boolean isOwnProfile(Long clientId, Long userId);
     void deleteClient(Long id);
 }

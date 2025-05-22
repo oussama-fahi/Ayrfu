@@ -149,7 +149,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Fetch active services
       .addCase(fetchActiveServices.pending, (state) => {
         state.isLoading = true;
@@ -163,7 +163,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Fetch service by ID
       .addCase(fetchServiceById.pending, (state) => {
         state.isLoading = true;
@@ -177,7 +177,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Search services by prompt
       .addCase(searchServicesByPrompt.pending, (state) => {
         state.isLoading = true;
@@ -191,7 +191,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Search services by keywords
       .addCase(searchServicesByKeywords.pending, (state) => {
         state.isLoading = true;
@@ -205,7 +205,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Create service
       .addCase(createService.pending, (state) => {
         state.isLoading = true;
@@ -219,7 +219,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Update service
       .addCase(updateService.pending, (state) => {
         state.isLoading = true;
@@ -237,7 +237,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Toggle service status
       .addCase(toggleServiceStatus.pending, (state) => {
         state.isLoading = true;
@@ -258,7 +258,7 @@ const servicesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Delete service
       .addCase(deleteService.pending, (state) => {
         state.isLoading = true;

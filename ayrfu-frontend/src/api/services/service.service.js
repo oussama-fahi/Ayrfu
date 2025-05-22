@@ -1,47 +1,47 @@
 import axios from '../axios';
 
-class ServiceService {
-  getAllServices() {
+const serviceService = {
+  getAllServices: async () => {
     return axios.get('/services');
-  }
-  
-  getAllActiveServices() {
+  },
+
+  getAllActiveServices: async () => {
     return axios.get('/services/active');
-  }
-  
-  getServiceById(id) {
+  },
+
+  getServiceById: async (id) => {
     return axios.get(`/services/${id}`);
-  }
-  
-  createService(serviceData) {
+  },
+
+  createService: async (serviceData) => {
     return axios.post('/services', serviceData);
-  }
-  
-  updateService(id, serviceData) {
+  },
+
+  updateService: async (id, serviceData) => {
     return axios.put(`/services/${id}`, serviceData);
-  }
-  
-  activateService(id) {
+  },
+
+  activateService: async (id) => {
     return axios.patch(`/services/${id}/activate`);
-  }
-  
-  deactivateService(id) {
+  },
+
+  deactivateService: async (id) => {
     return axios.patch(`/services/${id}/deactivate`);
-  }
-  
-  deleteService(id) {
+  },
+
+  deleteService: async (id) => {
     return axios.delete(`/services/${id}`);
-  }
-  
-  searchServicesByKeywords(keywords) {
+  },
+
+  searchServicesByKeywords: async (keywords) => {
     let queryParams = new URLSearchParams();
     keywords.forEach(keyword => queryParams.append('keywords', keyword));
     return axios.get(`/services/search?${queryParams.toString()}`);
-  }
-  
-  searchServicesByPrompt(prompt) {
+  },
+
+  searchServicesByPrompt: async (prompt) => {
     return axios.get(`/services/prompt/search?prompt=${encodeURIComponent(prompt)}`);
   }
-}
+};
 
-export default new ServiceService();
+export default serviceService;
