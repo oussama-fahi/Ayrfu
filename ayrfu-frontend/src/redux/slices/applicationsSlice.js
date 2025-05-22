@@ -2,9 +2,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import applicationService from '../../api/services/application.service';
 
-/**
- * Fetch all applications for the current candidate
- */
+
 export const fetchMyApplications = createAsyncThunk(
   'applications/fetchMy',
   async (_, { rejectWithValue }) => {
@@ -17,9 +15,7 @@ export const fetchMyApplications = createAsyncThunk(
   }
 );
 
-/**
- * Fetch applications for a specific candidate
- */
+
 export const fetchCandidateApplications = createAsyncThunk(
   'applications/fetchForCandidate',
   async (candidateId, { rejectWithValue }) => {
@@ -32,9 +28,7 @@ export const fetchCandidateApplications = createAsyncThunk(
   }
 );
 
-/**
- * Fetch application details by ID
- */
+
 export const fetchApplicationById = createAsyncThunk(
   'applications/fetchById',
   async (applicationId, { rejectWithValue }) => {
@@ -47,9 +41,7 @@ export const fetchApplicationById = createAsyncThunk(
   }
 );
 
-/**
- * Apply for a position
- */
+
 export const applyForPosition = createAsyncThunk(
   'applications/apply',
   async ({ candidateId, applicationData }, { rejectWithValue }) => {
@@ -62,9 +54,7 @@ export const applyForPosition = createAsyncThunk(
   }
 );
 
-/**
- * Apply with CV upload in a single request
- */
+
 export const applyWithCV = createAsyncThunk(
   'applications/applyWithCV',
   async ({ candidateId, formData }, { rejectWithValue }) => {
@@ -77,9 +67,7 @@ export const applyWithCV = createAsyncThunk(
   }
 );
 
-/**
- * Update an existing application
- */
+
 export const updateApplication = createAsyncThunk(
   'applications/update',
   async ({ candidateId, applicationId, applicationData }, { rejectWithValue }) => {
@@ -92,9 +80,7 @@ export const updateApplication = createAsyncThunk(
   }
 );
 
-/**
- * Withdraw an application
- */
+
 export const withdrawApplication = createAsyncThunk(
   'applications/withdraw',
   async ({ candidateId, applicationId }, { rejectWithValue }) => {
@@ -107,9 +93,7 @@ export const withdrawApplication = createAsyncThunk(
   }
 );
 
-/**
- * Add a message to an application
- */
+
 export const addApplicationMessage = createAsyncThunk(
   'applications/addMessage',
   async ({ applicationId, messageData }, { rejectWithValue }) => {
@@ -122,9 +106,7 @@ export const addApplicationMessage = createAsyncThunk(
   }
 );
 
-/**
- * Get recommended positions for the current candidate
- */
+
 export const fetchRecommendedPositions = createAsyncThunk(
   'applications/fetchRecommended',
   async (_, { rejectWithValue }) => {

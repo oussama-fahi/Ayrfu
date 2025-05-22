@@ -2,9 +2,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import candidateService from '../../api/services/candidate.service';
 
-/**
- * Create a new candidate
- */
+
 export const createCandidate = createAsyncThunk(
   'candidates/create',
   async (candidateData, { rejectWithValue }) => {
@@ -17,9 +15,7 @@ export const createCandidate = createAsyncThunk(
   }
 );
 
-/**
- * Get a candidate by ID
- */
+
 export const getCandidateById = createAsyncThunk(
   'candidates/getById',
   async (id, { rejectWithValue }) => {
@@ -32,9 +28,7 @@ export const getCandidateById = createAsyncThunk(
   }
 );
 
-/**
- * Get a candidate by email
- */
+
 export const getCandidateByEmail = createAsyncThunk(
   'candidates/getByEmail',
   async (email, { rejectWithValue }) => {
@@ -47,9 +41,7 @@ export const getCandidateByEmail = createAsyncThunk(
   }
 );
 
-/**
- * Update a candidate profile
- */
+
 export const updateCandidate = createAsyncThunk(
   'candidates/update',
   async ({ id, candidateData }, { rejectWithValue }) => {
@@ -62,9 +54,7 @@ export const updateCandidate = createAsyncThunk(
   }
 );
 
-/**
- * Upload a CV
- */
+
 export const uploadCandidateCV = createAsyncThunk(
   'candidates/uploadCV',
   async ({ id, file }, { rejectWithValue }) => {
@@ -77,9 +67,7 @@ export const uploadCandidateCV = createAsyncThunk(
   }
 );
 
-/**
- * Update profile and CV in one request
- */
+
 export const updateProfileWithCV = createAsyncThunk(
   'candidates/updateProfileWithCV',
   async ({ id, candidateData, cvFile }, { rejectWithValue }) => {
@@ -92,9 +80,7 @@ export const updateProfileWithCV = createAsyncThunk(
   }
 );
 
-/**
- * Apply for a position
- */
+
 export const applyForPosition = createAsyncThunk(
   'candidates/applyForPosition',
   async ({ id, applicationData }, { rejectWithValue }) => {
@@ -107,9 +93,7 @@ export const applyForPosition = createAsyncThunk(
   }
 );
 
-/**
- * Get applications for a candidate
- */
+
 export const getCandidateApplications = createAsyncThunk(
   'candidates/getApplications',
   async (id, { rejectWithValue }) => {
@@ -122,9 +106,7 @@ export const getCandidateApplications = createAsyncThunk(
   }
 );
 
-/**
- * Get matching jobs for a candidate
- */
+
 export const getMatchingJobs = createAsyncThunk(
   'candidates/getMatchingJobs',
   async (id, { rejectWithValue }) => {
@@ -137,9 +119,7 @@ export const getMatchingJobs = createAsyncThunk(
   }
 );
 
-/**
- * Register a new candidate
- */
+
 export const registerCandidate = createAsyncThunk(
   'candidates/register',
   async (registrationData, { rejectWithValue }) => {

@@ -1,14 +1,17 @@
 // src/pages/client/ClientDocumentsPage.js
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import {
+  Clear as ClearIcon,
+  CloudUpload as CloudUploadIcon,
+  Delete as DeleteIcon,
+  Description as DescriptionIcon,
+  GetApp as DownloadIcon,
+  FilterList as FilterListIcon,
+  Visibility as VisibilityIcon
+} from '@mui/icons-material';
 import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
-  Chip,
   CircularProgress,
   Container,
   Dialog,
@@ -34,23 +37,16 @@ import {
   Tooltip,
   Typography
 } from '@mui/material';
-import {
-  Clear as ClearIcon,
-  CloudUpload as CloudUploadIcon,
-  Delete as DeleteIcon,
-  Description as DescriptionIcon,
-  FilterList as FilterListIcon,
-  GetApp as DownloadIcon,
-  Search as SearchIcon,
-  Visibility as VisibilityIcon,
-} from '@mui/icons-material';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
+  clearDocumentStatus,
+  deleteDocument,
+  downloadDocument,
   fetchClientDocuments,
   uploadDocument,
-  downloadDocument,
-  deleteDocument,
-  clearDocumentStatus,
 } from '../../redux/slices/documentsSlice';
 
 const ClientDocumentsPage = () => {

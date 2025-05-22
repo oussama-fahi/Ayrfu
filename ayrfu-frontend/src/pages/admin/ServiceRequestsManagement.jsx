@@ -1,46 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import {
+    Check as CheckIcon,
+    Delete as DeleteIcon,
+    Visibility as VisibilityIcon
+} from '@mui/icons-material';
+import {
+    Box,
+    Button,
+    Chip,
+    CircularProgress,
+    Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    FormControl,
+    Grid,
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Tooltip,
+    Typography
+} from '@mui/material';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import {
-  Check as CheckIcon,
-  Close as CloseIcon,
-  Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  Search as SearchIcon,
-} from '@mui/icons-material';
 
 import {
-  getServiceRequestsByStatus,
-  updateServiceRequestStatus,
-  deleteServiceRequest,
-  clearRequestsError,
+    clearRequestsError,
+    deleteServiceRequest,
+    getServiceRequestsByStatus,
+    updateServiceRequestStatus,
 } from '../../redux/slices/serviceRequestsSlice';
 
 import AlertMessage from '../../components/common/AlertMessage';

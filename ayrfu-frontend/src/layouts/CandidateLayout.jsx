@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
+import UddanLogo from '../assets/images/uddan-logo.svg';
 import { useAuth } from '../hooks/useAuth';
 import { fetchUnreadCount } from '../redux/slices/conversationsSlice';
-import UddanLogo from '../assets/images/uddan-logo.svg';
 
 // Material UI imports
-import { 
+import {
   AppBar,
   Avatar,
   Badge,

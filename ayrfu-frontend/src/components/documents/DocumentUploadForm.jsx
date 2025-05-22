@@ -1,27 +1,26 @@
 // src/components/documents/DocumentUploadForm.js
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  Snackbar,
-  TextField,
-  Typography,
-  Alert
-} from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { uploadDocument, clearDocumentStatus } from '../../redux/slices/documentsSlice';
+import {
+    Alert,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    FormControl,
+    Grid,
+    InputLabel,
+    MenuItem,
+    Select,
+    Snackbar,
+    TextField,
+    Typography
+} from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearDocumentStatus, uploadDocument } from '../../redux/slices/documentsSlice';
 
 const DocumentUploadForm = ({ open, onClose, clientId }) => {
   const dispatch = useDispatch();

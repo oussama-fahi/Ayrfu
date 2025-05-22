@@ -1,4 +1,4 @@
-// src/App.js
+// src/App.jsx
 import { Box, CircularProgress } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';

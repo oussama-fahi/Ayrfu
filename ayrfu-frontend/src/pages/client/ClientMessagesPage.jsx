@@ -1,20 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Alert,
-  Box,
   Container,
-  Typography,
-  Paper,
   Grid,
-  CircularProgress,
-  useTheme,
-  useMediaQuery
+  Paper,
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
-import { useAuth } from '../../hooks/useAuth';
-import ConversationList from '../../components/messaging/ConversationList';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ConversationDetail from '../../components/messaging/ConversationDetail';
+import ConversationList from '../../components/messaging/ConversationList';
+import { useAuth } from '../../hooks/useAuth';
 import { fetchConversations } from '../../redux/slices/conversationsSlice';
 
 const ClientMessagesPage = () => {

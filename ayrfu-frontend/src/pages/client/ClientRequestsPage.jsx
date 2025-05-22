@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Assignment as AssignmentIcon } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -19,7 +17,9 @@ import {
   Select,
   Typography
 } from '@mui/material';
-import { Assignment as AssignmentIcon } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 import { getCurrentClientServiceRequests } from '../../redux/slices/serviceRequestsSlice';
 

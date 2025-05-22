@@ -1,27 +1,27 @@
-import React, { useEffect } from 'react';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Chip,
+    CircularProgress,
+    Container,
+    Divider,
+    Grid,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Paper,
+    Typography,
+} from '@mui/material';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Container,
-  Divider,
-  Grid,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Paper,
-  Typography,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
 
 import { fetchServiceById } from '../../redux/slices/servicesSlice';
 

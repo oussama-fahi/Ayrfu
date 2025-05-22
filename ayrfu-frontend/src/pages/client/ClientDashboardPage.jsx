@@ -1,18 +1,13 @@
 // src/pages/client/ClientDashboardPage.jsx
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import {
-  Alert,
   Box,
   Button,
   Card,
-  CardContent,
   CardActions,
+  CardContent,
   CardMedia,
   Chip,
   CircularProgress,
-  Container,
   Divider,
   Grid,
   IconButton,
@@ -23,24 +18,24 @@ import {
   Paper,
   Stack,
   Typography,
-  useTheme,
+  useTheme
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 // Icons
 import BusinessIcon from '@mui/icons-material/Business';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import FolderIcon from '@mui/icons-material/Folder';
-import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import AddIcon from '@mui/icons-material/Add';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EmailIcon from '@mui/icons-material/Email';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 // Charts
 import {
@@ -54,10 +49,10 @@ import {
 
 // Redux actions
 import { fetchConversations } from '../../redux/slices/conversationsSlice';
-import { fetchRecentDocuments, downloadDocument } from '../../redux/slices/documentsSlice';
+import { downloadDocument, fetchRecentDocuments } from '../../redux/slices/documentsSlice';
 import { fetchUnreadMessages } from '../../redux/slices/messagesSlice';
-import { fetchActiveServices } from '../../redux/slices/servicesSlice';
 import { getCurrentClientServiceRequests } from '../../redux/slices/serviceRequestsSlice';
+import { fetchActiveServices } from '../../redux/slices/servicesSlice';
 
 // Components
 import DocumentUploadForm from '../../components/documents/DocumentUploadForm';

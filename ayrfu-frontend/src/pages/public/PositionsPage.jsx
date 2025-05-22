@@ -30,11 +30,6 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-/**
- * PositionsPage component - Displays all job openings
- * 
- * @returns {JSX.Element} The rendered component
- */
 const PositionsPage = () => {
   const navigate = useNavigate();
   const [positions, setPositions] = useState([]);
