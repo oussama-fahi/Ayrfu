@@ -1,24 +1,25 @@
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
-  Box,
+  TextField,
   Button,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
   Chip,
+  FormHelperText,
+  Switch,
+  FormControlLabel,
+  Typography,
+  Paper,
   CircularProgress,
   Divider,
-  FormControl,
-  FormControlLabel,
-  FormHelperText,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Switch,
-  TextField,
-  Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { clearError, createService, updateService } from '../../redux/slices/servicesSlice';
+
+import { createService, updateService, clearError } from '../../redux/slices/servicesSlice';
 import AlertMessage from '../common/AlertMessage';
 
 const ITEM_HEIGHT = 48;
@@ -32,18 +33,12 @@ const MenuProps = {
   },
 };
 
-const availabilityOptions = [
-  'Immediate',
-  'In 1 week',
-  'In 2 weeks',
-  'In 1 month',
-  'Custom'
-];
+const availabilityOptions = ['Immediate', 'In 1 week', 'In 2 weeks', 'In 1 month', 'Custom'];
 
 const ServiceForm = ({ serviceId = null, onSuccess }) => {
   const dispatch = useDispatch();
   const { isLoading, error, currentService } = useSelector((state) => state.services);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -52,20 +47,19 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
     keywords: [],
     active: true
   });
-  
   const [formErrors, setFormErrors] = useState({});
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [newKeyword, setNewKeyword] = useState('');
-  
+
   const isEditMode = !!serviceId;
-  
+
   useEffect(() => {
     // Clear errors on unmount
     return () => {
       dispatch(clearError());
     };
   }, [dispatch]);
-  
+
   useEffect(() => {
     // If in edit mode and currentService is available, use it to populate the form
     if (isEditMode && currentService) {
@@ -79,25 +73,21 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
       });
     }
   }, [isEditMode, currentService]);
-  
+
   const validateForm = () => {
     const errors = {};
-    
     if (!formData.title.trim()) {
       errors.title = 'Title is required';
     }
-    
     if (formData.keywords.length === 0) {
       errors.keywords = 'At least one keyword is required';
     }
-    
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
     setFormData({
       ...formData,
       [name]: value
@@ -111,14 +101,14 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
       });
     }
   };
-  
+
   const handleSwitchChange = (e) => {
     setFormData({
       ...formData,
       active: e.target.checked
     });
   };
-  
+
   const handleAddKeyword = () => {
     if (newKeyword.trim() && !formData.keywords.includes(newKeyword.trim())) {
       setFormData({
@@ -136,7 +126,7 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
       }
     }
   };
-  
+
   const handleDeleteKeyword = (keywordToDelete) => {
     setFormData({
       ...formData,
@@ -151,10 +141,9 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
       });
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
@@ -174,9 +163,7 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
           active: true
         });
       }
-      
       setShowSuccessAlert(true);
-      
       if (onSuccess) {
         onSuccess();
       }
@@ -184,7 +171,7 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
       // Error is handled in the slice
     }
   };
-  
+
   return (
     <Paper elevation={3} sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
@@ -254,7 +241,9 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
               >
                 <MenuItem value="">Not specified</MenuItem>
                 {availabilityOptions.map((option) => (
-                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -309,9 +298,9 @@ const ServiceForm = ({ serviceId = null, onSuccess }) => {
                   }
                 }}
               />
-              <Button 
-                onClick={handleAddKeyword} 
-                variant="contained" 
+              <Button
+                onClick={handleAddKeyword}
+                variant="contained"
                 sx={{ ml: 2 }}
                 disabled={!newKeyword.trim() || isLoading}
               >

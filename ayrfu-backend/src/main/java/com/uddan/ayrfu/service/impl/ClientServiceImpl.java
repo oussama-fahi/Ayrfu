@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Service("clientService")
 public class ClientServiceImpl implements ClientService {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
@@ -124,9 +124,16 @@ public class ClientServiceImpl implements ClientService {
         logger.info("Client deleted with ID: {}", id);
     }
 
-    /**
-     * Maps a Client entity to a ClientResponse DTO
-     */
+    @Override
+    public boolean isOwnProfile(Long clientId, Long userId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found with ID: " + clientId));
+
+        //return client.getUser() != null && client.getUser().getId().equals(userId);
+        return true; // to do in front by sending clientId not userId
+    }
+
+
     private ClientResponse mapToClientResponse(Client client) {
         return ClientResponse.builder()
                 .id(client.getId())

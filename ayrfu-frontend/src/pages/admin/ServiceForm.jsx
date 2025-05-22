@@ -1,23 +1,22 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
-  CircularProgress,
-  Typography
+  Typography,
+  Paper,
+  CircularProgress
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import ServiceFormComponent from '../../components/forms/ServiceForm';
-import {
-  clearCurrentService,
-  fetchServiceById
-} from '../../redux/slices/servicesSlice';
 
-const ServiceForm = () => {
+import ServiceFormComponent from '../../components/forms/ServiceForm';
+import { fetchServiceById, clearCurrentService } from '../../redux/slices/servicesSlice';
+
+const ServiceFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentService, isLoading, error } = useSelector((state) => state.services);
   
+  const { currentService, isLoading, error } = useSelector((state) => state.services);
   const [formKey, setFormKey] = useState(0);
   
   const isEditMode = !!id;
@@ -75,4 +74,4 @@ const ServiceForm = () => {
   );
 };
 
-export default ServiceForm;
+export default ServiceFormPage;
