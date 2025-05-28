@@ -1,17 +1,16 @@
 // src/components/common/Footer.jsx
-import React from 'react';
-import { Box, Container, Typography, Grid, Link, Divider, Button, IconButton, Stack } from '@mui/material';
+import { Box, Button, Container, Divider, Grid, IconButton, Link, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import UddanLogo from '../../assets/images/uddan-logo.svg';
 
 // Import social media icons
-import FacebookIcon from '@mui/icons-material/Facebook';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import LinkedInIcon from '@mui/icons-material/LinkedIn';
-import InstagramIcon from '@mui/icons-material/Instagram';
 import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PhoneIcon from '@mui/icons-material/Phone';
+import TwitterIcon from '@mui/icons-material/Twitter';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

@@ -1,40 +1,46 @@
 // src/layouts/ClientLayout.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
 import {
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
+  Badge,
+  Box,
   Button,
-  IconButton,
+  Collapse,
+  Container,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Box,
-  Avatar,
   Menu,
   MenuItem,
+  Toolbar,
+  Typography,
   useMediaQuery,
-  useTheme,
-  Badge,
-  Container
+  useTheme
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import BusinessIcon from '@mui/icons-material/Business';
-import EmailIcon from '@mui/icons-material/Email';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import HomeIcon from '@mui/icons-material/Home';
-import DescriptionIcon from '@mui/icons-material/Description';
-import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
-import FolderIcon from '@mui/icons-material/Folder';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
 
+// Icons
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import EmailIcon from '@mui/icons-material/Email';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import FolderIcon from '@mui/icons-material/Folder';
+import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+
+// Hooks
 import { useAuth } from '../hooks/useAuth';
-import axios from 'axios';
+import { fetchUnreadCount } from '../redux/slices/conversationsSlice';
 
 // Import UDDAN logo
 import UddanLogo from '../assets/images/uddan-logo.svg';
@@ -43,31 +49,29 @@ const ClientLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
   const { user, logout } = useAuth();
+  const { unreadCount } = useSelector(state => state.messages);
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
-  const [unreadMessages, setUnreadMessages] = useState(0);
+  
+  // Submenu states
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
 
   // Check for unread messages
   useEffect(() => {
-    const fetchUnreadMessages = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/messages/unread/client', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUnreadMessages(response.data.length);
-      } catch (err) {
-        console.error('Error fetching unread messages:', err);
-      }
-    };
-
-    fetchUnreadMessages();
-    // Set up a periodic fetch every 2 minutes
-    const interval = setInterval(fetchUnreadMessages, 120000);
+    dispatch(fetchUnreadCount());
+    
+    // Set up periodic fetch every 2 minutes
+    const interval = setInterval(() => {
+      dispatch(fetchUnreadCount());
+    }, 120000);
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -90,6 +94,14 @@ const ClientLayout = () => {
     logout();
     handleAccountMenuClose();
     navigate('/');
+  };
+  
+  const toggleServicesMenu = () => {
+    setServicesOpen(!servicesOpen);
+  };
+  
+  const toggleDocumentsMenu = () => {
+    setDocumentsOpen(!documentsOpen);
   };
 
   return (
@@ -121,18 +133,11 @@ const ClientLayout = () => {
               }}
             >
               <img src={UddanLogo} alt="UDDAN Logo" height="30" />
-              <Typography
-                variant="h6"
-                sx={{
-                  ml: 1,
-                  fontWeight: 'bold',
-                  display: { xs: 'none', sm: 'block' }
-                }}
-              >
+              <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', display: { xs: 'none', sm: 'block' } }}>
                 Client Portal
               </Typography>
             </Box>
-
+            
             {!isMobile && (
               <Box sx={{ display: 'flex' }}>
                 <Button
@@ -156,6 +161,15 @@ const ClientLayout = () => {
                 <Button
                   color="inherit"
                   component={RouterLink}
+                  to="/client/requests"
+                  startIcon={<RequestQuoteIcon />}
+                >
+                  Requests
+                </Button>
+                
+                <Button
+                  color="inherit"
+                  component={RouterLink}
                   to="/client/documents"
                   startIcon={<FolderIcon />}
                 >
@@ -167,7 +181,7 @@ const ClientLayout = () => {
                   component={RouterLink}
                   to="/client/messages"
                   startIcon={
-                    <Badge badgeContent={unreadMessages} color="error">
+                    <Badge badgeContent={unreadCount} color="error">
                       <EmailIcon />
                     </Badge>
                   }
@@ -195,7 +209,7 @@ const ClientLayout = () => {
                 </Button>
               </Box>
             )}
-
+            
             {/* User Account Menu */}
             <Menu
               id="account-menu"
@@ -232,10 +246,12 @@ const ClientLayout = () => {
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <MenuItem onClick={() => {
-                handleAccountMenuClose();
-                navigate('/user/profile');
-              }}>
+              <MenuItem
+                onClick={() => {
+                  handleAccountMenuClose();
+                  navigate('/user/profile');
+                }}
+              >
                 <ListItemIcon>
                   <AccountCircleIcon fontSize="small" />
                 </ListItemIcon>
@@ -244,10 +260,12 @@ const ClientLayout = () => {
               
               <Divider />
               
-              <MenuItem onClick={() => {
-                handleAccountMenuClose();
-                navigate('/');
-              }}>
+              <MenuItem
+                onClick={() => {
+                  handleAccountMenuClose();
+                  navigate('/');
+                }}
+              >
                 <ListItemIcon>
                   <HomeIcon fontSize="small" />
                 </ListItemIcon>
@@ -264,7 +282,7 @@ const ClientLayout = () => {
           </Toolbar>
         </Container>
       </AppBar>
-
+      
       {/* Mobile menu drawer */}
       <Drawer
         anchor="left"
@@ -278,14 +296,12 @@ const ClientLayout = () => {
         }}
       >
         <Box sx={{ width: 280 }} role="presentation">
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              borderBottom: '1px solid rgba(0, 0, 0, 0.08)'
-            }}
-          >
+          <Box sx={{
+            p: 2,
+            display: 'flex',
+            alignItems: 'center',
+            borderBottom: '1px solid rgba(0,0,0,0.08)'
+          }}>
             <img src={UddanLogo} alt="UDDAN Logo" height="30" />
             <Typography variant="h6" color="secondary" sx={{ ml: 1, fontWeight: 'bold' }}>
               Client Portal
@@ -293,42 +309,59 @@ const ClientLayout = () => {
           </Box>
           
           <List>
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/dashboard')}
-            >
+            <ListItem button onClick={() => handleNavigation('/client/dashboard')}>
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/services')}
-            >
+            {/* Services submenu */}
+            <ListItem button onClick={toggleServicesMenu}>
               <ListItemIcon>
                 <MiscellaneousServicesIcon />
               </ListItemIcon>
               <ListItemText primary="Services" />
+              {servicesOpen ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/documents')}
-            >
+            <Collapse in={servicesOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem button sx={{ pl: 4 }} onClick={() => handleNavigation('/client/services')}>
+                  <ListItemText primary="Browse Services" />
+                </ListItem>
+                <ListItem button sx={{ pl: 4 }} onClick={() => handleNavigation('/client/requests')}>
+                  <ListItemIcon>
+                    <RequestQuoteIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="My Requests" />
+                </ListItem>
+              </List>
+            </Collapse>
+            
+            {/* Documents submenu */}
+            <ListItem button onClick={toggleDocumentsMenu}>
               <ListItemIcon>
                 <FolderIcon />
               </ListItemIcon>
               <ListItemText primary="Documents" />
+              {documentsOpen ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/client/messages')}
-            >
+            <Collapse in={documentsOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem button sx={{ pl: 4 }} onClick={() => handleNavigation('/client/documents')}>
+                  <ListItemText primary="All Documents" />
+                </ListItem>
+                <ListItem button sx={{ pl: 4 }} onClick={() => handleNavigation('/client/documents/upload')}>
+                  <ListItemText primary="Upload Document" />
+                </ListItem>
+              </List>
+            </Collapse>
+            
+            <ListItem button onClick={() => handleNavigation('/client/messages')}>
               <ListItemIcon>
-                <Badge badgeContent={unreadMessages} color="error">
+                <Badge badgeContent={unreadCount} color="error">
                   <EmailIcon />
                 </Badge>
               </ListItemIcon>
@@ -337,30 +370,21 @@ const ClientLayout = () => {
             
             <Divider />
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/user/profile')}
-            >
+            <ListItem button onClick={() => handleNavigation('/user/profile')}>
               <ListItemIcon>
                 <AccountCircleIcon />
               </ListItemIcon>
               <ListItemText primary="My Profile" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={() => handleNavigation('/')}
-            >
+            <ListItem button onClick={() => handleNavigation('/')}>
               <ListItemIcon>
                 <HomeIcon />
               </ListItemIcon>
               <ListItemText primary="Main Website" />
             </ListItem>
             
-            <ListItem
-              button
-              onClick={handleLogout}
-            >
+            <ListItem button onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
@@ -369,7 +393,7 @@ const ClientLayout = () => {
           </List>
         </Box>
       </Drawer>
-
+      
       <Box component="main" sx={{ flexGrow: 1, pt: { xs: 8, sm: 10 }, pb: 4 }}>
         <Container maxWidth="lg">
           <Outlet />

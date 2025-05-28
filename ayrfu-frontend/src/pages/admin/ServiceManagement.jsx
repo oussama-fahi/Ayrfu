@@ -1,83 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import {
-  Typography,
+  Add as AddIcon,
+  Clear as ClearIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  MoreVert as MoreVertIcon,
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+} from '@mui/icons-material';
+import {
   Box,
-  Paper,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  TextField,
-  InputAdornment,
   Chip,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
   FormControl,
+  IconButton,
+  InputAdornment,
   InputLabel,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
   Select,
-  CircularProgress
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
 } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  MoreVert as MoreVertIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  Search as SearchIcon
-} from '@mui/icons-material';
-import { 
-  fetchAllServices, 
-  deleteService, 
-  toggleServiceStatus 
+  deleteService,
+  fetchAllServices,
+  toggleServiceStatus
 } from '../../redux/slices/servicesSlice';
+
 import AlertMessage from '../../components/common/AlertMessage';
 
 const ServiceManagement = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { services, isLoading, error } = useSelector((state) => state.services);
   
+  const { services, isLoading, error } = useSelector((state) => state.services);
   const [filteredServices, setFilteredServices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterOptions, setFilterOptions] = useState({
-    status: 'all' // 'all', 'active', 'inactive'
-  });
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
   
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   useEffect(() => {
     dispatch(fetchAllServices());
   }, [dispatch]);
-  
+
   useEffect(() => {
     applyFilters();
-  }, [services, searchTerm, filterOptions]);
-  
+  }, [services, searchTerm, statusFilter]);
+
   const applyFilters = () => {
     let filtered = [...services];
     
     // Apply status filter
-    if (filterOptions.status === 'active') {
+    if (statusFilter === 'active') {
       filtered = filtered.filter(service => service.active);
-    } else if (filterOptions.status === 'inactive') {
+    } else if (statusFilter === 'inactive') {
       filtered = filtered.filter(service => !service.active);
     }
     
@@ -85,99 +86,95 @@ const ServiceManagement = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(service => 
-        service.title.toLowerCase().includes(term) ||
-        service.description?.toLowerCase().includes(term) ||
+        service.title.toLowerCase().includes(term) || 
+        (service.description?.toLowerCase().includes(term)) ||
         service.keywords.some(keyword => keyword.toLowerCase().includes(term))
       );
     }
     
     setFilteredServices(filtered);
   };
-  
+
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-  
-  const handleFilterChange = (event) => {
-    setFilterOptions({
-      ...filterOptions,
-      [event.target.name]: event.target.value
-    });
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
   };
-  
+
+  const handleStatusFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+  };
+
   const handleMenuOpen = (event, service) => {
     setAnchorEl(event.currentTarget);
     setSelectedService(service);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
+
   const handleEdit = () => {
     handleMenuClose();
     if (selectedService) {
       navigate(`/admin/services/edit/${selectedService.id}`);
     }
   };
-  
+
   const handleToggleStatus = () => {
     handleMenuClose();
     if (selectedService) {
-      dispatch(toggleServiceStatus({
-        id: selectedService.id,
-        active: selectedService.active
-      }))
-        .then(() => {
-          setSuccessMessage(`Service ${selectedService.active ? 'deactivated' : 'activated'} successfully!`);
-          setShowSuccessAlert(true);
-        });
+      dispatch(toggleServiceStatus({ 
+        id: selectedService.id, 
+        active: selectedService.active 
+      })).then(() => {
+        setSuccessMessage(`Service ${selectedService.active ? 'deactivated' : 'activated'} successfully!`);
+        setShowSuccessAlert(true);
+      });
     }
   };
-  
+
   const handleDeleteDialogOpen = () => {
     handleMenuClose();
     setDeleteDialogOpen(true);
   };
-  
+
   const handleDeleteDialogClose = () => {
     setDeleteDialogOpen(false);
   };
-  
+
   const handleDeleteConfirm = () => {
     if (selectedService) {
-      dispatch(deleteService(selectedService.id))
-        .then(() => {
-          setSuccessMessage('Service deleted successfully!');
-          setShowSuccessAlert(true);
-          handleDeleteDialogClose();
-        });
+      dispatch(deleteService(selectedService.id)).then(() => {
+        setSuccessMessage('Service deleted successfully!');
+        setShowSuccessAlert(true);
+        handleDeleteDialogClose();
+      });
     }
   };
-  
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Service Management
-        </Typography>
-        
-        <Button
-          variant="contained"
-          color="primary"
+        <Typography variant="h4" component="h1">Service Management</Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
           startIcon={<AddIcon />}
           onClick={() => navigate('/admin/services/create')}
         >
           Add New Service
         </Button>
       </Box>
-      
+
       {error && (
         <Box sx={{ mb: 3 }}>
           <Typography color="error">{error}</Typography>
         </Box>
       )}
-      
+
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
           <TextField
@@ -192,18 +189,27 @@ const ServiceManagement = () => {
                   <SearchIcon />
                 </InputAdornment>
               ),
+              endAdornment: searchTerm && (
+                <InputAdornment position="end">
+                  <IconButton 
+                    size="small"
+                    onClick={handleClearSearch}
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                </InputAdornment>
+              )
             }}
             sx={{ flexGrow: 1, minWidth: '200px' }}
           />
-          
+
           <FormControl size="small" sx={{ minWidth: '150px' }}>
             <InputLabel id="status-filter-label">Status</InputLabel>
             <Select
               labelId="status-filter-label"
-              name="status"
-              value={filterOptions.status}
+              value={statusFilter}
               label="Status"
-              onChange={handleFilterChange}
+              onChange={handleStatusFilterChange}
             >
               <MenuItem value="all">All</MenuItem>
               <MenuItem value="active">Active</MenuItem>
@@ -211,7 +217,7 @@ const ServiceManagement = () => {
             </Select>
           </FormControl>
         </Box>
-        
+
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
@@ -235,8 +241,8 @@ const ServiceManagement = () => {
                     <TableRow key={service.id}>
                       <TableCell>{service.title}</TableCell>
                       <TableCell>
-                        {service.description?.length > 100
-                          ? `${service.description.substring(0, 100)}...`
+                        {service.description?.length > 100 
+                          ? `${service.description.substring(0, 100)}...` 
                           : service.description || ''}
                       </TableCell>
                       <TableCell>
@@ -247,8 +253,8 @@ const ServiceManagement = () => {
                           {service.keywords.length > 3 && (
                             <Chip 
                               label={`+${service.keywords.length - 3}`} 
-                              size="small"
-                              variant="outlined"
+                              size="small" 
+                              variant="outlined" 
                             />
                           )}
                         </Box>
@@ -257,8 +263,8 @@ const ServiceManagement = () => {
                       <TableCell>
                         <Chip 
                           label={service.active ? "Active" : "Inactive"} 
-                          color={service.active ? "success" : "default"}
-                          size="small"
+                          color={service.active ? "success" : "default"} 
+                          size="small" 
                         />
                       </TableCell>
                       <TableCell align="right">
@@ -283,7 +289,7 @@ const ServiceManagement = () => {
           </TableContainer>
         )}
       </Paper>
-      
+
       {/* Service actions menu */}
       <Menu
         anchorEl={anchorEl}
@@ -296,7 +302,6 @@ const ServiceManagement = () => {
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
         </MenuItem>
-        
         <MenuItem onClick={handleToggleStatus}>
           <ListItemIcon>
             {selectedService?.active ? (
@@ -309,7 +314,6 @@ const ServiceManagement = () => {
             {selectedService?.active ? 'Deactivate' : 'Activate'}
           </ListItemText>
         </MenuItem>
-        
         <MenuItem onClick={handleDeleteDialogOpen}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
@@ -317,7 +321,7 @@ const ServiceManagement = () => {
           <ListItemText sx={{ color: 'error.main' }}>Delete</ListItemText>
         </MenuItem>
       </Menu>
-      
+
       {/* Delete confirmation dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -333,19 +337,19 @@ const ServiceManagement = () => {
           <Button onClick={handleDeleteDialogClose}>Cancel</Button>
           <Button 
             onClick={handleDeleteConfirm} 
-            color="error"
+            color="error" 
             variant="contained"
           >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
-      
-      <AlertMessage
-        open={showSuccessAlert}
-        message={successMessage}
-        severity="success"
-        onClose={() => setShowSuccessAlert(false)}
+
+      <AlertMessage 
+        open={showSuccessAlert} 
+        message={successMessage} 
+        severity="success" 
+        onClose={() => setShowSuccessAlert(false)} 
       />
     </Box>
   );

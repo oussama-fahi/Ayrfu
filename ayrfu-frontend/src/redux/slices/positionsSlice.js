@@ -1,6 +1,8 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+// src/redux/slices/positionsSlice.js
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import positionService from '../../api/services/position.service';
 
+// Fetch all positions
 export const fetchAllPositions = createAsyncThunk(
   'positions/fetchAll',
   async (_, { rejectWithValue }) => {
@@ -13,18 +15,7 @@ export const fetchAllPositions = createAsyncThunk(
   }
 );
 
-export const fetchActivePositions = createAsyncThunk(
-  'positions/fetchActive',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await positionService.getAllActivePositions();
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch active positions');
-    }
-  }
-);
-
+// Fetch position by ID
 export const fetchPositionById = createAsyncThunk(
   'positions/fetchById',
   async (id, { rejectWithValue }) => {
@@ -37,18 +28,7 @@ export const fetchPositionById = createAsyncThunk(
   }
 );
 
-export const fetchMatchingPositions = createAsyncThunk(
-  'positions/fetchMatching',
-  async (criteria, { rejectWithValue }) => {
-    try {
-      const response = await positionService.searchPositions(criteria);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to find matching positions');
-    }
-  }
-);
-
+// Create position
 export const createPosition = createAsyncThunk(
   'positions/create',
   async (positionData, { rejectWithValue }) => {
@@ -61,6 +41,7 @@ export const createPosition = createAsyncThunk(
   }
 );
 
+// Update position
 export const updatePosition = createAsyncThunk(
   'positions/update',
   async ({ id, positionData }, { rejectWithValue }) => {
@@ -73,6 +54,7 @@ export const updatePosition = createAsyncThunk(
   }
 );
 
+// Toggle position status (activate/deactivate)
 export const togglePositionStatus = createAsyncThunk(
   'positions/toggleStatus',
   async ({ id, active }, { rejectWithValue }) => {
@@ -90,6 +72,7 @@ export const togglePositionStatus = createAsyncThunk(
   }
 );
 
+// Delete position
 export const deletePosition = createAsyncThunk(
   'positions/delete',
   async (id, { rejectWithValue }) => {
@@ -102,21 +85,18 @@ export const deletePosition = createAsyncThunk(
   }
 );
 
+// Positions slice
 const positionsSlice = createSlice({
   name: 'positions',
   initialState: {
     positions: [],
     currentPosition: null,
-    matchingPositions: [],
     isLoading: false,
-    error: null,
+    error: null
   },
   reducers: {
     clearCurrentPosition: (state) => {
       state.currentPosition = null;
-    },
-    clearMatchingPositions: (state) => {
-      state.matchingPositions = [];
     },
     clearError: (state) => {
       state.error = null;
@@ -137,21 +117,7 @@ const positionsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
-      // Fetch active positions
-      .addCase(fetchActivePositions.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchActivePositions.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.positions = action.payload;
-      })
-      .addCase(fetchActivePositions.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
-      
+
       // Fetch position by ID
       .addCase(fetchPositionById.pending, (state) => {
         state.isLoading = true;
@@ -165,21 +131,7 @@ const positionsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
-      // Fetch matching positions
-      .addCase(fetchMatchingPositions.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchMatchingPositions.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.matchingPositions = action.payload;
-      })
-      .addCase(fetchMatchingPositions.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
-      
+
       // Create position
       .addCase(createPosition.pending, (state) => {
         state.isLoading = true;
@@ -193,7 +145,7 @@ const positionsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Update position
       .addCase(updatePosition.pending, (state) => {
         state.isLoading = true;
@@ -211,7 +163,7 @@ const positionsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Toggle position status
       .addCase(togglePositionStatus.pending, (state) => {
         state.isLoading = true;
@@ -232,7 +184,7 @@ const positionsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Delete position
       .addCase(deletePosition.pending, (state) => {
         state.isLoading = true;
@@ -248,10 +200,10 @@ const positionsSlice = createSlice({
       .addCase(deletePosition.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
-      });
+      })
   },
 });
 
-export const { clearCurrentPosition, clearMatchingPositions, clearError } = positionsSlice.actions;
+export const { clearCurrentPosition, clearError } = positionsSlice.actions;
 
 export default positionsSlice.reducer;

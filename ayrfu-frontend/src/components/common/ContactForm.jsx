@@ -1,27 +1,21 @@
-// src/components/common/ContactForm.jsx
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Paper, 
-  Typography, 
-  TextField, 
-  Button, 
-  Grid, 
-  Alert, 
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress,
-  Box
-} from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { createMessage, resetMessageSent } from '../../redux/slices/messagesSlice';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  TextField,
+  Typography
+} from '@mui/material';
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { createMessage, resetMessageState } from '../../redux/slices/messagesSlice';
 
 const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
   const dispatch = useDispatch();
   const { isLoading, error, messageSent } = useSelector((state) => state.messages);
-  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,38 +23,32 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
     subject: '',
     message: '',
   });
-  
   const [formErrors, setFormErrors] = useState({});
-  
+
   const validateForm = () => {
     const errors = {};
-    
     if (!formData.name.trim()) {
       errors.name = 'Name is required';
     }
-    
     if (!formData.email.trim()) {
       errors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Email is invalid';
     }
-    
     if (!formData.message.trim()) {
       errors.message = 'Message is required';
     }
-    
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
-    
-    // Clear the error for this field when user types
+
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -68,10 +56,9 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
       });
     }
   };
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (validateForm()) {
       const messageData = {
         type,
@@ -80,11 +67,10 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
         senderPhone: formData.phone,
         content: `${formData.subject ? `Subject: ${formData.subject}\n\n` : ''}${formData.message}`,
       };
-      
       dispatch(createMessage(messageData));
     }
   };
-  
+
   const handleReset = () => {
     setFormData({
       name: '',
@@ -94,16 +80,15 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
       message: '',
     });
     setFormErrors({});
-    dispatch(resetMessageSent());
+    dispatch(resetMessageState());
   };
-  
+
   return (
     <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
       <Typography variant="h5" gutterBottom>
         {title || (type === 'CANDIDATE' ? 'Contact Our Recruitment Team' : 'Contact Our Sales Team')}
       </Typography>
-      
-      <Typography variant="body1" color="textSecondary" paragraph>
+      <Typography variant="body1" color="text.secondary" paragraph>
         {subtitle || (type === 'CANDIDATE' 
           ? 'Have questions about our open positions or application process? Get in touch with our recruitment team.' 
           : 'Interested in our services? Contact our sales team to discuss your business needs.')}
@@ -114,10 +99,7 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
           <Alert severity="success" sx={{ mb: 3 }}>
             Your message has been sent successfully! We'll get back to you soon.
           </Alert>
-          <Button 
-            variant="outlined" 
-            onClick={handleReset}
-          >
+          <Button variant="outlined" onClick={handleReset}>
             Send Another Message
           </Button>
         </Box>
@@ -128,7 +110,6 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
               {error}
             </Alert>
           )}
-          
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -142,7 +123,6 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
                 helperText={formErrors.name}
               />
             </Grid>
-            
             <Grid item xs={12} sm={6}>
               <TextField
                 name="email"
@@ -156,7 +136,6 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
                 helperText={formErrors.email}
               />
             </Grid>
-            
             <Grid item xs={12}>
               <TextField
                 name="phone"
@@ -166,7 +145,6 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
                 onChange={handleChange}
               />
             </Grid>
-            
             <Grid item xs={12}>
               <TextField
                 name="subject"
@@ -176,7 +154,6 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
                 onChange={handleChange}
               />
             </Grid>
-            
             <Grid item xs={12}>
               <TextField
                 name="message"
@@ -191,7 +168,6 @@ const ContactForm = ({ type = 'CANDIDATE', title, subtitle }) => {
                 helperText={formErrors.message}
               />
             </Grid>
-            
             <Grid item xs={12}>
               <Button
                 type="submit"

@@ -11,7 +11,7 @@ import java.util.Set;
 @Entity
 @Table(name = "positions")
 @EntityListeners(AuditingEntityListener.class)
-public class Position {
+public class Position extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,13 +43,6 @@ public class Position {
     @Column(nullable = false)
     private boolean active;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     // Default constructor
     public Position() {
@@ -57,8 +50,7 @@ public class Position {
 
     // All-args constructor
     public Position(Long id, String title, String description, String technology, String location,
-                    Set<String> languages, String experienceLevel, String workModel, boolean active,
-                    LocalDateTime createdAt, LocalDateTime updatedAt) {
+                    Set<String> languages, String experienceLevel, String workModel, boolean active) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -68,8 +60,6 @@ public class Position {
         this.experienceLevel = experienceLevel;
         this.workModel = workModel;
         this.active = active;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     // Getters and Setters
@@ -145,21 +135,6 @@ public class Position {
         this.active = active;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 
     // Builder implementation
     public static PositionBuilder builder() {
@@ -176,8 +151,6 @@ public class Position {
         private String experienceLevel;
         private String workModel;
         private boolean active;
-        private LocalDateTime createdAt;
-        private LocalDateTime updatedAt;
 
         PositionBuilder() {
         }
@@ -227,19 +200,9 @@ public class Position {
             return this;
         }
 
-        public PositionBuilder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public PositionBuilder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
-            return this;
-        }
-
         public Position build() {
             return new Position(id, title, description, technology, location, languages,
-                    experienceLevel, workModel, active, createdAt, updatedAt);
+                    experienceLevel, workModel, active);
         }
     }
 }

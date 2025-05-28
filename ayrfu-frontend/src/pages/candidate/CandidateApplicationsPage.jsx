@@ -1,164 +1,235 @@
-// src/pages/candidate/CandidateApplicationsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Typography,
-  Paper,
-  Grid,
+  Clear as ClearIcon,
+  FilterList as FilterListIcon,
+  Search as SearchIcon,
+  Visibility as VisibilityIcon,
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
   Button,
   Chip,
+  CircularProgress,
+  Container,
   Divider,
+  FormControl,
+  Grid,
+  IconButton,
+  InputAdornment,
+  InputLabel,
   List,
   ListItem,
   ListItemText,
-  IconButton,
-  TextField,
   MenuItem,
-  FormControl,
-  InputLabel,
+  Paper,
   Select,
-  InputAdornment,
-  CircularProgress,
-  Alert
+  Snackbar,
+  TextField,
+  Typography
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  Clear as ClearIcon,
-  Visibility as VisibilityIcon,
-  FilterList as FilterListIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getCandidateApplications } from '../../redux/slices/candidatesSlice';
 
 const CandidateApplicationsPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
+  const dispatch = useDispatch();
   
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { applications, isLoading, error } = useSelector((state) => state.candidates);
+  const { user } = useSelector((state) => state.auth);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState('appliedAt');
   const [sortDirection, setSortDirection] = useState('desc');
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
   
+  // Fetch applications on component mount
   useEffect(() => {
-    fetchApplications();
-  }, [statusFilter, sortBy, sortDirection]);
+    if (user?.id) {
+      dispatch(getCandidateApplications(user.id));
+    }
+  }, [dispatch, user]);
   
-  const fetchApplications = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      let url = '/api/applications/my-applications';
-      
-      // Ajouter les paramètres de filtrage et de tri
-      const params = new URLSearchParams();
-      if (statusFilter) params.append('status', statusFilter);
-      params.append('sort', sortBy);
-      params.append('direction', sortDirection);
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-      
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
+  // Display notification if redirected from another page with a message
+  useEffect(() => {
+    if (location.state?.message) {
+      setNotification({
+        open: true,
+        message: location.state.message,
+        severity: location.state.type || 'info',
       });
       
-      setApplications(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Erreur lors de la récupération des candidatures:', err);
-      setError('Impossible de charger vos candidatures. Veuillez réessayer plus tard.');
-    } finally {
-      setLoading(false);
+      // Clear the state to prevent showing the notification on refresh
+      navigate(location.pathname, { replace: true });
     }
-  };
+  }, [location, navigate]);
   
-  const handleSearch = (e) => {
+  // Handle search input change
+  const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
   
-  const handleViewApplication = (applicationId) => {
-    navigate(`/candidate/applications/${applicationId}`);
-  };
-  
+  // Handle status filter change
   const handleStatusFilterChange = (e) => {
     setStatusFilter(e.target.value);
   };
   
+  // Handle sort by change
   const handleSortByChange = (e) => {
     setSortBy(e.target.value);
   };
   
+  // Toggle sort direction
   const handleSortDirectionToggle = () => {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
   
+  // Navigate to application details
+  const handleViewApplication = (applicationId) => {
+    navigate(`/candidate/applications/${applicationId}`);
+  };
+  
+  // Handle closing notification
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+  
+  // Format date for display
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
   
+  // Get status label
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'PENDING': return 'En attente';
-      case 'REVIEWING': return 'En cours d\'examen';
-      case 'INTERVIEW': return 'Entretien';
-      case 'ACCEPTED': return 'Acceptée';
-      case 'REJECTED': return 'Refusée';
-      default: return status;
+      case 'PENDING':
+        return 'Pending';
+      case 'REVIEWING':
+        return 'In Review';
+      case 'INTERVIEW':
+        return 'Interview';
+      case 'ACCEPTED':
+        return 'Accepted';
+      case 'REJECTED':
+        return 'Rejected';
+      case 'WITHDRAWN':
+        return 'Withdrawn';
+      default:
+        return status;
     }
   };
   
+  // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PENDING': return 'primary';
-      case 'REVIEWING': return 'secondary';
-      case 'INTERVIEW': return 'warning';
-      case 'ACCEPTED': return 'success';
-      case 'REJECTED': return 'error';
-      default: return 'default';
+      case 'PENDING':
+        return 'primary';
+      case 'REVIEWING':
+        return 'secondary';
+      case 'INTERVIEW':
+        return 'warning';
+      case 'ACCEPTED':
+        return 'success';
+      case 'REJECTED':
+        return 'error';
+      case 'WITHDRAWN':
+        return 'default';
+      default:
+        return 'default';
     }
   };
   
-  // Filtrer les candidatures en fonction de la recherche
+  // Filter applications based on search and status filter
   const filteredApplications = applications.filter(app => {
-    if (!searchQuery.trim()) return true;
+    // Filter by search query
+    if (searchQuery && !app.position.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !app.position.technology.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !app.position.location.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
     
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      app.position.title.toLowerCase().includes(searchLower) ||
-      app.position.company.toLowerCase().includes(searchLower) ||
-      app.position.location.toLowerCase().includes(searchLower)
-    );
+    // Filter by status
+    if (statusFilter && app.status !== statusFilter) {
+      return false;
+    }
+    
+    return true;
   });
+  
+  // Sort applications
+  const sortedApplications = [...filteredApplications].sort((a, b) => {
+    let valueA, valueB;
+    
+    // Sort by different fields
+    switch (sortBy) {
+      case 'appliedAt':
+        valueA = new Date(a.appliedAt);
+        valueB = new Date(b.appliedAt);
+        break;
+      case 'updatedAt':
+        valueA = new Date(a.updatedAt);
+        valueB = new Date(b.updatedAt);
+        break;
+      case 'position.title':
+        valueA = a.position.title;
+        valueB = b.position.title;
+        break;
+      case 'position.company':
+        valueA = a.position.company || '';
+        valueB = b.position.company || '';
+        break;
+      case 'status':
+        valueA = a.status;
+        valueB = b.status;
+        break;
+      default:
+        valueA = new Date(a.appliedAt);
+        valueB = new Date(b.appliedAt);
+    }
+    
+    // Apply sort direction
+    if (sortDirection === 'asc') {
+      return valueA > valueB ? 1 : -1;
+    } else {
+      return valueA < valueB ? 1 : -1;
+    }
+  });
+  
+  if (isLoading) {
+    return (
+      <Container sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ mt: 2 }}>Loading applications...</Typography>
+      </Container>
+    );
+  }
   
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4">
-          Mes candidatures
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate('/applicants')}
+        <Typography variant="h4">My Applications</Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => navigate('/positions')}
         >
-          Parcourir les offres d'emploi
+          Browse Job Opportunities
         </Button>
       </Box>
       
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
       )}
       
       <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
@@ -167,9 +238,9 @@ const CandidateApplicationsPage = () => {
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Rechercher par poste, entreprise, lieu..."
+              placeholder="Search by position, company, location..."
               value={searchQuery}
-              onChange={handleSearch}
+              onChange={handleSearchChange}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -189,34 +260,36 @@ const CandidateApplicationsPage = () => {
           
           <Grid item xs={12} md={3}>
             <FormControl fullWidth variant="outlined">
-              <InputLabel>Filtrer par statut</InputLabel>
+              <InputLabel>Filter by status</InputLabel>
               <Select
                 value={statusFilter}
                 onChange={handleStatusFilterChange}
-                label="Filtrer par statut"
+                label="Filter by status"
               >
-                <MenuItem value="">Tous les statuts</MenuItem>
-                <MenuItem value="PENDING">En attente</MenuItem>
-                <MenuItem value="REVIEWING">En cours d'examen</MenuItem>
-                <MenuItem value="INTERVIEW">Entretien</MenuItem>
-                <MenuItem value="ACCEPTED">Acceptée</MenuItem>
-                <MenuItem value="REJECTED">Refusée</MenuItem>
+                <MenuItem value="">All statuses</MenuItem>
+                <MenuItem value="PENDING">Pending</MenuItem>
+                <MenuItem value="REVIEWING">In Review</MenuItem>
+                <MenuItem value="INTERVIEW">Interview</MenuItem>
+                <MenuItem value="ACCEPTED">Accepted</MenuItem>
+                <MenuItem value="REJECTED">Rejected</MenuItem>
+                <MenuItem value="WITHDRAWN">Withdrawn</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           
           <Grid item xs={12} md={3}>
             <FormControl fullWidth variant="outlined">
-              <InputLabel>Trier par</InputLabel>
+              <InputLabel>Sort by</InputLabel>
               <Select
                 value={sortBy}
                 onChange={handleSortByChange}
-                label="Trier par"
+                label="Sort by"
               >
-                <MenuItem value="appliedAt">Date de candidature</MenuItem>
-                <MenuItem value="updatedAt">Dernière mise à jour</MenuItem>
-                <MenuItem value="position.title">Titre du poste</MenuItem>
-                <MenuItem value="position.company">Entreprise</MenuItem>
+                <MenuItem value="appliedAt">Application Date</MenuItem>
+                <MenuItem value="updatedAt">Last Update</MenuItem>
+                <MenuItem value="position.title">Position Title</MenuItem>
+                <MenuItem value="position.company">Company</MenuItem>
+                <MenuItem value="status">Status</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -235,21 +308,38 @@ const CandidateApplicationsPage = () => {
         </Grid>
       </Paper>
       
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : filteredApplications.length > 0 ? (
+      {applications.length === 0 ? (
+        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">You have no applications yet</Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
+            Start applying for positions to track your job applications.
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={() => navigate('/positions')}
+          >
+            Browse Job Opportunities
+          </Button>
+        </Paper>
+      ) : sortedApplications.length === 0 ? (
+        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">No applications match your search</Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+            Try adjusting your search criteria or filters.
+          </Typography>
+        </Paper>
+      ) : (
         <Paper elevation={2}>
           <List sx={{ width: '100%' }}>
-            {filteredApplications.map((application, index) => (
+            {sortedApplications.map((application, index) => (
               <React.Fragment key={application.id}>
-                <ListItem
-                  alignItems="flex-start"
+                <ListItem 
+                  alignItems="flex-start" 
                   secondaryAction={
-                    <IconButton
-                      edge="end"
-                      aria-label="voir"
+                    <IconButton 
+                      edge="end" 
+                      aria-label="view" 
                       onClick={() => handleViewApplication(application.id)}
                     >
                       <VisibilityIcon />
@@ -263,38 +353,38 @@ const CandidateApplicationsPage = () => {
                         <Typography variant="h6" component="span">
                           {application.position.title}
                         </Typography>
-                        <Chip
-                          label={getStatusLabel(application.status)}
-                          color={getStatusColor(application.status)}
-                          size="small"
+                        <Chip 
+                          label={getStatusLabel(application.status)} 
+                          color={getStatusColor(application.status)} 
+                          size="small" 
                         />
                       </Box>
                     }
                     secondary={
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} sm={6}>
                           <Typography variant="body2" component="span" display="block">
-                            <strong>Entreprise:</strong> {application.position.company}
+                            <strong>Company:</strong> {application.position.company || 'UDDAN'}
                           </Typography>
                           <Typography variant="body2" component="span" display="block">
-                            <strong>Localisation:</strong> {application.position.location}
+                            <strong>Location:</strong> {application.position.location}
                           </Typography>
                           <Typography variant="body2" component="span" display="block">
                             <strong>Type:</strong> {application.position.workModel}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} sm={6}>
                           <Typography variant="body2" component="span" display="block">
-                            <strong>Candidature soumise le:</strong> {formatDate(application.appliedAt)}
+                            <strong>Application submitted on:</strong> {formatDate(application.appliedAt)}
                           </Typography>
                           {application.updatedAt && (
                             <Typography variant="body2" component="span" display="block">
-                              <strong>Dernière mise à jour:</strong> {formatDate(application.updatedAt)}
+                              <strong>Last updated:</strong> {formatDate(application.updatedAt)}
                             </Typography>
                           )}
                           {application.interviewDate && (
                             <Typography variant="body2" component="span" display="block">
-                              <strong>Date d'entretien:</strong> {formatDate(application.interviewDate)}
+                              <strong>Interview date:</strong> {formatDate(application.interviewDate)}
                             </Typography>
                           )}
                         </Grid>
@@ -302,30 +392,28 @@ const CandidateApplicationsPage = () => {
                     }
                   />
                 </ListItem>
-                {index < filteredApplications.length - 1 && <Divider />}
+                {index < sortedApplications.length - 1 && <Divider />}
               </React.Fragment>
             ))}
           </List>
         </Paper>
-      ) : (
-        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            Aucune candidature trouvée
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
-            {searchQuery || statusFilter
-              ? "Essayez de modifier vos critères de recherche ou de filtrage"
-              : "Vous n'avez pas encore soumis de candidature"}
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate('/applicants')}
-          >
-            Parcourir les offres d'emploi
-          </Button>
-        </Paper>
       )}
+      
+      {/* Notification snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

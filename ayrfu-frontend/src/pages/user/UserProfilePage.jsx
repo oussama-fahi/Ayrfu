@@ -1,30 +1,30 @@
 // src/pages/user/UserProfilePage.jsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Paper,
-  Typography,
-  Box,
-  Grid,
-  Avatar,
-  Divider,
-  Button,
-  CircularProgress,
-  Alert,
-  TextField,
-  Tab,
-  Tabs,
-  Chip,
-  Snackbar
-} from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import BusinessIcon from '@mui/icons-material/Business';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PersonIcon from '@mui/icons-material/Person';
-import BusinessIcon from '@mui/icons-material/Business';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SaveIcon from '@mui/icons-material/Save';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Container,
+  Divider,
+  Grid,
+  Paper,
+  Snackbar,
+  Tab,
+  Tabs,
+  TextField,
+  Typography
+} from '@mui/material';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 // TabPanel component for the tabs
@@ -178,8 +178,8 @@ const UserProfilePage = () => {
       } catch (err) {
         console.error('Error fetching user profile:', err);
         if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
+          // localStorage.removeItem('token');
+          // navigate('/login');
         }
       } finally {
         setLoading(false);

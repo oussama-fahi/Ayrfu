@@ -11,7 +11,7 @@ import java.util.Set;
 @Entity
 @Table(name = "services")
 @EntityListeners(AuditingEntityListener.class)
-public class Service {
+public class Service extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,13 +37,6 @@ public class Service {
     @Column(nullable = false)
     private boolean active;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     // Default constructor
     public Service() {
@@ -51,7 +44,7 @@ public class Service {
 
     // All-args constructor
     public Service(Long id, String title, String description, String benefits, String availability,
-                   Set<String> keywords, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                   Set<String> keywords, boolean active) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -59,8 +52,6 @@ public class Service {
         this.availability = availability;
         this.keywords = keywords != null ? keywords : new HashSet<>();
         this.active = active;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     // Getters and Setters
@@ -120,21 +111,6 @@ public class Service {
         this.active = active;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 
     // Builder implementation
     public static ServiceBuilder builder() {
@@ -190,19 +166,9 @@ public class Service {
             return this;
         }
 
-        public ServiceBuilder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public ServiceBuilder updatedAt(LocalDateTime updatedAt) {
-            this.updatedAt = updatedAt;
-            return this;
-        }
-
         public Service build() {
             return new Service(id, title, description, benefits, availability,
-                    keywords, active, createdAt, updatedAt);
+                    keywords, active);
         }
     }
 }

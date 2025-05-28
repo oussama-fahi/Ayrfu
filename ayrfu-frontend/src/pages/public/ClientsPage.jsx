@@ -1,28 +1,28 @@
 // src/pages/public/ClientsPage.jsx
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Paper, 
+import BusinessIcon from '@mui/icons-material/Business';
+import CloudIcon from '@mui/icons-material/Cloud';
+import CodeIcon from '@mui/icons-material/Code';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import SchoolIcon from '@mui/icons-material/School';
+import SecurityIcon from '@mui/icons-material/Security';
+import StorageIcon from '@mui/icons-material/Storage';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Divider,
   Grid,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Card,
-  CardContent,
-  Button
+  Paper,
+  Typography
 } from '@mui/material';
-import CodeIcon from '@mui/icons-material/Code';
-import CloudIcon from '@mui/icons-material/Cloud';
-import SecurityIcon from '@mui/icons-material/Security';
-import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
-import StorageIcon from '@mui/icons-material/Storage';
-import BusinessIcon from '@mui/icons-material/Business';
-import SchoolIcon from '@mui/icons-material/School';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ClientsPage = () => {
   const navigate = useNavigate();

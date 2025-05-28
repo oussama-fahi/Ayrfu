@@ -1,22 +1,22 @@
 // src/pages/user/UserApplicationsPage.jsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Paper,
-  Typography,
-  Box,
-  Divider,
-  Button,
-  CircularProgress,
   Alert,
+  Box,
+  Button,
   Chip,
+  CircularProgress,
+  Container,
+  Divider,
   List,
   ListItem,
+  ListItemSecondaryAction,
   ListItemText,
-  ListItemSecondaryAction
+  Paper,
+  Typography
 } from '@mui/material';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const UserApplicationsPage = () => {
@@ -56,8 +56,8 @@ const UserApplicationsPage = () => {
         
         // If 401 unauthorized, redirect to login
         if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
+          // localStorage.removeItem('token');
+          // navigate('/login');
         }
       } finally {
         setLoading(false);

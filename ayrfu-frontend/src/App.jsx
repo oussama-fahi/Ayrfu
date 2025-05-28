@@ -1,0 +1,274 @@
+// src/App.jsx
+import { Box, CircularProgress } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+
+// Auth Provider
+import { AuthProvider, useAuth } from './hooks/useAuth';
+
+// Layouts
+import AdminLayout from './layouts/AdminLayout';
+import CandidateLayout from './layouts/CandidateLayout';
+import ClientLayout from './layouts/ClientLayout';
+import MainLayout from './layouts/MainLayout';
+
+// Public Pages
+import ApplicantsPage from './pages/public/ApplicantsPage';
+import ClientsPage from './pages/public/ClientsPage';
+import ContactPage from './pages/public/ContactPage';
+import LoginPage from './pages/public/LoginPage';
+import MainPage from './pages/public/MainPage';
+import NotFoundPage from './pages/public/NotFoundPage';
+import PositionDetailPage from './pages/public/PositionDetailPage';
+import PositionsPage from './pages/public/PositionsPage';
+import RegisterPage from './pages/public/RegisterPage';
+import ServiceDetailPage from './pages/public/ServiceDetailPage';
+
+// User Pages
+import UserApplicationsPage from './pages/user/UserApplicationsPage';
+import UserProfilePage from './pages/user/UserProfilePage';
+
+// Candidate Pages
+import MultiStepApplicationForm from './components/candidate/MultiStepApplicationForm';
+import CandidateApplicationDetailPage from './pages/candidate/CandidateApplicationDetailPage';
+import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
+import CandidateDashboardPage from './pages/candidate/CandidateDashboardPage';
+import CandidateMessagesPage from './pages/candidate/CandidateMessagesPage';
+
+// Client Pages
+import ClientDashboardPage from './pages/client/ClientDashboardPage';
+import ClientDocumentsPage from './pages/client/ClientDocumentsPage';
+import ClientMessagesPage from './pages/client/ClientMessagesPage';
+import ClientRequestDetailPage from './pages/client/ClientRequestDetailPage';
+import ClientServiceRequestPage from './pages/client/ClientServiceRequestPage';
+import ClientServicesPage from './pages/client/ClientServicesPage';
+
+// Admin Pages
+import AdminCandidateMessagesPage from './pages/admin/AdminCandidateMessagesPage';
+import AdminClientMessagesPage from './pages/admin/AdminClientMessagesPage';
+import Dashboard from './pages/admin/Dashboard';
+import PositionForm from './pages/admin/PositionForm';
+import PositionManagement from './pages/admin/PositionManagement';
+import ServiceForm from './pages/admin/ServiceForm';
+import ServiceManagement from './pages/admin/ServiceManagement';
+import SuperAdminUserManagementPage from './pages/admin/SuperAdminUserManagementPage';
+import UserManagementPage from './pages/admin/UserManagementPage';
+import ClientRequestsPage from './pages/client/ClientRequestsPage';
+
+// Protected Route Components
+const AuthRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  
+  return children;
+};
+
+const RoleRoute = ({ children, roles = [] }) => {
+  const { user, hasRole, isLoading, isAuthenticated } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  
+  // Check if user has any of the required roles
+  const hasRequiredRole = roles.length === 0 || roles.some(role => hasRole(role));
+  
+  if (!hasRequiredRole) {
+    // Redirect based on user's role
+    if (hasRole('ROLE_ADMIN') || hasRole('ROLE_SUPER_USER')) {
+      return <Navigate to="/admin/dashboard" />;
+    } else if (hasRole('ROLE_CANDIDATE')) {
+      return <Navigate to="/candidate/dashboard" />;
+    } else if (hasRole('ROLE_CLIENT')) {
+      return <Navigate to="/client/dashboard" />;
+    }
+    return <Navigate to="/" />;
+  }
+  
+  return children;
+};
+
+// Theme configuration
+const theme = createTheme({
+  gradientTextStyle: {
+    fontWeight: 'bold',
+    position: 'relative',
+    display: 'inline-block',
+    pb: 1,
+    backgroundImage: 'linear-gradient(90deg, rgba(1, 232, 200, .8) 0, rgba(41, 0, 255, .8) 100%)',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    color: 'transparent', // Ensures the gradient is visible
+    fontSize: { xs: '2rem', md: '3rem' }, // Responsive font size
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      width: '60%',
+      height: '4px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      bottom: 0,
+      bgcolor: 'primary.main', // Keep your primary color for the underline
+      borderRadius: 2,
+    },
+  },
+  palette: {
+    primary: {
+      main: '#007aff', // Main color
+    },
+    secondary: {
+      main: '#01e8c8', // Secondary color for accent elements
+    },
+    background: {
+      default: '#f5f5f5',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    h3: {
+      fontWeight: 600,
+    },
+    button: {
+      textTransform: 'none',
+      fontWeight: 500,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+      },
+    },
+  },
+});
+
+const App = () => {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<MainPage />} />
+              <Route path="applicants" element={<ApplicantsPage />} />
+              <Route path="clients" element={<ClientsPage />} />
+              <Route path="positions" element={<PositionsPage />} />
+              <Route path="positions/:id" element={<PositionDetailPage />} />
+              <Route path="services/:id" element={<ServiceDetailPage />} />
+              <Route path="apply/:positionId" element={
+                <AuthRoute>
+                  <MultiStepApplicationForm />
+                </AuthRoute>
+              } />
+              <Route path="contact" element={<ContactPage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="register" element={<RegisterPage />} />
+
+              {/* Protected User Routes */}
+              <Route path="user">
+                <Route path="profile" element={<AuthRoute><UserProfilePage /></AuthRoute>} />
+                <Route path="applications" element={<AuthRoute><UserApplicationsPage /></AuthRoute>} />
+              </Route>
+              
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+
+            {/* Admin Login Page (outside of admin layout) */}
+            <Route path="/admin/login" element={<LoginPage />} />
+
+            {/* Candidate Routes */}
+            <Route path="/candidate" element={
+              <RoleRoute roles={['ROLE_CANDIDATE']}>
+                <CandidateLayout />
+              </RoleRoute>
+            }>
+              <Route index element={<Navigate to="/candidate/dashboard" replace />} />
+              <Route path="dashboard" element={<CandidateDashboardPage />} />
+              <Route path="applications" element={<CandidateApplicationsPage />} />
+              <Route path="applications/:id" element={<CandidateApplicationDetailPage />} />
+              <Route path="messages" element={<CandidateMessagesPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+
+            {/* Client Routes */}
+            <Route path="/client" element={<RoleRoute roles={['ROLE_CLIENT']}><ClientLayout /></RoleRoute>}>
+              <Route index element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="dashboard" element={<ClientDashboardPage />} />
+              <Route path="services" element={<ClientServicesPage />} />
+              <Route path="services/request" element={<ClientServiceRequestPage />} />
+              <Route path="requests/:id" element={<ClientRequestDetailPage />} />
+              <Route path="messages" element={<ClientMessagesPage />} />
+              <Route path="documents" element={<ClientDocumentsPage />} />
+              <Route path="requests" element={<ClientRequestsPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+
+            {/* Admin Routes (all protected) */}
+            <Route path="/admin" element={
+              <RoleRoute roles={['ROLE_ADMIN', 'ROLE_SUPER_USER']}>
+                <AdminLayout />
+              </RoleRoute>
+            }>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="positions" element={<PositionManagement />} />
+              <Route path="positions/create" element={<PositionForm />} />
+              <Route path="positions/edit/:id" element={<PositionForm />} />
+              <Route path="services" element={<ServiceManagement />} />
+              <Route path="services/create" element={<ServiceForm />} />
+              <Route path="services/edit/:id" element={<ServiceForm />} />
+              <Route path="messages/candidates" element={<AdminCandidateMessagesPage />} />
+              <Route path="messages/clients" element={<AdminClientMessagesPage />} />
+              <Route path="users" element={<UserManagementPage />} />
+              <Route path="admins" element={
+                <RoleRoute roles={['ROLE_SUPER_USER']}>
+                  <SuperAdminUserManagementPage />
+                </RoleRoute>
+              } />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+};
+
+export default App;

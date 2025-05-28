@@ -1,246 +1,282 @@
-// src/pages/client/ClientDocumentsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/pages/client/ClientDocumentsPage.js
 import {
-  Container,
-  Typography,
-  Paper,
-  Button,
+  Clear as ClearIcon,
+  CloudUpload as CloudUploadIcon,
+  Delete as DeleteIcon,
+  Description as DescriptionIcon,
+  GetApp as DownloadIcon,
+  FilterList as FilterListIcon,
+  Refresh as RefreshIcon,
+  Visibility as VisibilityIcon
+} from '@mui/icons-material';
+import {
+  Alert,
   Box,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  IconButton,
+  Button,
+  CircularProgress,
+  Container,
   Dialog,
-  DialogTitle,
+  DialogActions,
   DialogContent,
   DialogContentText,
-  DialogActions,
-  TextField,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  Grid,
-  Chip,
+  DialogTitle,
   Divider,
-  Alert,
-  CircularProgress,
+  Fade,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemSecondaryAction,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select,
+  Skeleton,
+  Snackbar,
+  TextField,
   Tooltip,
-  Snackbar
+  Typography,
+  useTheme
 } from '@mui/material';
-import {
-  Description as DescriptionIcon,
-  Delete as DeleteIcon,
-  CloudUpload as CloudUploadIcon,
-  Visibility as VisibilityIcon,
-  GetApp as DownloadIcon,
-  Search as SearchIcon,
-  FilterList as FilterListIcon,
-  Clear as ClearIcon
-} from '@mui/icons-material';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import axios from 'axios';
+import { fetchCurrentClient } from '../../redux/slices/clientsSlice';
+import {
+  clearDocumentStatus,
+  deleteDocument,
+  downloadDocument,
+  fetchClientDocuments,
+  uploadDocument,
+} from '../../redux/slices/documentsSlice';
 
 const ClientDocumentsPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useAuth();
+    const theme = useTheme();
   
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  const { documents, isLoading, error, uploadSuccess } = useSelector((state) => state.documents);
+  const { currentClient, isLoading: clientLoading } = useSelector((state) => state.clients);
+
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
-  
-  // États pour le téléversement
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
+  const [refreshing, setRefreshing] = useState(false);
+
   const [file, setFile] = useState(null);
   const [documentType, setDocumentType] = useState('');
   const [description, setDescription] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
-  
-  // États pour le filtrage et la recherche
+
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [sortBy, setSortBy] = useState('uploadedAt');
+  const [sortBy, setSortBy] = useState('createdAt');
   const [sortDirection, setSortDirection] = useState('desc');
-  
+
   const documentTypes = [
-    'IDENTIFICATION',
-    'ADDRESS_PROOF',
-    'FINANCIAL',
+    'COMPANY_PROFILE',
+    'FINANCIAL_REPORT', 
+    'PORTFOLIO',
     'CONTRACT',
+    'PROPOSAL',
     'INVOICE',
-    'REPORT',
+    'MESSAGE_ATTACHMENT',
     'OTHER'
   ];
-  
+
   const documentTypeLabels = {
-    'IDENTIFICATION': 'Pièce d\'identité',
-    'ADDRESS_PROOF': 'Justificatif de domicile',
-    'FINANCIAL': 'Document financier',
-    'CONTRACT': 'Contrat',
-    'INVOICE': 'Facture',
-    'REPORT': 'Rapport',
-    'OTHER': 'Autre'
+    'COMPANY_PROFILE': 'Company Profile',
+    'FINANCIAL_REPORT': 'Financial Report',
+    'PORTFOLIO': 'Portfolio',
+    'CONTRACT': 'Contract',
+    'PROPOSAL': 'Proposal',
+    'INVOICE': 'Invoice',
+    'MESSAGE_ATTACHMENT': 'Message Attachment',
+    'OTHER': 'Other'
   };
-  
-  useEffect(() => {
-    fetchDocuments();
-  }, [typeFilter, sortBy, sortDirection]);
-  
-  const fetchDocuments = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      let url = '/api/documents/client';
-      
-      // Ajouter les paramètres de filtrage et de tri
-      const params = new URLSearchParams();
-      if (typeFilter) params.append('type', typeFilter);
-      params.append('sort', sortBy);
-      params.append('direction', sortDirection);
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
+
+  const fetchDocuments = useCallback(async () => {
+    if (currentClient?.id) {
+      try {
+        console.log('Fetching documents for clientId:', currentClient.id);
+        await dispatch(fetchClientDocuments(currentClient.id)).unwrap();
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+        setNotification({
+          open: true,
+          message: 'Failed to fetch documents',
+          severity: 'error'
+        });
       }
-      
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setDocuments(response.data);
-      setError(null);
-    } catch (err) {
-      console.error('Erreur lors de la récupération des documents:', err);
-      setError('Impossible de charger les documents. Veuillez réessayer plus tard.');
-    } finally {
-      setLoading(false);
     }
+  }, [dispatch, currentClient?.id]);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      if (user?.id && !currentClient) {
+        try {
+          console.log('Fetching client data for userId:', user.id);
+          await dispatch(fetchCurrentClient()).unwrap();
+        } catch (err) {
+          console.error("Error fetching client:", err);
+          setNotification({
+            open: true,
+            message: 'Failed to fetch client information',
+            severity: 'error'
+          });
+        }
+      }
+    };
+
+    initializeData();
+  }, [dispatch, user?.id, currentClient]);
+
+  useEffect(() => {
+    if (currentClient?.id) {
+      console.log('Current client loaded:', currentClient);
+      fetchDocuments();
+    }
+  }, [currentClient?.id, fetchDocuments]);
+
+  useEffect(() => {
+    if (uploadSuccess) {
+      setNotification({
+        open: true,
+        message: 'Document uploaded successfully',
+        severity: 'success'
+      });
+      handleUploadDialogClose();
+    }
+  }, [uploadSuccess]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDocuments();
+    setTimeout(() => setRefreshing(false), 500);
   };
-  
+
   const handleUploadDialogOpen = () => {
     setUploadDialogOpen(true);
   };
-  
+
   const handleUploadDialogClose = () => {
     setUploadDialogOpen(false);
     setFile(null);
     setDocumentType('');
     setDescription('');
+    dispatch(clearDocumentStatus());
   };
-  
+
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files[0]) {
       setFile(event.target.files[0]);
     }
   };
-  
+
   const handleDeleteDialogOpen = (documentId) => {
     setSelectedDocumentId(documentId);
     setDeleteDialogOpen(true);
   };
-  
+
   const handleDeleteDialogClose = () => {
     setDeleteDialogOpen(false);
     setSelectedDocumentId(null);
   };
-  
-  const handleDeleteDocument = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/documents/${selectedDocumentId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setDocuments(documents.filter(doc => doc.id !== selectedDocumentId));
-      handleDeleteDialogClose();
-      setNotification({
-        open: true,
-        message: 'Document supprimé avec succès',
-        severity: 'success'
-      });
-    } catch (err) {
-      console.error('Erreur lors de la suppression du document:', err);
-      setNotification({
-        open: true,
-        message: 'Erreur lors de la suppression du document',
-        severity: 'error'
-      });
-    }
-  };
-  
+
   const handleUploadDocument = async () => {
     if (!file || !documentType) {
       setNotification({
         open: true,
-        message: 'Veuillez sélectionner un fichier et un type de document',
+        message: 'Please select a file and document type',
         severity: 'error'
       });
       return;
     }
-    
+
+    if (!currentClient?.id) {
+      setNotification({
+        open: true,
+        message: 'Client information not found',
+        severity: 'error'
+      });
+      return;
+    }
+
     setUploadLoading(true);
-    
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('documentType', documentType);
-      formData.append('description', description);
-      
-      const token = localStorage.getItem('token');
-      const response = await axios.post('/api/documents/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      setDocuments([response.data, ...documents]);
-      handleUploadDialogClose();
-      setNotification({
-        open: true,
-        message: 'Document téléversé avec succès',
-        severity: 'success'
-      });
+      if (description) {
+        formData.append('description', description);
+      }
+
+      console.log('Uploading document for clientId:', currentClient.id);
+      await dispatch(uploadDocument({
+        clientId: currentClient.id,
+        formData
+      })).unwrap();
+
+      await fetchDocuments();
     } catch (err) {
-      console.error('Erreur lors du téléversement du document:', err);
+      console.error('Error uploading document:', err);
       setNotification({
         open: true,
-        message: 'Erreur lors du téléversement du document',
+        message: 'Error uploading document',
         severity: 'error'
       });
     } finally {
       setUploadLoading(false);
     }
   };
-  
-  const handleSearch = (event) => {
-    event.preventDefault();
-    
-    if (searchQuery.trim()) {
-      const filtered = documents.filter(doc => 
-        doc.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      setDocuments(filtered);
-    } else {
-      fetchDocuments();
+
+  const handleDeleteDocument = async () => {
+    try {
+      await dispatch(deleteDocument(selectedDocumentId)).unwrap();
+      handleDeleteDialogClose();
+      setNotification({
+        open: true,
+        message: 'Document deleted successfully',
+        severity: 'success'
+      });
+      await fetchDocuments();
+    } catch (err) {
+      console.error('Error deleting document:', err);
+      setNotification({
+        open: true,
+        message: 'Error deleting document',
+        severity: 'error'
+      });
     }
   };
-  
+
+  const handleDownloadDocument = (documentId) => {
+    dispatch(downloadDocument(documentId));
+  };
+
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
   const handleClearSearch = () => {
     setSearchQuery('');
-    fetchDocuments();
   };
-  
+
   const handleCloseNotification = () => {
     setNotification({ ...notification, open: false });
   };
-  
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, {
       year: 'numeric',
@@ -248,10 +284,10 @@ const ClientDocumentsPage = () => {
       day: 'numeric'
     });
   };
-  
+
   const getFileIcon = (filename) => {
+    if (!filename) return <DescriptionIcon />;
     const extension = filename.split('.').pop().toLowerCase();
-    
     switch (extension) {
       case 'pdf':
         return <DescriptionIcon style={{ color: '#e53935' }} />;
@@ -269,75 +305,162 @@ const ClientDocumentsPage = () => {
         return <DescriptionIcon />;
     }
   };
-  
+
   const filteredDocuments = documents.filter(doc => {
-    if (searchQuery.trim()) {
-      return (
-        doc.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      if (!(doc.fileName.toLowerCase().includes(searchLower) ||
+            (doc.description && doc.description.toLowerCase().includes(searchLower)))) {
+        return false;
+      }
     }
+
+    if (typeFilter && doc.documentType !== typeFilter) {
+      return false;
+    }
+
     return true;
+  }).sort((a, b) => {
+    let valueA, valueB;
+    switch (sortBy) {
+      case 'fileName':
+        valueA = a.fileName;
+        valueB = b.fileName;
+        break;
+      case 'documentType':
+        valueA = a.documentType;
+        valueB = b.documentType;
+        break;
+      case 'fileSize':
+        valueA = a.fileSize;
+        valueB = b.fileSize;
+        break;
+      case 'createdAt':
+      default:
+        valueA = new Date(a.createdAt);
+        valueB = new Date(b.createdAt);
+    }
+
+    if (sortDirection === 'asc') {
+      return valueA > valueB ? 1 : -1;
+    } else {
+      return valueA < valueB ? 1 : -1;
+    }
   });
-  
+
+  if (clientLoading || (isLoading && !documents.length)) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Skeleton variant="rectangular" width={200} height={40} />
+          <Skeleton variant="rectangular" width={150} height={36} />
+        </Box>
+
+        <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+          <Skeleton variant="rectangular" height={60} />
+        </Paper>
+
+        <Paper elevation={2}>
+          <List>
+            {[1, 2, 3, 4, 5].map((item) => (
+              <React.Fragment key={item}>
+                <ListItem>
+                  <ListItemIcon>
+                    <Skeleton variant="circular" width={40} height={40} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Skeleton variant="text" width="60%" />}
+                    secondary={<Skeleton variant="text" width="40%" />}
+                  />
+                </ListItem>
+                {item < 5 && <Divider />}
+              </React.Fragment>
+            ))}
+          </List>
+        </Paper>
+      </Container>
+    );
+  }
+
+  if (!currentClient) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 4 }}>
+          Unable to load client information. Please try refreshing the page.
+          {user?.id && <div>User ID: {user.id} - Client data not found</div>}
+        </Alert>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4">Mes documents</Typography>
-        <Button
-          variant="contained"
-          color="secondary"
-          startIcon={<CloudUploadIcon />}
-          onClick={handleUploadDialogOpen}
-        >
-          Téléverser un document
-        </Button>
+        <Typography variant="h4" sx={theme.gradientTextStyle}>My Documents</Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <IconButton 
+            onClick={handleRefresh} 
+            disabled={refreshing}
+            sx={{ 
+              bgcolor: 'background.paper', 
+              boxShadow: 1,
+              '&:hover': { boxShadow: 2 }
+            }}
+          >
+            <RefreshIcon sx={{ 
+              animation: refreshing ? 'spin 1s linear infinite' : 'none',
+              '@keyframes spin': {
+                '0%': { transform: 'rotate(0deg)' },
+                '100%': { transform: 'rotate(360deg)' }
+              }
+            }} />
+          </IconButton>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<CloudUploadIcon />}
+            onClick={handleUploadDialogOpen}
+          >
+            Upload Document
+          </Button>
+        </Box>
       </Box>
-      
+
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <Fade in={!!error}>
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        </Fade>
       )}
-      
+
       <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
-            <Box component="form" onSubmit={handleSearch} sx={{ display: 'flex' }}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                label="Rechercher..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  endAdornment: searchQuery ? (
-                    <IconButton size="small" onClick={handleClearSearch}>
-                      <ClearIcon />
-                    </IconButton>
-                  ) : null
-                }}
-              />
-              <Button 
-                type="submit" 
-                variant="contained" 
-                color="secondary" 
-                sx={{ ml: 1 }}
-              >
-                <SearchIcon />
-              </Button>
-            </Box>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Search documents..."
+              value={searchQuery}
+              onChange={handleSearch}
+              InputProps={{
+                endAdornment: searchQuery ? (
+                  <IconButton size="small" onClick={handleClearSearch}>
+                    <ClearIcon />
+                  </IconButton>
+                ) : null
+              }}
+            />
           </Grid>
-          
           <Grid item xs={12} md={3}>
             <FormControl fullWidth variant="outlined">
-              <InputLabel>Filtrer par type</InputLabel>
+              <InputLabel>Filter by type</InputLabel>
               <Select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                label="Filtrer par type"
+                label="Filter by type"
               >
-                <MenuItem value="">Tous les types</MenuItem>
+                <MenuItem value="">All types</MenuItem>
                 {documentTypes.map(type => (
                   <MenuItem key={type} value={type}>
                     {documentTypeLabels[type]}
@@ -346,37 +469,36 @@ const ClientDocumentsPage = () => {
               </Select>
             </FormControl>
           </Grid>
-          
           <Grid item xs={12} md={3}>
             <FormControl fullWidth variant="outlined">
-              <InputLabel>Trier par</InputLabel>
+              <InputLabel>Sort by</InputLabel>
               <Select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                label="Trier par"
+                label="Sort by"
               >
-                <MenuItem value="uploadedAt">Date de téléversement</MenuItem>
-                <MenuItem value="filename">Nom de fichier</MenuItem>
-                <MenuItem value="documentType">Type de document</MenuItem>
+                <MenuItem value="createdAt">Upload date</MenuItem>
+                <MenuItem value="fileName">File name</MenuItem>
+                <MenuItem value="documentType">Document type</MenuItem>
+                <MenuItem value="fileSize">File size</MenuItem>
               </Select>
             </FormControl>
           </Grid>
-          
           <Grid item xs={12} md={2}>
-            <Button 
+            <Button
               fullWidth
-              variant="outlined" 
+              variant="outlined"
               color="secondary"
               onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
               startIcon={<FilterListIcon />}
             >
-              {sortDirection === 'asc' ? 'Croissant' : 'Décroissant'}
+              {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
             </Button>
           </Grid>
         </Grid>
       </Paper>
-      
-      {loading ? (
+
+      {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
           <CircularProgress color="secondary" />
         </Box>
@@ -387,17 +509,21 @@ const ClientDocumentsPage = () => {
               <React.Fragment key={document.id}>
                 <ListItem>
                   <ListItemIcon>
-                    {getFileIcon(document.filename)}
+                    {getFileIcon(document.fileName)}
                   </ListItemIcon>
                   <ListItemText
-                    primary={document.filename}
+                    primary={document.fileName}
                     secondary={
                       <>
-                        <Typography component="span" variant="body2" color="text.primary">
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.primary"
+                        >
                           {documentTypeLabels[document.documentType] || document.documentType}
                         </Typography>
                         <Typography component="p" variant="body2">
-                          Téléversé le {formatDate(document.uploadedAt)}
+                          Uploaded on {formatDate(document.createdAt)}
                         </Typography>
                         {document.description && (
                           <Typography component="p" variant="body2">
@@ -409,25 +535,25 @@ const ClientDocumentsPage = () => {
                   />
                   <ListItemSecondaryAction>
                     <Box>
-                      <Tooltip title="Voir">
+                      <Tooltip title="View">
                         <IconButton
                           edge="end"
                           aria-label="view"
-                          onClick={() => window.open(`/api/documents/view/${document.id}`, '_blank')}
+                          onClick={() => window.open(`/api/documents/${document.id}/view`, '_blank')}
                         >
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Télécharger">
+                      <Tooltip title="Download">
                         <IconButton
                           edge="end"
                           aria-label="download"
-                          onClick={() => window.open(`/api/documents/download/${document.id}`, '_blank')}
+                          onClick={() => handleDownloadDocument(document.id)}
                         >
                           <DownloadIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Supprimer">
+                      <Tooltip title="Delete">
                         <IconButton
                           edge="end"
                           aria-label="delete"
@@ -446,13 +572,15 @@ const ClientDocumentsPage = () => {
         </Paper>
       ) : (
         <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+          <DescriptionIcon sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3 }} />
           <Typography variant="h6" color="text.secondary">
-            Aucun document trouvé
+            No documents found
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
             {searchQuery || typeFilter
-              ? 'Essayez de modifier vos critères de recherche ou de filtrage'
-              : 'Commencez par téléverser des documents'}
+              ? 'Try modifying your search or filter criteria'
+              : 'Start by uploading some documents'
+            }
           </Typography>
           <Button
             variant="contained"
@@ -461,17 +589,21 @@ const ClientDocumentsPage = () => {
             onClick={handleUploadDialogOpen}
             sx={{ mt: 3 }}
           >
-            Téléverser un document
+            Upload Document
           </Button>
         </Paper>
       )}
-      
-      {/* Dialog de téléversement */}
-      <Dialog open={uploadDialogOpen} onClose={handleUploadDialogClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Téléverser un nouveau document</DialogTitle>
+
+      <Dialog
+        open={uploadDialogOpen}
+        onClose={handleUploadDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Upload a New Document</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Veuillez sélectionner un fichier à téléverser et spécifier le type de document.
+            Please select a file to upload and specify the document type.
           </DialogContentText>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -482,25 +614,28 @@ const ClientDocumentsPage = () => {
                 startIcon={<CloudUploadIcon />}
                 sx={{ py: 1.5 }}
               >
-                Sélectionner un fichier
-                <input type="file" hidden onChange={handleFileChange} />
+                Select a file
+                <input
+                  type="file"
+                  hidden
+                  onChange={handleFileChange}
+                />
               </Button>
               {file && (
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Fichier sélectionné : {file.name}
+                  Selected file: {file.name}
                 </Typography>
               )}
             </Grid>
             <Grid item xs={12}>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel>Type de document</InputLabel>
+              <FormControl fullWidth variant="outlined" required>
+                <InputLabel>Document Type</InputLabel>
                 <Select
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
-                  label="Type de document"
-                  required
+                  label="Document Type"
                 >
-                  <MenuItem value="">Sélectionner un type</MenuItem>
+                  <MenuItem value="">Select a type</MenuItem>
                   {documentTypes.map(type => (
                     <MenuItem key={type} value={type}>
                       {documentTypeLabels[type]}
@@ -512,7 +647,7 @@ const ClientDocumentsPage = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Description (facultatif)"
+                label="Description (optional)"
                 variant="outlined"
                 multiline
                 rows={3}
@@ -524,7 +659,7 @@ const ClientDocumentsPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleUploadDialogClose} disabled={uploadLoading}>
-            Annuler
+            Cancel
           </Button>
           <Button
             onClick={handleUploadDocument}
@@ -533,41 +668,45 @@ const ClientDocumentsPage = () => {
             disabled={!file || !documentType || uploadLoading}
             startIcon={uploadLoading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
           >
-            {uploadLoading ? 'Téléversement en cours...' : 'Téléverser'}
+            {uploadLoading ? 'Uploading...' : 'Upload'}
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Dialog de confirmation de suppression */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteDialogClose}>
-        <DialogTitle>Confirmer la suppression</DialogTitle>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.
+            Are you sure you want to delete this document? This action is irreversible.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteDialogClose}>
-            Annuler
-          </Button>
+          <Button onClick={handleDeleteDialogClose}>Cancel</Button>
           <Button onClick={handleDeleteDocument} color="error" variant="contained">
-            Supprimer
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Notification */}
+
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
           {notification.message}
         </Alert>
       </Snackbar>
     </Container>
   );
 };
+
 export default ClientDocumentsPage;

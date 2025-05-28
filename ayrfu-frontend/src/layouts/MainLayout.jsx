@@ -1,38 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink, Outlet } from 'react-router-dom';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
+import BusinessIcon from '@mui/icons-material/Business';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import PersonIcon from '@mui/icons-material/Person';
 import {
   AppBar,
-  Toolbar,
-  Typography,
+  Avatar,
+  Box,
   Button,
-  IconButton,
+  Container,
+  Divider,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Box,
-  Avatar,
   Menu,
   MenuItem,
+  Toolbar,
+  Typography,
   useMediaQuery,
-  useTheme,
-  Container,
-  Stack
+  useTheme
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import PersonIcon from '@mui/icons-material/Person';
-import BusinessIcon from '@mui/icons-material/Business';
-import ContactMailIcon from '@mui/icons-material/ContactMail';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import LoginIcon from '@mui/icons-material/Login';
-import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { useAuth } from '../hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { Outlet, Link as RouterLink, useNavigate } from 'react-router-dom';
 import Footer from '../components/common/Footer';
+import { useAuth } from '../hooks/useAuth';
 
 // Import UDDAN logo
 import UddanLogo from '../assets/images/uddan-logo.svg';

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import messageService from '../../api/services/message.service';
 
 export const fetchAllMessages = createAsyncThunk(
@@ -18,9 +18,9 @@ export const fetchMessagesByType = createAsyncThunk(
   async (type, { rejectWithValue }) => {
     try {
       const response = await messageService.getMessagesByType(type);
-      return { type, messages: response.data };
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch messages by type');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch messages');
     }
   }
 );
@@ -42,9 +42,9 @@ export const fetchUnreadMessagesByType = createAsyncThunk(
   async (type, { rejectWithValue }) => {
     try {
       const response = await messageService.getUnreadMessagesByType(type);
-      return { type, messages: response.data };
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch unread messages by type');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch unread messages');
     }
   }
 );
@@ -56,7 +56,7 @@ export const createMessage = createAsyncThunk(
       const response = await messageService.createMessage(messageData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to send message');
+      return rejectWithValue(error.response?.data?.message || 'Failed to create message');
     }
   }
 );
@@ -73,6 +73,21 @@ export const markMessageAsRead = createAsyncThunk(
   }
 );
 
+export const markMultipleAsRead = createAsyncThunk(
+  'messages/markMultipleAsRead',
+  async (messageIds, { rejectWithValue }) => {
+    try {
+      const response = await messageService.markMultipleAsRead(messageIds);
+      return {
+        messageIds,
+        count: response.data.count
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to mark messages as read');
+    }
+  }
+);
+
 export const deleteMessage = createAsyncThunk(
   'messages/delete',
   async (id, { rejectWithValue }) => {
@@ -85,34 +100,42 @@ export const deleteMessage = createAsyncThunk(
   }
 );
 
+export const searchMessages = createAsyncThunk(
+  'messages/search',
+  async (searchText, { rejectWithValue }) => {
+    try {
+      const response = await messageService.searchMessages(searchText);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to search messages');
+    }
+  }
+);
+
 const messagesSlice = createSlice({
   name: 'messages',
   initialState: {
     messages: [],
-    candidateMessages: [],
-    clientMessages: [],
     unreadMessages: [],
+    searchResults: [],
+    unreadCount: 0,
     isLoading: false,
     error: null,
-    messageSent: false,
+    messageSent: false
   },
   reducers: {
     clearMessages: (state) => {
       state.messages = [];
-      state.candidateMessages = [];
-      state.clientMessages = [];
       state.unreadMessages = [];
+      state.searchResults = [];
     },
-    clearError: (state) => {
+    resetMessageState: (state) => {
       state.error = null;
-    },
-    resetMessageSent: (state) => {
       state.messageSent = false;
-    },
+    }
   },
   extraReducers: (builder) => {
     builder
-      // Fetch all messages
       .addCase(fetchAllMessages.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -126,25 +149,19 @@ const messagesSlice = createSlice({
         state.error = action.payload;
       })
       
-      // Fetch messages by type
       .addCase(fetchMessagesByType.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(fetchMessagesByType.fulfilled, (state, action) => {
         state.isLoading = false;
-        if (action.payload.type === 'CANDIDATE') {
-          state.candidateMessages = action.payload.messages;
-        } else if (action.payload.type === 'CLIENT') {
-          state.clientMessages = action.payload.messages;
-        }
+        state.messages = action.payload;
       })
       .addCase(fetchMessagesByType.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
       
-      // Fetch unread messages
       .addCase(fetchUnreadMessages.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -158,24 +175,19 @@ const messagesSlice = createSlice({
         state.error = action.payload;
       })
       
-      // Fetch unread messages by type
       .addCase(fetchUnreadMessagesByType.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(fetchUnreadMessagesByType.fulfilled, (state, action) => {
         state.isLoading = false;
-        const currentUnread = state.unreadMessages.filter(
-          msg => msg.type !== action.payload.type
-        );
-        state.unreadMessages = [...currentUnread, ...action.payload.messages];
+        state.unreadMessages = action.payload;
       })
       .addCase(fetchUnreadMessagesByType.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
       
-      // Create message
       .addCase(createMessage.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -184,12 +196,6 @@ const messagesSlice = createSlice({
       .addCase(createMessage.fulfilled, (state, action) => {
         state.isLoading = false;
         state.messageSent = true;
-        if (action.payload.type === 'CANDIDATE') {
-          state.candidateMessages.push(action.payload);
-        } else if (action.payload.type === 'CLIENT') {
-          state.clientMessages.push(action.payload);
-        }
-        state.messages.push(action.payload);
       })
       .addCase(createMessage.rejected, (state, action) => {
         state.isLoading = false;
@@ -197,57 +203,65 @@ const messagesSlice = createSlice({
         state.messageSent = false;
       })
       
-      // Mark message as read
-      .addCase(markMessageAsRead.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
       .addCase(markMessageAsRead.fulfilled, (state, action) => {
-        state.isLoading = false;
+        const updatedMessage = action.payload;
         
-        // Update in all message lists
-        const updateMessageInList = (list) => {
-          const index = list.findIndex(m => m.id === action.payload.id);
-          if (index !== -1) {
-            list[index] = action.payload;
-          }
-        };
+        state.messages = state.messages.map(message => 
+          message.id === updatedMessage.id ? updatedMessage : message
+        );
         
-        updateMessageInList(state.messages);
-        updateMessageInList(state.candidateMessages);
-        updateMessageInList(state.clientMessages);
+        state.unreadMessages = state.unreadMessages.filter(message => 
+          message.id !== updatedMessage.id
+        );
         
-        // Remove from unread messages
-        state.unreadMessages = state.unreadMessages.filter(m => m.id !== action.payload.id);
-      })
-      .addCase(markMessageAsRead.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
+        if (state.unreadCount > 0) {
+          state.unreadCount -= 1;
+        }
       })
       
-      // Delete message
-      .addCase(deleteMessage.pending, (state) => {
+      .addCase(markMultipleAsRead.fulfilled, (state, action) => {
+        const { messageIds, count } = action.payload;
+        
+        state.messages = state.messages.map(message => 
+          messageIds.includes(message.id) 
+            ? { ...message, read: true, readAt: new Date().toISOString() }
+            : message
+        );
+        
+        state.unreadMessages = state.unreadMessages.filter(message => 
+          !messageIds.includes(message.id)
+        );
+        
+        state.unreadCount = Math.max(0, state.unreadCount - count);
+      })
+      
+      .addCase(deleteMessage.fulfilled, (state, action) => {
+        const messageId = action.payload;
+        
+        state.messages = state.messages.filter(message => 
+          message.id !== messageId
+        );
+        
+        state.unreadMessages = state.unreadMessages.filter(message => 
+          message.id !== messageId
+        );
+      })
+      
+      .addCase(searchMessages.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(deleteMessage.fulfilled, (state, action) => {
+      .addCase(searchMessages.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.messages = state.messages.filter(m => m.id !== action.payload);
-        state.candidateMessages = state.candidateMessages.filter(m => m.id !== action.payload);
-        state.clientMessages = state.clientMessages.filter(m => m.id !== action.payload);
-        state.unreadMessages = state.unreadMessages.filter(m => m.id !== action.payload);
+        state.searchResults = action.payload;
       })
-      .addCase(deleteMessage.rejected, (state, action) => {
+      .addCase(searchMessages.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       });
-  },
+  }
 });
 
-export const { 
-  clearMessages, 
-  clearError,
-  resetMessageSent
-} = messagesSlice.actions;
+export const { clearMessages, resetMessageState } = messagesSlice.actions;
 
 export default messagesSlice.reducer;

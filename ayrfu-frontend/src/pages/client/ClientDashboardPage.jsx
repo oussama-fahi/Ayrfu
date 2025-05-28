@@ -1,461 +1,204 @@
-// src/pages/client/ClientDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
+import BusinessIcon from '@mui/icons-material/Business';
+import DescriptionIcon from '@mui/icons-material/Description';
+import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import { Box, Button, CircularProgress, Grid, Paper, Stack, Typography, useTheme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
-  Box,
-  CircularProgress,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  Alert,
-  Divider,
-  Paper
-} from '@mui/material';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
-} from 'recharts';
-import { useAuth } from '../../hooks/useAuth';
-import axios from 'axios';
+import DocumentUploadForm from '../../components/documents/DocumentUploadForm';
+import { fetchCurrentClient } from '../../redux/slices/clientsSlice';
+import { fetchConversations } from '../../redux/slices/conversationsSlice';
+import { downloadDocument, fetchRecentDocuments } from '../../redux/slices/documentsSlice';
+import { fetchUnreadMessages } from '../../redux/slices/messagesSlice';
+import { getCurrentClientServiceRequests } from '../../redux/slices/serviceRequestsSlice';
+import { fetchActiveServices } from '../../redux/slices/servicesSlice';
 
 const ClientDashboardPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dashboardData, setDashboardData] = useState({
-    serviceRequests: [],
-    requestStats: {
-      total: 0,
-      pending: 0,
-      inProgress: 0,
-      completed: 0,
-      cancelled: 0
-    },
-    recentMessages: [],
-    recentDocuments: [],
-    recommendedServices: []
-  });
-  
+  const dispatch = useDispatch();
+  const theme = useTheme();
+
+  const { user } = useSelector(state => state.auth);
+  const { currentClient } = useSelector(state => state.clients);
+  const { serviceRequests, isLoading: requestsLoading } = useSelector(state => state.serviceRequests);
+  const { services, isLoading: servicesLoading } = useSelector(state => state.services);
+  const { messages, isLoading: messagesLoading } = useSelector(state => state.messages);
+  const { documents, isLoading: documentsLoading } = useSelector(state => state.documents);
+
+  const isLoading = requestsLoading || servicesLoading || messagesLoading || documentsLoading;
+  const [documentUploadOpen, setDocumentUploadOpen] = useState(false);
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem('token');
-        
-        // Fetch service requests
-        const requestsResponse = await axios.get('/api/service-requests/my-requests', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Fetch recent messages
-        const messagesResponse = await axios.get('/api/messages/recent/client', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Fetch recent documents
-        const documentsResponse = await axios.get('/api/documents/recent', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Fetch recommended services
-        const servicesResponse = await axios.get('/api/services/recommended', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Calculate request stats
-        const requests = requestsResponse.data || [];
-        const requestStats = {
-          total: requests.length,
-          pending: requests.filter(req => req.status === 'PENDING').length,
-          inProgress: requests.filter(req => req.status === 'IN_PROGRESS').length,
-          completed: requests.filter(req => req.status === 'COMPLETED').length,
-          cancelled: requests.filter(req => req.status === 'CANCELLED').length
-        };
-        
-        setDashboardData({
-          serviceRequests: requests.slice(0, 5),
-          requestStats,
-          recentMessages: messagesResponse.data || [],
-          recentDocuments: documentsResponse.data || [],
-          recommendedServices: servicesResponse.data || []
-        });
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchDashboardData();
-  }, []);
-  
-  // Prepare chart data
+    dispatch(fetchCurrentClient());
+    dispatch(getCurrentClientServiceRequests({}));
+    dispatch(fetchActiveServices());
+    dispatch(fetchRecentDocuments());
+    dispatch(fetchUnreadMessages());
+    dispatch(fetchConversations());
+  }, [dispatch]);
+
+  const requestStats = {
+    total: serviceRequests?.length || 0,
+    pending: serviceRequests?.filter(req => req.status === 'PENDING').length || 0,
+    inProgress: serviceRequests?.filter(req => req.status === 'IN_REVIEW' || req.status === 'ACCEPTED').length || 0,
+    completed: serviceRequests?.filter(req => req.status === 'COMPLETED').length || 0,
+    rejected: serviceRequests?.filter(req => req.status === 'REJECTED').length || 0
+  };
+
   const pieChartData = [
-    { name: 'Pending', value: dashboardData.requestStats.pending, color: '#1976D2' },
-    { name: 'In Progress', value: dashboardData.requestStats.inProgress, color: '#FF9800' },
-    { name: 'Completed', value: dashboardData.requestStats.completed, color: '#4CAF50' },
-    { name: 'Cancelled', value: dashboardData.requestStats.cancelled, color: '#F44336' }
+    { name: 'Pending', value: requestStats.pending, color: theme.palette.primary.main },
+    { name: 'In Progress', value: requestStats.inProgress, color: theme.palette.warning.main },
+    { name: 'Completed', value: requestStats.completed, color: theme.palette.success.main },
+    { name: 'Rejected', value: requestStats.rejected, color: theme.palette.error.main }
   ].filter(item => item.value > 0);
-  
+
   const formatDate = (dateString) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      year: 'numeric', month: 'short', day: 'numeric'
     });
   };
-  
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'PENDING': return 'primary';
-      case 'IN_PROGRESS': return 'warning';
+      case 'IN_REVIEW': return 'warning';
+      case 'ACCEPTED': return 'info';
       case 'COMPLETED': return 'success';
-      case 'CANCELLED': return 'error';
+      case 'REJECTED': return 'error';
       default: return 'default';
     }
   };
-  
-  if (loading) {
+
+  const handleOpenDocumentUpload = () => {
+    setDocumentUploadOpen(true);
+  };
+
+  const handleCloseDocumentUpload = (success) => {
+    setDocumentUploadOpen(false);
+    if (success) {
+      dispatch(fetchRecentDocuments());
+    }
+  };
+
+  const handleDownloadDocument = (documentId) => {
+    dispatch(downloadDocument(documentId));
+  };
+
+  if (isLoading) {
     return (
-      <Container sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading dashboard...
-        </Typography>
-      </Container>
+      <Box sx={{ py: 4, textAlign: 'center', height: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box>
+          <CircularProgress color="secondary" size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }}>Loading your dashboard data...</Typography>
+        </Box>
+      </Box>
     );
   }
-  
-  if (error) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      </Container>
-    );
-  }
-  
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Welcome, {user?.fullName || user?.client?.companyName || 'Client'}
-      </Typography>
-      
-      <Grid container spacing={4}>
-        {/* Service requests summary */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>
-              Service Request Status
+    <Box sx={{ py: 4 }}>
+      <Paper elevation={0} sx={{
+        p: 4, mb: 4, borderRadius: 2,
+        background: `linear-gradient(135deg, ${alpha(theme.palette.secondary.light, 0.8)} 0%, ${alpha(theme.palette.secondary.main, 0.8)} 100%)`,
+        color: 'white', position: 'relative', overflow: 'hidden'
+      }}>
+        <Box sx={{ position: 'absolute', top: 0, right: 0, width: '30%', height: '100%', opacity: 0.1 }}>
+          <BusinessIcon sx={{ fontSize: 180, position: 'absolute', top: '50%', right: -20, transform: 'translateY(-50%)' }} />
+        </Box>
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} md={7}>
+            <Typography variant="h4" fontWeight="bold" sx={theme.gradientTextStyle} gutterBottom>
+              Welcome back, {currentClient?.companyName || user?.fullName || 'Client'}
             </Typography>
-            
-            {dashboardData.requestStats.total > 0 ? (
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`${value} request(s)`, 'Count']} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 5 }}>
-                <Typography variant="body1" color="text.secondary">
-                  You haven't submitted any service requests yet.
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  color="secondary"
-                  onClick={() => navigate('/client/services')}
-                  sx={{ mt: 2 }}
-                >
-                  Browse Services
-                </Button>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-        
-        {/* Recent service requests */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Recent Service Requests
-              </Typography>
-              <Button 
-                variant="outlined" 
-                color="secondary"
-                size="small"
+            <Typography variant="body1" sx={{ mb: 2, maxWidth: '90%'}} color="inherit" >
+              Manage your service requests, documents, and communications with UDDAN all in one place.
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                startIcon={<MiscellaneousServicesIcon />}
                 onClick={() => navigate('/client/services')}
+                sx={{ px: 3, py: 1.2, color: 'white', background: theme.palette.primary.main, '&:hover': { background: theme.palette.primary.dark } }}
               >
-                View All
+                Browse Services
               </Button>
-            </Box>
-            
-            {dashboardData.serviceRequests.length > 0 ? (
-              <List>
-                {dashboardData.serviceRequests.map((request) => (
-                  <React.Fragment key={request.id}>
-                    <ListItem 
-                      button 
-                      onClick={() => navigate(`/client/requests/${request.id}`)}
-                      sx={{ py: 2 }}
-                    >
-                      <ListItemText 
-                        primary={request.service.title}
-                        secondary={`Requested on: ${formatDate(request.requestedAt)}`}
-                      />
-                      <Chip 
-                        label={request.status} 
-                        color={getStatusColor(request.status)} 
-                        size="small"
-                      />
-                    </ListItem>
-                    <Divider component="li" />
-                  </React.Fragment>
-                ))}
-              </List>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 5 }}>
-                <Typography variant="body1" color="text.secondary">
-                  You haven't submitted any service requests yet.
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  color="secondary"
-                  onClick={() => navigate('/client/services')}
-                  sx={{ mt: 2 }}
-                >
-                  Browse Services
-                </Button>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-        
-        {/* Recent documents */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Recent Documents
-              </Typography>
-              <Button 
+              <Button
                 variant="outlined"
-                color="secondary" 
-                size="small"
-                onClick={() => navigate('/client/documents')}
+                color="inherit"
+                size="large"
+                startIcon={<RequestQuoteIcon />}
+                onClick={() => navigate('/client/requests')}
+                sx={{ px: 3, py: 1.2, borderColor: 'white', '&:hover': { background: 'rgba(255,255,255,0.1)', borderColor: 'white' } }}
               >
-                View All
+                View Requests
               </Button>
-            </Box>
-            
-            {dashboardData.recentDocuments.length > 0 ? (
-              <List>
-                {dashboardData.recentDocuments.map((document) => (
-                  <React.Fragment key={document.id}>
-                    <ListItem 
-                      button 
-                      onClick={() => window.open(`/api/documents/view/${document.id}`, '_blank')}
-                      sx={{ py: 2 }}
-                    >
-                      <ListItemText 
-                        primary={document.filename}
-                        secondary={
-                          <>
-                            <Typography component="span" variant="body2" color="text.primary">
-                              {document.documentType}
-                            </Typography>
-                            <Typography component="p" variant="body2">
-                              Uploaded: {formatDate(document.uploadedAt)}
-                            </Typography>
-                          </>
-                        }
-                      />
-                    </ListItem>
-                    <Divider component="li" />
-                  </React.Fragment>
-                ))}
-              </List>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 3 }}>
-                <Typography variant="body1" color="text.secondary">
-                  No documents available.
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  color="secondary"
-                  onClick={() => navigate('/client/documents/upload')}
-                  sx={{ mt: 2 }}
-                >
-                  Upload Document
-                </Button>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-        
-        {/* Recent messages */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Recent Messages
-              </Typography>
-              <Button 
-                variant="outlined"
-                color="secondary" 
-                size="small"
-                onClick={() => navigate('/client/messages')}
-              >
-                View All
-              </Button>
-            </Box>
-            
-            {dashboardData.recentMessages.length > 0 ? (
-              <List>
-                {dashboardData.recentMessages.map((message) => (
-                  <React.Fragment key={message.id}>
-                    <ListItem 
-                      button 
-                      onClick={() => navigate('/client/messages', { state: { selectedMessage: message.id } })}
-                      sx={{ 
-                        py: 2,
-                        bgcolor: !message.read ? 'rgba(46, 125, 50, 0.08)' : 'transparent'
-                      }}
-                    >
-                      <ListItemText 
-                        primary={message.senderName}
-                        secondary={
-                          <>
-                            <Typography component="span" variant="body2" color="text.primary">
-                              {formatDate(message.sentAt)}
-                            </Typography>
-                            <Typography component="p" variant="body2">
-                              {message.content && message.content.length > 100
-                                ? `${message.content.substring(0, 100)}...`
-                                : message.content}
-                            </Typography>
-                          </>
-                        }
-                      />
-                      {!message.read && (
-                        <Chip label="New" size="small" color="secondary" />
-                      )}
-                    </ListItem>
-                    <Divider component="li" />
-                  </React.Fragment>
-                ))}
-              </List>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 3 }}>
-                <Typography variant="body1" color="text.secondary">
-                  No messages available.
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-        
-        {/* Recommended services */}
-        <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Recommended Services
-            </Typography>
-            
-            {dashboardData.recommendedServices.length > 0 ? (
-              <Grid container spacing={3}>
-                {dashboardData.recommendedServices.map((service) => (
-                  <Grid item xs={12} md={4} key={service.id}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          {service.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {service.keywords.join(', ')}
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 2 }}>
-                          {service.description && service.description.length > 100
-                            ? `${service.description.substring(0, 100)}...`
-                            : service.description}
-                        </Typography>
-                      </CardContent>
-                      <CardActions>
-                        <Button 
-                          size="small" 
-                          onClick={() => navigate(`/services/${service.id}`)}
-                        >
-                          View Details
-                        </Button>
-                        <Button 
-                          size="small" 
-                          variant="contained"
-                          color="secondary" 
-                          onClick={() => navigate('/client/services/request', { state: { serviceId: service.id } })}
-                        >
-                          Request Service
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 3 }}>
-                <Typography variant="body1" color="text.secondary">
-                  No recommended services available at the moment.
-                </Typography>
-                <Button 
-                  variant="contained"
-                  color="secondary" 
+            </Stack>
+          </Grid>
+          <Grid item xs={12} md={5} sx={{ display: { xs: 'none', md: 'block' } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Paper
+                  elevation={6}
+                  sx={{
+                    p: 1.5, bgcolor: 'white', color: 'text.primary', borderRadius: 2,
+                    width: 120, height: 120, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.05)' }, cursor: 'pointer'
+                  }}
                   onClick={() => navigate('/client/services')}
-                  sx={{ mt: 2 }}
                 >
-                  Browse All Services
-                </Button>
+                  <MiscellaneousServicesIcon color="secondary" sx={{ fontSize: 40, mb: 1 }} />
+                  <Typography variant="body2" align="center">
+                    <strong>{services?.length || 0}</strong><br />Services
+                  </Typography>
+                </Paper>
+                <Paper
+                  elevation={6}
+                  sx={{
+                    p: 1.5, bgcolor: 'white', color: 'text.primary', borderRadius: 2,
+                    width: 120, height: 120, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.05)' }, cursor: 'pointer'
+                  }}
+                  onClick={() => navigate('/client/requests')}
+                >
+                  <RequestQuoteIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+                  <Typography variant="body2" align="center">
+                    <strong>{requestStats.total}</strong><br />Requests
+                  </Typography>
+                </Paper>
+                <Paper
+                  elevation={6}
+                  sx={{
+                    p: 1.5, bgcolor: 'white', color: 'text.primary', borderRadius: 2,
+                    width: 120, height: 120, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', transition: 'transform 0.2s',
+                    '&:hover': { transform: 'scale(1.05)' }, cursor: 'pointer'
+                  }}
+                  onClick={() => navigate('/client/documents')}
+                >
+                  <DescriptionIcon color="info" sx={{ fontSize: 40, mb: 1 }} />
+                  <Typography variant="body2" align="center">
+                    <strong>{documents?.length || 0}</strong><br />Documents
+                  </Typography>
+                </Paper>
               </Box>
-            )}
-          </Paper>
+            </Box>
+          </Grid>
         </Grid>
-      </Grid>
-    </Container>
+      </Paper>
+
+      <DocumentUploadForm
+        open={documentUploadOpen}
+        onClose={handleCloseDocumentUpload}
+        clientId={currentClient?.id || user?.id}
+      />
+    </Box>
   );
 };
 

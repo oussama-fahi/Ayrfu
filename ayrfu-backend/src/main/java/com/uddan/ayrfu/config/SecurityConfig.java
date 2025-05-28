@@ -74,9 +74,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth
-                                // Public endpoints - IMPORTANT: Added /api/auth/register
+                                // Public endpoints
                                 .requestMatchers("/api/auth/login").permitAll()
-                                .requestMatchers("/api/auth/register").permitAll()
+                                .requestMatchers("/api/auth/register/candidate").permitAll()
+                                .requestMatchers("/api/auth/register/client").permitAll()
                                 .requestMatchers("/api/positions/active").permitAll()
                                 .requestMatchers("/api/positions/search").permitAll()
                                 .requestMatchers("/api/services/active").permitAll()
@@ -95,7 +96,6 @@ public class SecurityConfig {
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

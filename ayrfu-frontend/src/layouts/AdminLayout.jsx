@@ -1,46 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {
+  AccountCircle as AccountCircleIcon,
+  Business as BusinessIcon,
+  Dashboard as DashboardIcon,
+  Email as EmailIcon,
+  ExitToApp as ExitToAppIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Home as HomeIcon,
+  Menu as MenuIcon,
+  MiscellaneousServices as MiscellaneousServicesIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  SupervisorAccount as SupervisorAccountIcon,
+  Work as WorkIcon
+} from '@mui/icons-material';
 import {
   AppBar,
-  Toolbar,
-  Typography,
-  Button,
+  Avatar,
+  Badge,
   Box,
-  Drawer,
+  CircularProgress,
+  Collapse,
   Divider,
+  Drawer,
   IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Avatar,
   Menu,
   MenuItem,
-  Badge,
-  CircularProgress,
+  Toolbar,
+  Typography,
   useMediaQuery,
-  useTheme,
-  ListSubheader,
-  Collapse
+  useTheme
 } from '@mui/material';
-import {
-  Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  Work as WorkIcon,
-  MiscellaneousServices as MiscellaneousServicesIcon,
-  Email as EmailIcon,
-  Business as BusinessIcon,
-  Home as HomeIcon,
-  ExitToApp as ExitToAppIcon,
-  AccountCircle as AccountCircleIcon,
-  SupervisorAccount as SupervisorAccountIcon,
-  Person as PersonIcon,
-  ExpandLess as ExpandLessIcon,
-  ExpandMore as ExpandMoreIcon,
-  Settings as SettingsIcon
-} from '@mui/icons-material';
-import { Outlet } from 'react-router-dom';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 // Import UDDAN logo

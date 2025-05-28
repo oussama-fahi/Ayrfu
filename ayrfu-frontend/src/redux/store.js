@@ -1,18 +1,28 @@
-// src/redux/store.js
+//src/redux/store.js
 import { configureStore } from '@reduxjs/toolkit';
-import positionsReducer from './slices/positionsSlice';
-import servicesReducer from './slices/servicesSlice';
+import applicationsReducer from './slices/applicationsSlice';
 import authReducer from './slices/authSlice';
 import candidatesReducer from './slices/candidatesSlice';
+import clientsReducer from './slices/clientsSlice';
+import documentsReducer from './slices/documentsSlice';
 import messagesReducer from './slices/messagesSlice';
+import positionsReducer from './slices/positionsSlice';
+import servicesReducer from './slices/servicesSlice';
+import serviceRequestsReducer from './slices/serviceRequestsSlice';
+import conversationsReducer from './slices/conversationsSlice';
 
 export const store = configureStore({
   reducer: {
-    positions: positionsReducer,
-    services: servicesReducer,
     auth: authReducer,
     candidates: candidatesReducer,
+    clients: clientsReducer,
+    positions: positionsReducer,
+    services: servicesReducer,
+    serviceRequests: serviceRequestsReducer,
+    documents: documentsReducer,
     messages: messagesReducer,
+    applications: applicationsReducer,
+    conversations: conversationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

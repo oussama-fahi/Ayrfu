@@ -1,138 +1,92 @@
-// src/pages/client/ClientRequestDetailPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { AssignmentTurnedIn as AssignmentIcon, Schedule as ScheduleIcon } from '@mui/icons-material';
 import {
-  Container,
-  Typography,
-  Paper,
-  Grid,
+  Alert,
   Box,
   Button,
   Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  TextField,
   CircularProgress,
-  Alert,
-  Stepper,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Divider,
+  Grid,
+  Paper,
   Step,
-  StepLabel
+  StepLabel,
+  Stepper,
+  Typography
 } from '@mui/material';
-import {
-  Description as DescriptionIcon,
-  Schedule as ScheduleIcon,
-  Assignment as AssignmentIcon,
-  AttachFile as AttachFileIcon,
-  Send as SendIcon,
-  CloudUpload as CloudUploadIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import { deleteServiceRequest, getServiceRequestById } from '../../redux/slices/serviceRequestsSlice';
 
 const ClientRequestDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const dispatch = useDispatch();
   
-  const [request, setRequest] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [newMessage, setNewMessage] = useState('');
-  const [file, setFile] = useState(null);
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const { currentRequest, isLoading, error } = useSelector((state) => state.serviceRequests);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
-    fetchRequestDetails();
-  }, [id]);
+    if (id) {
+      dispatch(getServiceRequestById(id));
+    }
+  }, [dispatch, id]);
   
-  const fetchRequestDetails = async () => {
-    setLoading(true);
+  const handleDeleteDialogOpen = () => {
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+  };
+  
+  const handleDeleteRequest = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/service-requests/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setRequest(response.data);
-      setError(null);
+      await dispatch(deleteServiceRequest(id)).unwrap();
+      navigate('/client/requests');
     } catch (err) {
-      console.error('Erreur lors de la récupération des détails de la demande:', err);
-      setError('Impossible de charger les détails de la demande. Veuillez réessayer plus tard.');
-    } finally {
-      setLoading(false);
+      console.error('Error deleting request:', err);
     }
-  };
-  
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() && !file) return;
-    
-    setSendingMessage(true);
-    
-    try {
-      const token = localStorage.getItem('token');
-      
-      let response;
-      const formData = new FormData();
-      formData.append('content', newMessage);
-      formData.append('requestId', id);
-      
-      if (file) {
-        formData.append('file', file);
-      }
-      
-      response = await axios.post('/api/service-requests/messages', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      // Mettre à jour les messages dans la demande
-      setRequest({
-        ...request,
-        messages: [...request.messages, response.data]
-      });
-      
-      setNewMessage('');
-      setFile(null);
-    } catch (err) {
-      console.error('Erreur lors de l\'envoi du message:', err);
-      setError('Erreur lors de l\'envoi du message. Veuillez réessayer.');
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-  
-  const handleFileChange = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      setFile(event.target.files[0]);
-    }
-  };
-  
-  const handleRemoveFile = () => {
-    setFile(null);
   };
   
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PENDING': return 'primary';
-      case 'IN_PROGRESS': return 'warning';
-      case 'COMPLETED': return 'success';
-      case 'CANCELLED': return 'error';
-      default: return 'default';
+      case 'PENDING':
+        return 'primary';
+      case 'IN_REVIEW':
+        return 'secondary';
+      case 'ACCEPTED':
+        return 'success';
+      case 'COMPLETED':
+        return 'success';
+      case 'REJECTED':
+        return 'error';
+      default:
+        return 'default';
     }
   };
   
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'PENDING': return 'En attente';
-      case 'IN_PROGRESS': return 'En cours';
-      case 'COMPLETED': return 'Terminé';
-      case 'CANCELLED': return 'Annulé';
-      default: return status;
+      case 'PENDING':
+        return 'Pending';
+      case 'IN_REVIEW':
+        return 'In Review';
+      case 'ACCEPTED':
+        return 'Accepted';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'REJECTED':
+        return 'Rejected';
+      default:
+        return status;
     }
   };
   
@@ -140,30 +94,34 @@ const ClientRequestDetailPage = () => {
     return new Date(dateString).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
   
-  // Étapes de progression
-  const steps = ['Demande reçue', 'En traitement', 'Terminé'];
+  // Steps for progress
+  const steps = ['Request Received', 'In Review', 'Completed'];
+  
   const getStepIndex = (status) => {
     switch (status) {
-      case 'PENDING': return 0;
-      case 'IN_PROGRESS': return 1;
-      case 'COMPLETED': return 2;
-      default: return 0;
+      case 'PENDING':
+        return 0;
+      case 'IN_REVIEW':
+        return 1;
+      case 'ACCEPTED':
+      case 'COMPLETED':
+        return 2;
+      case 'REJECTED':
+        return 3; // Rejected is a special case, not shown in stepper
+      default:
+        return 0;
     }
   };
   
-  if (loading) {
+  if (isLoading) {
     return (
       <Container sx={{ py: 4, textAlign: 'center' }}>
         <CircularProgress color="secondary" />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Chargement des détails...
-        </Typography>
+        <Typography variant="h6" sx={{ mt: 2 }}>Loading details...</Typography>
       </Container>
     );
   }
@@ -177,40 +135,38 @@ const ClientRequestDetailPage = () => {
         <Button 
           variant="contained" 
           color="secondary" 
-          onClick={() => navigate('/client/services')}
+          onClick={() => navigate('/client/requests')}
         >
-          Retour aux services
+          Return to Requests
         </Button>
       </Container>
     );
   }
   
-  if (!request) {
+  if (!currentRequest) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="info" sx={{ mb: 4 }}>
-          Demande non trouvée.
+          Request not found.
         </Alert>
         <Button 
           variant="contained" 
           color="secondary" 
-          onClick={() => navigate('/client/services')}
+          onClick={() => navigate('/client/requests')}
         >
-          Retour aux services
+          Return to Requests
         </Button>
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4">
-          Détails de la demande de service
-        </Typography>
+        <Typography variant="h4">Service Request Details</Typography>
         <Chip 
-          label={getStatusLabel(request.status)} 
-          color={getStatusColor(request.status)} 
+          label={getStatusLabel(currentRequest.status)} 
+          color={getStatusColor(currentRequest.status)}
         />
       </Box>
       
@@ -218,187 +174,57 @@ const ClientRequestDetailPage = () => {
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              {request.service.title}
+              {currentRequest.service?.title || 'Service Request'}
             </Typography>
-            <Typography variant="body1" paragraph>
-              {request.service.description}
-            </Typography>
+            
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <ScheduleIcon color="action" sx={{ mr: 1 }} />
               <Typography variant="body2">
-                Demandé le: {formatDate(request.requestedAt)}
+                Requested on: {formatDate(currentRequest.createdAt)}
               </Typography>
             </Box>
-            {request.assignedTo && (
+            
+            {currentRequest.updatedAt && currentRequest.updatedAt !== currentRequest.createdAt && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <ScheduleIcon color="action" sx={{ mr: 1 }} />
+                <Typography variant="body2">
+                  Last updated: {formatDate(currentRequest.updatedAt)}
+                </Typography>
+              </Box>
+            )}
+            
+            {currentRequest.service?.id && (
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <AssignmentIcon color="action" sx={{ mr: 1 }} />
                 <Typography variant="body2">
-                  Assigné à: {request.assignedTo.name}
+                  Service: {currentRequest.service.title}
                 </Typography>
               </Box>
             )}
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <Stepper activeStep={getStepIndex(request.status)} alternativeLabel sx={{ mb: 4 }}>
+            <Stepper 
+              activeStep={getStepIndex(currentRequest.status)} 
+              alternativeLabel
+              sx={{ mb: 4 }}
+            >
               {steps.map((label) => (
                 <Step key={label}>
                   <StepLabel>{label}</StepLabel>
                 </Step>
               ))}
             </Stepper>
-            
-            {request.notes && (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Notes:
-                </Typography>
-                <Typography variant="body2">
-                  {request.notes}
-                </Typography>
-              </Box>
-            )}
           </Grid>
-        </Grid>
-      </Paper>
-      
-      <Typography variant="h5" gutterBottom>
-        Messages et documents
-      </Typography>
-      
-      <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-        <Box sx={{ height: '350px', overflow: 'auto', mb: 3 }}>
-          {request.messages && request.messages.length > 0 ? (
-            <List>
-              {request.messages.map((message) => (
-                <ListItem 
-                  key={message.id}
-                  sx={{ 
-                    bgcolor: message.sender.id === user.id ? 'rgba(46, 125, 50, 0.08)' : 'transparent',
-                    borderRadius: 1,
-                    mb: 1
-                  }}
-                >
-                  <ListItemText 
-                    primary={
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="subtitle2">
-                          {message.sender.id === user.id ? 'Vous' : message.sender.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDate(message.sentAt)}
-                        </Typography>
-                      </Box>
-                    }
-                    secondary={
-                      <>
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          {message.content}
-                        </Typography>
-                        {message.attachmentUrl && (
-                          <Box 
-                            sx={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              mt: 1,
-                              p: 1,
-                              borderRadius: 1,
-                              bgcolor: 'background.default'
-                            }}
-                            component="a"
-                            href={message.attachmentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <AttachFileIcon fontSize="small" sx={{ mr: 1 }} />
-                            <Typography variant="caption">
-                              {message.attachmentName || 'Pièce jointe'}
-                            </Typography>
-                          </Box>
-                        )}
-                      </>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-          ) : (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-              <Typography color="text.secondary">
-                Aucun message pour l'instant. Commencez la conversation !
-              </Typography>
-            </Box>
-          )}
-        </Box>
-        
-        <Divider sx={{ my: 2 }} />
-        
-        {file && (
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              p: 1,
-              mb: 2,
-              borderRadius: 1,
-              bgcolor: 'background.default'
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <AttachFileIcon fontSize="small" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                {file.name}
-              </Typography>
-            </Box>
-            <Button 
-              size="small" 
-              color="error" 
-              onClick={handleRemoveFile}
-            >
-              Supprimer
-            </Button>
-          </Box>
-        )}
-        
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs>
-            <TextField
-              fullWidth
-              label="Votre message"
-              multiline
-              rows={3}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Tapez votre message ici..."
-            />
-          </Grid>
-          <Grid item>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Button
-                component="label"
-                variant="outlined"
-                color="secondary"
-                startIcon={<CloudUploadIcon />}
-              >
-                Joindre un fichier
-                <input
-                  type="file"
-                  hidden
-                  onChange={handleFileChange}
-                />
-              </Button>
-              
-              <Button
-                variant="contained"
-                color="secondary"
-                startIcon={<SendIcon />}
-                onClick={handleSendMessage}
-                disabled={sendingMessage || (!newMessage.trim() && !file)}
-              >
-                Envoyer
-              </Button>
-            </Box>
+          
+          <Grid item xs={12}>
+            <Divider sx={{ mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              Request Details
+            </Typography>
+            <Typography variant="body1">
+              {currentRequest.details}
+            </Typography>
           </Grid>
         </Grid>
       </Paper>
@@ -407,21 +233,43 @@ const ClientRequestDetailPage = () => {
         <Button 
           variant="outlined" 
           color="secondary" 
-          onClick={() => navigate('/client/services')}
+          onClick={() => navigate('/client/requests')}
         >
-          Retour aux services
+          Back to Requests
         </Button>
         
-        {request.status === 'PENDING' && (
+        {currentRequest.status === 'PENDING' && (
           <Button 
             variant="outlined" 
-            color="error"
-            onClick={() => {/* Ajouter la logique d'annulation */}}
+            color="error" 
+            onClick={handleDeleteDialogOpen}
           >
-            Annuler la demande
+            Cancel Request
           </Button>
         )}
       </Box>
+      
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+      >
+        <DialogTitle>Confirm Cancellation</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to cancel this service request? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose}>Go Back</Button>
+          <Button 
+            onClick={handleDeleteRequest} 
+            color="error"
+          >
+            Cancel Request
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

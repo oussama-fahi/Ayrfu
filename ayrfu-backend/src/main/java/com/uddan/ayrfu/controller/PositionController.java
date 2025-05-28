@@ -82,7 +82,7 @@ public class PositionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER')")
     @Operation(summary = "Delete a position", description = "Deletes a position by its ID")
     public ResponseEntity<Void> deletePosition(@PathVariable Long id) {
         positionService.deletePosition(id);

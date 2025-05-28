@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
-  Typography,
-  Paper,
-  CircularProgress
+  CircularProgress,
+  Typography
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
 import PositionFormComponent from '../../components/forms/PositionForm';
-import { 
-  fetchPositionById, 
-  clearCurrentPosition
+import {
+  clearCurrentPosition,
+  fetchPositionById
 } from '../../redux/slices/positionsSlice';
 
 const PositionForm = () => {

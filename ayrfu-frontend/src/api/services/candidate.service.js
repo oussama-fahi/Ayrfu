@@ -1,31 +1,34 @@
+// src/api/services/candidate.service.js
 import axios from '../axios';
 
-class CandidateService {
-  getAllCandidates() {
+
+const candidateService = {
+
+  getAllCandidates: async () => {
     return axios.get('/candidates');
-  }
-  
-  getCandidateById(id) {
+  },
+
+
+  getCandidateById: async (id) => {
     return axios.get(`/candidates/${id}`);
-  }
-  
-  getCandidateByEmail(email) {
+  },
+
+
+  getCandidateByEmail: async (email) => {
     return axios.get(`/candidates/email/${email}`);
-  }
-  
-  createCandidate(candidateData) {
+  },
+
+  createCandidate: async (candidateData) => {
     return axios.post('/candidates', candidateData);
-  }
-  
-  updateCandidate(id, candidateData) {
+  },
+
+
+  updateCandidate: async (id, candidateData) => {
     return axios.put(`/candidates/${id}`, candidateData);
-  }
-  
-  deleteCandidate(id) {
-    return axios.delete(`/candidates/${id}`);
-  }
-  
-  uploadCV(id, file) {
+  },
+
+ 
+  uploadCV: async (id, file) => {
     const formData = new FormData();
     formData.append('file', file);
     
@@ -34,15 +37,60 @@ class CandidateService {
         'Content-Type': 'multipart/form-data',
       },
     });
-  }
-  
-  applyForPosition(id, applicationData) {
-    return axios.post(`/candidates/${id}/applications`, applicationData);
-  }
-  
-  getCandidateApplications(id) {
-    return axios.get(`/candidates/${id}/applications`);
-  }
-}
+  },
 
-export default new CandidateService();
+
+  updateProfileWithCV: async (id, candidateData, cvFile) => {
+    const formData = new FormData();
+    formData.append('candidate', JSON.stringify(candidateData));
+    
+    if (cvFile) {
+      formData.append('cv', cvFile);
+    }
+    
+    return axios.post(`/candidates/${id}/update-profile-with-cv`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+
+  applyForPosition: async (id, applicationData) => {
+    return axios.post(`/candidates/${id}/applications`, applicationData);
+  },
+
+  getCandidateApplications: async (id) => {
+    return axios.get(`/candidates/${id}/applications`);
+  },
+
+  getApplicationById: async (candidateId, applicationId) => {
+    return axios.get(`/candidates/${candidateId}/applications/${applicationId}`);
+  },
+
+ 
+  updateApplication: async (candidateId, applicationId, applicationData) => {
+    return axios.put(`/candidates/${candidateId}/applications/${applicationId}`, applicationData);
+  },
+
+ 
+  withdrawApplication: async (candidateId, applicationId) => {
+    return axios.delete(`/candidates/${candidateId}/applications/${applicationId}`);
+  },
+
+  getMatchingJobs: async (id) => {
+    return axios.get(`/candidates/${id}/matching-jobs`);
+  },
+
+  
+  register: async (registrationData) => {
+    return axios.post('/auth/register/candidate', registrationData);
+  },
+
+ 
+  deleteCandidate: async (id) => {
+    return axios.delete(`/candidates/${id}`);
+  }
+};
+
+export default candidateService;
