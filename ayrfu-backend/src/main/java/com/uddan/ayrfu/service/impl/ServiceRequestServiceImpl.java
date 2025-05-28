@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@org.springframework.stereotype.Service
+@org.springframework.stereotype.Service("serviceRequestService")
 public class ServiceRequestServiceImpl implements ServiceRequestService {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceRequestServiceImpl.class);

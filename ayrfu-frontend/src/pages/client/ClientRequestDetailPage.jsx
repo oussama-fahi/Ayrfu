@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { AssignmentTurnedIn as AssignmentIcon, Schedule as ScheduleIcon } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -21,9 +19,11 @@ import {
   Stepper,
   Typography
 } from '@mui/material';
-import { AssignmentTurnedIn as AssignmentIcon, Schedule as ScheduleIcon } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { getServiceRequestById, deleteServiceRequest } from '../../redux/slices/serviceRequestsSlice';
+import { deleteServiceRequest, getServiceRequestById } from '../../redux/slices/serviceRequestsSlice';
 
 const ClientRequestDetailPage = () => {
   const { id } = useParams();

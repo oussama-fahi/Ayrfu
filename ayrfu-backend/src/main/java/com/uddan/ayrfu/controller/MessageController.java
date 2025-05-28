@@ -136,7 +136,7 @@ public class MessageController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER')")
     @Operation(summary = "Delete a message", description = "Deletes a message by its ID")
     public ResponseEntity<Void> deleteMessage(@PathVariable Long id) {
         logger.info("Request to delete message with ID: {}", id);

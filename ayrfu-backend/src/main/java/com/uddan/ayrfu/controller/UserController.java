@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Create a new user", description = "Creates a new user with the provided information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created successfully",
@@ -54,7 +54,7 @@ public class UserController {
     }
 
     @PostMapping("/super-users")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Create a new super user", description = "Creates a new super user with the provided information (Admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Super user created successfully",
@@ -71,7 +71,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER')")
     @Operation(summary = "Update a user", description = "Updates an existing user with the provided information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User updated successfully"),
@@ -90,7 +90,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Delete a user", description = "Deletes a user by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
@@ -153,7 +153,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Activate user", description = "Activates a user account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User activated successfully"),
@@ -169,7 +169,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Deactivate user", description = "Deactivates a user account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User deactivated successfully"),
@@ -185,7 +185,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/roles/{roleId}/add")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Add role to user", description = "Adds a role to a user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Role added successfully"),
@@ -203,7 +203,7 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/roles/{roleId}/remove")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Remove role from user", description = "Removes a role from a user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Role removed successfully"),
@@ -296,12 +296,12 @@ public class UserController {
         return ResponseEntity.ok(updatedProfile);
     }
     @PostMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a new admin", description = "Creates a new admin user (Admin only)")
+    @PreAuthorize("hasRole('SUPER_USER')")
+    @Operation(summary = "Create a new admin", description = "Creates a new super user (super only)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Admin created successfully"),
+            @ApiResponse(responseCode = "201", description = "user created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN role")
+            @ApiResponse(responseCode = "403", description = "Forbidden, requires Super User role")
     })
     public ResponseEntity<UserResponse> createAdmin(@Valid @RequestBody AdminCreationRequest request) {
         logger.info("Request to create admin with email: {}", request.getEmail());
@@ -310,12 +310,12 @@ public class UserController {
     }
 
     @PostMapping("/super-admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a new super admin", description = "Creates a new super admin user (Admin only)")
+    @PreAuthorize("hasRole('SUPER_USER')")
+    @Operation(summary = "Create a new super admin", description = "Creates a new super admin user (super only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Super admin created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "403", description = "Forbidden, requires ADMIN role")
+            @ApiResponse(responseCode = "403", description = "Forbidden, requires Super user role")
     })
     public ResponseEntity<UserResponse> createSuperAdmin(@Valid @RequestBody AdminCreationRequest request) {
         logger.info("Request to create super admin with email: {}", request.getEmail());

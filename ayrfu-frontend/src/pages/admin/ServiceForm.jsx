@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
-  Typography,
-  Paper,
-  CircularProgress
+  CircularProgress,
+  Typography
 } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import ServiceFormComponent from '../../components/forms/ServiceForm';
-import { fetchServiceById, clearCurrentService } from '../../redux/slices/servicesSlice';
+import { clearCurrentService, fetchServiceById } from '../../redux/slices/servicesSlice';
 
 const ServiceFormPage = () => {
   const { id } = useParams();

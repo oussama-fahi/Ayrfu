@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import {
-  Container,
-  Grid,
-  Paper,
-  Box,
-  Typography,
-  Divider,
-  useTheme,
-  useMediaQuery,
-  IconButton
-} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
-import ConversationList from '../../components/messaging/ConversationList';
+import {
+  Box,
+  Container,
+  Grid,
+  IconButton,
+  Paper,
+  Typography,
+  useMediaQuery,
+  useTheme
+} from '@mui/material';
+import { useState } from 'react';
 import ConversationDetail from '../../components/messaging/ConversationDetail';
+import ConversationList from '../../components/messaging/ConversationList';
 
 const MessagingPage = () => {
   const theme = useTheme();

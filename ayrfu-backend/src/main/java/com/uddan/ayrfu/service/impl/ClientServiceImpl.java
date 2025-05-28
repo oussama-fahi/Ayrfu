@@ -129,8 +129,7 @@ public class ClientServiceImpl implements ClientService {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found with ID: " + clientId));
 
-        //return client.getUser() != null && client.getUser().getId().equals(userId);
-        return true; // to do in front by sending clientId not userId
+        return client.getUser() != null && client.getUser().getId().equals(userId);
     }
 
 

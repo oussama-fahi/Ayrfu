@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
+import CheckIcon from '@mui/icons-material/Check';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import {
   Alert,
   Box,
   Button,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   CircularProgress,
   Container,
-  Divider,
   Grid,
   Paper,
   Step,
@@ -20,13 +18,12 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckIcon from '@mui/icons-material/Check';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { fetchServiceById } from '../../redux/slices/servicesSlice';
 import { createServiceRequest, resetSuccess } from '../../redux/slices/serviceRequestsSlice';
+import { fetchServiceById } from '../../redux/slices/servicesSlice';
 
 const ClientServiceRequestPage = () => {
   const navigate = useNavigate();

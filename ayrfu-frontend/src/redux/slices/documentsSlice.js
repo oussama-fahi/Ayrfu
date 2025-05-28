@@ -1,4 +1,4 @@
-// src/redux/slices/documentsSlice.js
+//src/redux/slices/documentsSlice.js
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import documentService from '../../api/services/document.service';
 
@@ -28,15 +28,8 @@ export const fetchClientDocuments = createAsyncThunk(
 
 export const fetchRecentDocuments = createAsyncThunk(
   'documents/fetchRecent',
-  async (_, { getState, rejectWithValue }) => {
+  async (clientId, { rejectWithValue }) => {
     try {
-      const { auth } = getState();
-      const clientId = auth.user?.id;
-      
-      if (!clientId) {
-        return rejectWithValue('User not authenticated');
-      }
-      
       const response = await documentService.getClientDocuments(clientId);
       return response.data;
     } catch (error) {
@@ -62,11 +55,7 @@ export const downloadDocument = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const response = await documentService.downloadDocument(id);
-      
-      // Create a URL for the blob
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      
-      // Get filename from content-disposition header
       const contentDisposition = response.headers['content-disposition'];
       let filename = 'document';
       
@@ -76,16 +65,13 @@ export const downloadDocument = createAsyncThunk(
           filename = filenameMatch[1];
         }
       }
-      
-      // Create a temporary link and click it to start download
+
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      
-      // Clean up the URL
       window.URL.revokeObjectURL(url);
       
       return { id, success: true };
@@ -130,7 +116,6 @@ const documentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Upload document
       .addCase(uploadDocument.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -146,8 +131,6 @@ const documentsSlice = createSlice({
         state.error = action.payload;
         state.uploadSuccess = false;
       })
-      
-      // Fetch client documents
       .addCase(fetchClientDocuments.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -160,8 +143,6 @@ const documentsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
-      // Fetch recent documents
       .addCase(fetchRecentDocuments.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -174,8 +155,6 @@ const documentsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
-      // Fetch document by ID
       .addCase(fetchDocumentById.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -188,8 +167,6 @@ const documentsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
-      // Download document
       .addCase(downloadDocument.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -204,8 +181,6 @@ const documentsSlice = createSlice({
         state.error = action.payload;
         state.downloadSuccess = false;
       })
-      
-      // Delete document
       .addCase(deleteDocument.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -225,5 +200,4 @@ const documentsSlice = createSlice({
 });
 
 export const { clearDocuments, clearDocumentStatus } = documentsSlice.actions;
-
 export default documentsSlice.reducer;

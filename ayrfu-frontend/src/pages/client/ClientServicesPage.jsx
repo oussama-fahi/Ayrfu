@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   Alert,
   Box,
   Button,
   Card,
-  CardContent,
   CardActions,
+  CardContent,
   Chip,
   CircularProgress,
   Container,
@@ -18,7 +16,9 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { fetchActiveServices, searchServicesByKeywords } from '../../redux/slices/servicesSlice';
 
 const ClientServicesPage = () => {

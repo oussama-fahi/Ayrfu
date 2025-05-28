@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import {
+  Add as AddIcon,
+  Clear as ClearIcon,
+  Search as SearchIcon
+} from '@mui/icons-material';
+import {
+  Avatar,
+  Badge,
   Box,
+  Button,
+  CircularProgress,
+  Divider,
+  IconButton,
+  InputAdornment,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Avatar,
-  Typography,
-  Badge,
-  Divider,
   TextField,
-  InputAdornment,
-  IconButton,
-  CircularProgress,
-  Button
+  Typography
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  Clear as ClearIcon,
-  Add as AddIcon
-} from '@mui/icons-material';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { fetchConversations } from '../../redux/slices/conversationsSlice';
 import CreateConversationModal from './CreateConversationModal';
 

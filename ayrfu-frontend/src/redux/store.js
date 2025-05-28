@@ -1,8 +1,9 @@
-// src/redux/store.js
+//src/redux/store.js
 import { configureStore } from '@reduxjs/toolkit';
 import applicationsReducer from './slices/applicationsSlice';
 import authReducer from './slices/authSlice';
 import candidatesReducer from './slices/candidatesSlice';
+import clientsReducer from './slices/clientsSlice';
 import documentsReducer from './slices/documentsSlice';
 import messagesReducer from './slices/messagesSlice';
 import positionsReducer from './slices/positionsSlice';
@@ -14,6 +15,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     candidates: candidatesReducer,
+    clients: clientsReducer,
     positions: positionsReducer,
     services: servicesReducer,
     serviceRequests: serviceRequestsReducer,

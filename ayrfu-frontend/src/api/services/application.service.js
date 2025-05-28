@@ -8,11 +8,9 @@ const applicationService = {
     return axios.get('/candidates/my-applications');
   },
 
-
   getCandidateApplications: async (candidateId) => {
     return axios.get(`/candidates/${candidateId}/applications`);
   },
-
 
   getApplicationById: async (applicationId) => {
     return axios.get(`/applications/${applicationId}`);
@@ -48,7 +46,7 @@ const applicationService = {
   uploadApplicationDocument: async (applicationId, file) => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return axios.post(`/applications/${applicationId}/documents`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

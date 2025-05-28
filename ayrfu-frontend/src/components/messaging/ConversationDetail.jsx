@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Box, Typography, TextField, Button, Paper, Divider, 
-  CircularProgress, Avatar, IconButton, Alert
+import { ArrowBack as ArrowBackIcon, AttachFile as AttachFileIcon, Send as SendIcon } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  IconButton,
+  TextField,
+  Typography
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, Send as SendIcon, AttachFile as AttachFileIcon } from '@mui/icons-material';
-import { 
-  fetchConversationDetails, 
-  fetchConversationMessages, 
-  sendMessage, 
-  markAllMessagesAsRead 
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchConversationDetails,
+  fetchConversationMessages,
+  markAllMessagesAsRead,
+  sendMessage
 } from '../../redux/slices/conversationsSlice';
 
 const ConversationDetail = ({ conversationId, onBack }) => {

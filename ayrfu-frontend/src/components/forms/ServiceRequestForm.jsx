@@ -1,19 +1,18 @@
 // src/components/forms/ServiceRequestForm.js
-import React, { useState } from 'react';
+import {
+    Alert,
+    Box,
+    Button,
+    CircularProgress,
+    FormHelperText,
+    Grid,
+    Paper,
+    TextField,
+    Typography
+} from '@mui/material';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  FormControl,
-  FormHelperText,
-  Grid,
-  Paper,
-  TextField,
-  Typography,
-  Alert
-} from '@mui/material';
 import { createServiceRequest } from '../../redux/slices/serviceRequestsSlice';
 
 const ServiceRequestForm = ({ serviceId, onSuccess }) => {
