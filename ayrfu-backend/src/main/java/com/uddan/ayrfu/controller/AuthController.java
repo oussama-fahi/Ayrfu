@@ -77,7 +77,7 @@ public class AuthController {
     }
 
     @PostMapping("/admin/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPER_USER')")
     @Operation(summary = "Create Admin", description = "Creates a new admin user (Admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Admin created successfully"),

@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Set;
 
-@Service
+@Service("authService")
 public class AuthServiceImpl implements AuthService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);

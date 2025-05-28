@@ -1,11 +1,20 @@
+//src/redux/slices/serviceRequestsSlice.js
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import serviceRequestService from '../../api/services/serviceRequest.service';
 
 export const createServiceRequest = createAsyncThunk(
   'serviceRequests/create',
-  async (requestData, { rejectWithValue }) => {
+  async (requestData, { rejectWithValue, getState }) => {
     try {
-      const response = await serviceRequestService.createServiceRequest(requestData);
+      const { clients } = getState();
+      const clientId = clients.currentClient?.id;
+      
+      const finalRequestData = {
+        ...requestData,
+        clientId: requestData.clientId || clientId
+      };
+      
+      const response = await serviceRequestService.createServiceRequest(finalRequestData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create service request');
@@ -27,9 +36,19 @@ export const getServiceRequestById = createAsyncThunk(
 
 export const getServiceRequestsByClient = createAsyncThunk(
   'serviceRequests/getByClient',
-  async ({ clientId, page = 0, size = 20 }, { rejectWithValue }) => {
+  async ({ clientId, page = 0, size = 20 }, { rejectWithValue, getState }) => {
     try {
-      const response = await serviceRequestService.getServiceRequestsByClient(clientId, page, size);
+      let effectiveClientId = clientId;
+      if (!effectiveClientId) {
+        const { clients, auth } = getState();
+        effectiveClientId = clients.currentClient?.id || auth.user?.id;
+      }
+      
+      if (!effectiveClientId) {
+        return rejectWithValue('Client ID not found');
+      }
+      
+      const response = await serviceRequestService.getServiceRequestsByClient(effectiveClientId, page, size);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch client service requests');
@@ -39,8 +58,15 @@ export const getServiceRequestsByClient = createAsyncThunk(
 
 export const getCurrentClientServiceRequests = createAsyncThunk(
   'serviceRequests/getCurrentClient',
-  async ({ page = 0, size = 20 }, { rejectWithValue }) => {
+  async ({ page = 0, size = 20 }, { rejectWithValue, getState }) => {
     try {
+      const { clients, auth } = getState();
+      const clientId = clients.currentClient?.id || auth.user?.id;
+      
+      if (!clientId) {
+        return rejectWithValue('Client not authenticated');
+      }
+      
       const response = await serviceRequestService.getCurrentClientServiceRequests(page, size);
       return response.data;
     } catch (error) {
@@ -107,7 +133,6 @@ const serviceRequestsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Create service request
       .addCase(createServiceRequest.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -124,8 +149,6 @@ const serviceRequestsSlice = createSlice({
         state.error = action.payload;
         state.success = false;
       })
-
-      // Get service request by ID
       .addCase(getServiceRequestById.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -138,8 +161,6 @@ const serviceRequestsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-
-      // Get service requests by client
       .addCase(getServiceRequestsByClient.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -152,15 +173,12 @@ const serviceRequestsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-
-      // Get current client service requests
       .addCase(getCurrentClientServiceRequests.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(getCurrentClientServiceRequests.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Handle both array response and message response from API
         if (Array.isArray(action.payload)) {
           state.requests = action.payload;
         } else {
@@ -171,8 +189,6 @@ const serviceRequestsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-
-      // Get service requests by status
       .addCase(getServiceRequestsByStatus.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -185,8 +201,6 @@ const serviceRequestsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-
-      // Update service request status
       .addCase(updateServiceRequestStatus.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -195,12 +209,10 @@ const serviceRequestsSlice = createSlice({
       .addCase(updateServiceRequestStatus.fulfilled, (state, action) => {
         state.isLoading = false;
         state.success = true;
-        // Update the request in the requests array
         const index = state.requests.findIndex(req => req.id === action.payload.id);
         if (index !== -1) {
           state.requests[index] = action.payload;
         }
-        // Update current request if it's the same one
         if (state.currentRequest && state.currentRequest.id === action.payload.id) {
           state.currentRequest = action.payload;
         }
@@ -210,8 +222,6 @@ const serviceRequestsSlice = createSlice({
         state.error = action.payload;
         state.success = false;
       })
-
-      // Delete service request
       .addCase(deleteServiceRequest.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -231,5 +241,4 @@ const serviceRequestsSlice = createSlice({
 });
 
 export const { clearCurrentRequest, clearRequestsError, resetSuccess } = serviceRequestsSlice.actions;
-
 export default serviceRequestsSlice.reducer;

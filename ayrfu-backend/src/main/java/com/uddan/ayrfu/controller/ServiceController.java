@@ -81,7 +81,7 @@ public class ServiceController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER')")
     @Operation(summary = "Delete a service", description = "Deletes a service by its ID")
     public ResponseEntity<Void> deleteService(@PathVariable Long id) {
         serviceService.deleteService(id);

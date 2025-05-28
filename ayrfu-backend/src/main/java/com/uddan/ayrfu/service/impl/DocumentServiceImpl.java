@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Service("documentService")
 public class DocumentServiceImpl implements DocumentService {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentServiceImpl.class);

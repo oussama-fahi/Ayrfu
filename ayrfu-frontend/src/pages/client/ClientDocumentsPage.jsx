@@ -6,6 +6,7 @@ import {
   Description as DescriptionIcon,
   GetApp as DownloadIcon,
   FilterList as FilterListIcon,
+  Refresh as RefreshIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material';
 import {
@@ -20,6 +21,7 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  Fade,
   FormControl,
   Grid,
   IconButton,
@@ -32,15 +34,18 @@ import {
   MenuItem,
   Paper,
   Select,
+  Skeleton,
   Snackbar,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  useTheme
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { fetchCurrentClient } from '../../redux/slices/clientsSlice';
 import {
   clearDocumentStatus,
   deleteDocument,
@@ -53,9 +58,12 @@ const ClientDocumentsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useAuth();
+    const theme = useTheme();
+  
   
   const { documents, isLoading, error, uploadSuccess } = useSelector((state) => state.documents);
-  
+  const { currentClient, isLoading: clientLoading } = useSelector((state) => state.clients);
+
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
@@ -64,22 +72,21 @@ const ClientDocumentsPage = () => {
     message: '',
     severity: 'info'
   });
-  
-  // States for upload
+  const [refreshing, setRefreshing] = useState(false);
+
   const [file, setFile] = useState(null);
   const [documentType, setDocumentType] = useState('');
   const [description, setDescription] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
-  
-  // States for filtering and searching
+
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortDirection, setSortDirection] = useState('desc');
-  
+
   const documentTypes = [
     'COMPANY_PROFILE',
-    'FINANCIAL_REPORT',
+    'FINANCIAL_REPORT', 
     'PORTFOLIO',
     'CONTRACT',
     'PROPOSAL',
@@ -87,7 +94,7 @@ const ClientDocumentsPage = () => {
     'MESSAGE_ATTACHMENT',
     'OTHER'
   ];
-  
+
   const documentTypeLabels = {
     'COMPANY_PROFILE': 'Company Profile',
     'FINANCIAL_REPORT': 'Financial Report',
@@ -98,15 +105,50 @@ const ClientDocumentsPage = () => {
     'MESSAGE_ATTACHMENT': 'Message Attachment',
     'OTHER': 'Other'
   };
-  
-  useEffect(() => {
-    if (user?.id) {
-      console.log(" user is : ",user);
-      
-      dispatch(fetchClientDocuments(user.id));
+
+  const fetchDocuments = useCallback(async () => {
+    if (currentClient?.id) {
+      try {
+        console.log('Fetching documents for clientId:', currentClient.id);
+        await dispatch(fetchClientDocuments(currentClient.id)).unwrap();
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+        setNotification({
+          open: true,
+          message: 'Failed to fetch documents',
+          severity: 'error'
+        });
+      }
     }
-  }, [dispatch, user]);
-  
+  }, [dispatch, currentClient?.id]);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      if (user?.id && !currentClient) {
+        try {
+          console.log('Fetching client data for userId:', user.id);
+          await dispatch(fetchCurrentClient()).unwrap();
+        } catch (err) {
+          console.error("Error fetching client:", err);
+          setNotification({
+            open: true,
+            message: 'Failed to fetch client information',
+            severity: 'error'
+          });
+        }
+      }
+    };
+
+    initializeData();
+  }, [dispatch, user?.id, currentClient]);
+
+  useEffect(() => {
+    if (currentClient?.id) {
+      console.log('Current client loaded:', currentClient);
+      fetchDocuments();
+    }
+  }, [currentClient?.id, fetchDocuments]);
+
   useEffect(() => {
     if (uploadSuccess) {
       setNotification({
@@ -117,11 +159,17 @@ const ClientDocumentsPage = () => {
       handleUploadDialogClose();
     }
   }, [uploadSuccess]);
-  
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDocuments();
+    setTimeout(() => setRefreshing(false), 500);
+  };
+
   const handleUploadDialogOpen = () => {
     setUploadDialogOpen(true);
   };
-  
+
   const handleUploadDialogClose = () => {
     setUploadDialogOpen(false);
     setFile(null);
@@ -129,23 +177,23 @@ const ClientDocumentsPage = () => {
     setDescription('');
     dispatch(clearDocumentStatus());
   };
-  
+
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files[0]) {
       setFile(event.target.files[0]);
     }
   };
-  
+
   const handleDeleteDialogOpen = (documentId) => {
     setSelectedDocumentId(documentId);
     setDeleteDialogOpen(true);
   };
-  
+
   const handleDeleteDialogClose = () => {
     setDeleteDialogOpen(false);
     setSelectedDocumentId(null);
   };
-  
+
   const handleUploadDocument = async () => {
     if (!file || !documentType) {
       setNotification({
@@ -155,19 +203,32 @@ const ClientDocumentsPage = () => {
       });
       return;
     }
-    
+
+    if (!currentClient?.id) {
+      setNotification({
+        open: true,
+        message: 'Client information not found',
+        severity: 'error'
+      });
+      return;
+    }
+
     setUploadLoading(true);
-    
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('documentType', documentType);
-      
       if (description) {
         formData.append('description', description);
       }
-      
-      await dispatch(uploadDocument({ clientId: user.id, formData })).unwrap();
+
+      console.log('Uploading document for clientId:', currentClient.id);
+      await dispatch(uploadDocument({
+        clientId: currentClient.id,
+        formData
+      })).unwrap();
+
+      await fetchDocuments();
     } catch (err) {
       console.error('Error uploading document:', err);
       setNotification({
@@ -179,7 +240,7 @@ const ClientDocumentsPage = () => {
       setUploadLoading(false);
     }
   };
-  
+
   const handleDeleteDocument = async () => {
     try {
       await dispatch(deleteDocument(selectedDocumentId)).unwrap();
@@ -189,6 +250,7 @@ const ClientDocumentsPage = () => {
         message: 'Document deleted successfully',
         severity: 'success'
       });
+      await fetchDocuments();
     } catch (err) {
       console.error('Error deleting document:', err);
       setNotification({
@@ -198,25 +260,23 @@ const ClientDocumentsPage = () => {
       });
     }
   };
-  
+
   const handleDownloadDocument = (documentId) => {
     dispatch(downloadDocument(documentId));
   };
-  
+
   const handleSearch = (event) => {
-    event.preventDefault();
-    // The filtering is done client-side in the filteredDocuments calculation
     setSearchQuery(event.target.value);
   };
-  
+
   const handleClearSearch = () => {
     setSearchQuery('');
   };
-  
+
   const handleCloseNotification = () => {
     setNotification({ ...notification, open: false });
   };
-  
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, {
       year: 'numeric',
@@ -224,12 +284,10 @@ const ClientDocumentsPage = () => {
       day: 'numeric'
     });
   };
-  
+
   const getFileIcon = (filename) => {
     if (!filename) return <DescriptionIcon />;
-    
     const extension = filename.split('.').pop().toLowerCase();
-    
     switch (extension) {
       case 'pdf':
         return <DescriptionIcon style={{ color: '#e53935' }} />;
@@ -247,30 +305,23 @@ const ClientDocumentsPage = () => {
         return <DescriptionIcon />;
     }
   };
-  
-  // Filter and sort documents
+
   const filteredDocuments = documents.filter(doc => {
-    // Apply search filter
     if (searchQuery) {
       const searchLower = searchQuery.toLowerCase();
-      if (!(
-        doc.fileName.toLowerCase().includes(searchLower) ||
-        (doc.description && doc.description.toLowerCase().includes(searchLower))
-      )) {
+      if (!(doc.fileName.toLowerCase().includes(searchLower) ||
+            (doc.description && doc.description.toLowerCase().includes(searchLower)))) {
         return false;
       }
     }
-    
-    // Apply type filter
+
     if (typeFilter && doc.documentType !== typeFilter) {
       return false;
     }
-    
+
     return true;
   }).sort((a, b) => {
-    // Apply sorting
     let valueA, valueB;
-    
     switch (sortBy) {
       case 'fileName':
         valueA = a.fileName;
@@ -289,55 +340,118 @@ const ClientDocumentsPage = () => {
         valueA = new Date(a.createdAt);
         valueB = new Date(b.createdAt);
     }
-    
+
     if (sortDirection === 'asc') {
       return valueA > valueB ? 1 : -1;
     } else {
       return valueA < valueB ? 1 : -1;
     }
   });
-  
+
+  if (clientLoading || (isLoading && !documents.length)) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Skeleton variant="rectangular" width={200} height={40} />
+          <Skeleton variant="rectangular" width={150} height={36} />
+        </Box>
+
+        <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
+          <Skeleton variant="rectangular" height={60} />
+        </Paper>
+
+        <Paper elevation={2}>
+          <List>
+            {[1, 2, 3, 4, 5].map((item) => (
+              <React.Fragment key={item}>
+                <ListItem>
+                  <ListItemIcon>
+                    <Skeleton variant="circular" width={40} height={40} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={<Skeleton variant="text" width="60%" />}
+                    secondary={<Skeleton variant="text" width="40%" />}
+                  />
+                </ListItem>
+                {item < 5 && <Divider />}
+              </React.Fragment>
+            ))}
+          </List>
+        </Paper>
+      </Container>
+    );
+  }
+
+  if (!currentClient) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 4 }}>
+          Unable to load client information. Please try refreshing the page.
+          {user?.id && <div>User ID: {user.id} - Client data not found</div>}
+        </Alert>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4">My Documents</Typography>
-        <Button 
-          variant="contained" 
-          color="secondary" 
-          startIcon={<CloudUploadIcon />} 
-          onClick={handleUploadDialogOpen}
-        >
-          Upload Document
-        </Button>
+        <Typography variant="h4" sx={theme.gradientTextStyle}>My Documents</Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <IconButton 
+            onClick={handleRefresh} 
+            disabled={refreshing}
+            sx={{ 
+              bgcolor: 'background.paper', 
+              boxShadow: 1,
+              '&:hover': { boxShadow: 2 }
+            }}
+          >
+            <RefreshIcon sx={{ 
+              animation: refreshing ? 'spin 1s linear infinite' : 'none',
+              '@keyframes spin': {
+                '0%': { transform: 'rotate(0deg)' },
+                '100%': { transform: 'rotate(360deg)' }
+              }
+            }} />
+          </IconButton>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<CloudUploadIcon />}
+            onClick={handleUploadDialogOpen}
+          >
+            Upload Document
+          </Button>
+        </Box>
       </Box>
-      
+
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <Fade in={!!error}>
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        </Fade>
       )}
-      
+
       <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
-            <Box component="form" onSubmit={handleSearch} sx={{ display: 'flex' }}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                label="Search..."
-                value={searchQuery}
-                onChange={handleSearch}
-                InputProps={{
-                  endAdornment: searchQuery ? (
-                    <IconButton size="small" onClick={handleClearSearch}>
-                      <ClearIcon />
-                    </IconButton>
-                  ) : null
-                }}
-              />
-            </Box>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Search documents..."
+              value={searchQuery}
+              onChange={handleSearch}
+              InputProps={{
+                endAdornment: searchQuery ? (
+                  <IconButton size="small" onClick={handleClearSearch}>
+                    <ClearIcon />
+                  </IconButton>
+                ) : null
+              }}
+            />
           </Grid>
-          
           <Grid item xs={12} md={3}>
             <FormControl fullWidth variant="outlined">
               <InputLabel>Filter by type</InputLabel>
@@ -355,7 +469,6 @@ const ClientDocumentsPage = () => {
               </Select>
             </FormControl>
           </Grid>
-          
           <Grid item xs={12} md={3}>
             <FormControl fullWidth variant="outlined">
               <InputLabel>Sort by</InputLabel>
@@ -371,7 +484,6 @@ const ClientDocumentsPage = () => {
               </Select>
             </FormControl>
           </Grid>
-          
           <Grid item xs={12} md={2}>
             <Button
               fullWidth
@@ -385,7 +497,7 @@ const ClientDocumentsPage = () => {
           </Grid>
         </Grid>
       </Paper>
-      
+
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
           <CircularProgress color="secondary" />
@@ -403,7 +515,11 @@ const ClientDocumentsPage = () => {
                     primary={document.fileName}
                     secondary={
                       <>
-                        <Typography component="span" variant="body2" color="text.primary">
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.primary"
+                        >
                           {documentTypeLabels[document.documentType] || document.documentType}
                         </Typography>
                         <Typography component="p" variant="body2">
@@ -420,8 +536,8 @@ const ClientDocumentsPage = () => {
                   <ListItemSecondaryAction>
                     <Box>
                       <Tooltip title="View">
-                        <IconButton 
-                          edge="end" 
+                        <IconButton
+                          edge="end"
                           aria-label="view"
                           onClick={() => window.open(`/api/documents/${document.id}/view`, '_blank')}
                         >
@@ -429,8 +545,8 @@ const ClientDocumentsPage = () => {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Download">
-                        <IconButton 
-                          edge="end" 
+                        <IconButton
+                          edge="end"
                           aria-label="download"
                           onClick={() => handleDownloadDocument(document.id)}
                         >
@@ -438,8 +554,8 @@ const ClientDocumentsPage = () => {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
-                        <IconButton 
-                          edge="end" 
+                        <IconButton
+                          edge="end"
                           aria-label="delete"
                           onClick={() => handleDeleteDialogOpen(document.id)}
                         >
@@ -456,6 +572,7 @@ const ClientDocumentsPage = () => {
         </Paper>
       ) : (
         <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+          <DescriptionIcon sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3 }} />
           <Typography variant="h6" color="text.secondary">
             No documents found
           </Typography>
@@ -476,8 +593,7 @@ const ClientDocumentsPage = () => {
           </Button>
         </Paper>
       )}
-      
-      {/* Upload Dialog */}
+
       <Dialog
         open={uploadDialogOpen}
         onClose={handleUploadDialogClose}
@@ -511,7 +627,6 @@ const ClientDocumentsPage = () => {
                 </Typography>
               )}
             </Grid>
-            
             <Grid item xs={12}>
               <FormControl fullWidth variant="outlined" required>
                 <InputLabel>Document Type</InputLabel>
@@ -529,7 +644,6 @@ const ClientDocumentsPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -558,8 +672,7 @@ const ClientDocumentsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
+
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteDialogClose}
@@ -571,16 +684,13 @@ const ClientDocumentsPage = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteDialogClose}>
-            Cancel
-          </Button>
+          <Button onClick={handleDeleteDialogClose}>Cancel</Button>
           <Button onClick={handleDeleteDocument} color="error" variant="contained">
             Delete
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Notification */}
+
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}

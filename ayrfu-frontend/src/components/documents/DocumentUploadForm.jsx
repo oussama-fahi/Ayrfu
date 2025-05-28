@@ -1,51 +1,25 @@
-// src/components/documents/DocumentUploadForm.js
+//src/components/documents/DocumentUploadForm.jsx
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import {
-    Alert,
-    Button,
-    CircularProgress,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    FormControl,
-    Grid,
-    InputLabel,
-    MenuItem,
-    Select,
-    Snackbar,
-    TextField,
-    Typography
-} from '@mui/material';
+import { Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select, Snackbar, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { fetchCurrentClient } from '../../redux/slices/clientsSlice';
 import { clearDocumentStatus, uploadDocument } from '../../redux/slices/documentsSlice';
 
 const DocumentUploadForm = ({ open, onClose, clientId }) => {
   const dispatch = useDispatch();
   const { isLoading, error, uploadSuccess } = useSelector((state) => state.documents);
-  
+  const { currentClient } = useSelector((state) => state.clients);
   const [file, setFile] = useState(null);
   const [documentType, setDocumentType] = useState('');
   const [description, setDescription] = useState('');
-  const [notification, setNotification] = useState({
-    open: false,
-    message: '',
-    severity: 'info'
-  });
-  
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+
   const documentTypes = [
-    'COMPANY_PROFILE',
-    'FINANCIAL_REPORT',
-    'PORTFOLIO',
-    'CONTRACT',
-    'PROPOSAL',
-    'INVOICE',
-    'MESSAGE_ATTACHMENT',
-    'OTHER'
+    'COMPANY_PROFILE', 'FINANCIAL_REPORT', 'PORTFOLIO', 'CONTRACT', 
+    'PROPOSAL', 'INVOICE', 'MESSAGE_ATTACHMENT', 'OTHER'
   ];
-  
+
   const documentTypeLabels = {
     'COMPANY_PROFILE': 'Company Profile',
     'FINANCIAL_REPORT': 'Financial Report',
@@ -56,7 +30,13 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
     'MESSAGE_ATTACHMENT': 'Message Attachment',
     'OTHER': 'Other'
   };
-  
+
+  useEffect(() => {
+    if (open && !currentClient && !clientId) {
+      dispatch(fetchCurrentClient());
+    }
+  }, [dispatch, open, currentClient, clientId]);
+
   useEffect(() => {
     if (uploadSuccess) {
       setNotification({
@@ -67,13 +47,13 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
       handleClose(true);
     }
   }, [uploadSuccess]);
-  
+
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files[0]) {
       setFile(event.target.files[0]);
     }
   };
-  
+
   const handleUpload = async () => {
     if (!file || !documentType) {
       setNotification({
@@ -83,22 +63,24 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
       });
       return;
     }
-    
+
     try {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('documentType', documentType);
-      
       if (description) {
         formData.append('description', description);
       }
-      
-      await dispatch(uploadDocument({ clientId, formData })).unwrap();
+
+      await dispatch(uploadDocument({ 
+        clientId: clientId || currentClient?.id, 
+        formData 
+      })).unwrap();
     } catch (err) {
       console.error('Error uploading document:', err);
     }
   };
-  
+
   const handleClose = (success = false) => {
     setFile(null);
     setDocumentType('');
@@ -106,31 +88,24 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
     dispatch(clearDocumentStatus());
     onClose(success);
   };
-  
+
   const handleCloseNotification = () => {
     setNotification({ ...notification, open: false });
   };
-  
+
   return (
     <>
-      <Dialog
-        open={open}
-        onClose={() => handleClose()}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={open} onClose={() => handleClose()} maxWidth="sm" fullWidth>
         <DialogTitle>Upload Document</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
             Please select a file to upload and specify the document type.
           </DialogContentText>
-          
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
-          
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <Button
@@ -141,11 +116,7 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
                 sx={{ py: 1.5 }}
               >
                 Select a file
-                <input
-                  type="file"
-                  hidden
-                  onChange={handleFileChange}
-                />
+                <input type="file" hidden onChange={handleFileChange} />
               </Button>
               {file && (
                 <Typography variant="body2" sx={{ mt: 1 }}>
@@ -153,7 +124,6 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
                 </Typography>
               )}
             </Grid>
-            
             <Grid item xs={12}>
               <FormControl fullWidth variant="outlined" required>
                 <InputLabel>Document Type</InputLabel>
@@ -171,7 +141,6 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
                 </Select>
               </FormControl>
             </Grid>
-            
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -200,7 +169,6 @@ const DocumentUploadForm = ({ open, onClose, clientId }) => {
           </Button>
         </DialogActions>
       </Dialog>
-      
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}

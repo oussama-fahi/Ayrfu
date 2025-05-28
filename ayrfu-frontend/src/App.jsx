@@ -54,6 +54,7 @@ import ServiceForm from './pages/admin/ServiceForm';
 import ServiceManagement from './pages/admin/ServiceManagement';
 import SuperAdminUserManagementPage from './pages/admin/SuperAdminUserManagementPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
+import ClientRequestsPage from './pages/client/ClientRequestsPage';
 
 // Protected Route Components
 const AuthRoute = ({ children }) => {
@@ -235,6 +236,7 @@ const App = () => {
               <Route path="requests/:id" element={<ClientRequestDetailPage />} />
               <Route path="messages" element={<ClientMessagesPage />} />
               <Route path="documents" element={<ClientDocumentsPage />} />
+              <Route path="requests" element={<ClientRequestsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
 

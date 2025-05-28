@@ -143,7 +143,7 @@ public class ApplicationController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_USER')")
     @Operation(summary = "Delete application", description = "Deletes an application by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Application deleted successfully"),

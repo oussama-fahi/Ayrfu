@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Service("conversationService")
 public class ConversationServiceImpl implements ConversationService {
 
     private static final Logger logger = LoggerFactory.getLogger(ConversationServiceImpl.class);
