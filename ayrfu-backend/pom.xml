@@ -8,7 +8,7 @@
 		<version>3.4.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.uddan</groupId>
+	<groupId>com.ayrfu</groupId>
 	<artifactId>ayrfu</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ayrfu</name>
